@@ -1,0 +1,63 @@
+---
+// Section navigation, in small caps beneath the dateline.
+import { sections } from '../data/sections';
+
+// Astro.url.pathname is the page being built, e.g. "/politics/some-story".
+// Its first segment tells us which section to mark as current.
+const current = Astro.url.pathname.split('/').filter(Boolean)[0];
+---
+
+<nav class="section-nav sheet" aria-label="Sections">
+  <ul class="section-nav__list">
+    {
+      sections.map((section) => (
+        <li>
+          <a
+            class="section-nav__link"
+            href={`/${section.slug}`}
+            aria-current={current === section.slug ? 'page' : undefined}
+          >
+            {section.name}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .section-nav__list {
+    display: flex;
+    flex-wrap: wrap; /* six sections do not fit one line on a phone; let them fall to two */
+    justify-content: center;
+    gap: 0 var(--space-5);
+    margin: 0;
+    padding: var(--space-1) 0;
+    list-style: none;
+    border-bottom: var(--rule-thick) double var(--rule);
+  }
+
+  .section-nav__link {
+    display: block;
+    /* Generous vertical padding makes a comfortable target for a thumb. */
+    padding: var(--space-2) 0;
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.12em;
+    text-decoration: none;
+  }
+
+  .section-nav__link:hover,
+  .section-nav__link[aria-current='page'] {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+  }
+
+  @media (min-width: 40rem) {
+    .section-nav__list {
+      gap: 0 var(--space-7);
+    }
+  }
+</style>

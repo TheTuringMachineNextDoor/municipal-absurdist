@@ -1,0 +1,485 @@
+---
+// The styleguide: a living reference of every design element. When a
+// new component is finished, it gets a specimen here.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Vignette from '../components/Vignette.astro';
+// Credits are read from the same file that documents the images, so the
+// page and the record cannot disagree.
+import credits from '../../public/illustrations/credits.json';
+
+const colors = [
+  { token: '--paper', hex: '#F4EFE4', note: 'Aged newsprint. The background of everything.' },
+  { token: '--ink', hex: '#1A1714', note: 'Near-black. Headlines and body copy.' },
+  { token: '--ink-soft', hex: '#4A443D', note: 'Deks, labels, captions, fine print.' },
+  { token: '--rule', hex: '#2B2622', note: 'Rules between sections and columns.' },
+  { token: '--accent', hex: '#A8321F', note: 'Vermilion. Used sparingly, like the truth.' },
+];
+
+const fonts = [
+  {
+    name: 'UnifrakturMaguntia',
+    token: '--font-masthead',
+    use: 'Masthead only',
+    sample: 'The Municipal Absurdist',
+    size: 'clamp(2rem, 1.2rem + 4vw, 3.5rem)',
+  },
+  {
+    name: 'Libre Caslon Display',
+    token: '--font-headline',
+    use: 'Headlines',
+    sample: 'Council Votes to Study Feasibility of Further Studies',
+    size: 'var(--text-h2)',
+  },
+  {
+    name: 'Libre Caslon Text',
+    token: '--font-body',
+    use: 'Body copy',
+    sample:
+      'Residents were assured on Tuesday that the situation remains under control, though officials declined to say whose.',
+    size: 'var(--text-base)',
+  },
+  {
+    name: 'IM Fell English SC',
+    token: '--font-label',
+    use: 'Labels, section names, bylines, datelines',
+    sample: 'By Our Correspondent at City Hall',
+    size: 'var(--text-lg)',
+  },
+];
+
+const spaces = ['--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--space-8'];
+
+const hat = credits.find((c) => c.file === 'placeholder-top-hat.svg');
+---
+
+<BaseLayout
+  title="Office of Typographical Standards"
+  description="The styleguide of The Municipal Absurdist: every colour, typeface, rule, and ornament in use."
+  noindex
+>
+  <header class="sg-intro">
+    <p class="label label--accent">Internal Circular</p>
+    <h1>Office of Typographical Standards</h1>
+    <p class="dek">
+      A complete inventory of the colours, typefaces, rules, and ornaments approved for
+      use in this newspaper. Unapproved ornaments will be confiscated.
+    </p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <section class="sg-section" aria-labelledby="sg-colour">
+    <h2 id="sg-colour" class="sg-heading">I. Colour</h2>
+    <ul class="sg-swatches">
+      {
+        colors.map((c) => (
+          <li class="sg-swatch">
+            <div class="sg-swatch__chip" style={`background: var(${c.token})`} />
+            <code>{c.token}</code>
+            <span class="label">{c.hex}</span>
+            <span class="fine-print">{c.note}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-type">
+    <h2 id="sg-type" class="sg-heading">II. Typefaces</h2>
+    {
+      fonts.map((f) => (
+        <div class="sg-specimen">
+          <p class="sg-meta">
+            <span class="label">{f.name}</span>
+            <code>{f.token}</code>
+            <span class="fine-print">{f.use}</span>
+          </p>
+          <p class="sg-font" style={`font-family: var(${f.token}); font-size: ${f.size}`}>
+            {f.sample}
+          </p>
+        </div>
+      ))
+    }
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Body styles</span>
+        <span class="fine-print">Roman, italic, bold, link</span>
+      </p>
+      <p class="prose">
+        The Department confirmed the delay in <em>a statement of unusual length</em>,
+        adding that the matter was <strong>receiving its fullest attention</strong> and
+        directing further questions to <a href="/styleguide">the appropriate window</a>,
+        which is closed.
+      </p>
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-headings">
+    <h2 id="sg-headings" class="sg-heading">III. Heading Levels</h2>
+    <!-- These are shown as specimens, not as real headings, so the page
+         keeps one sensible outline for screen readers. The .sg-h* classes
+         copy the element styles from global.css. -->
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Heading 1</span><code>h1</code></p>
+      <p class="sg-h sg-h1">Mayor Declares Pothole a Heritage Site</p>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Heading 2</span><code>h2</code></p>
+      <p class="sg-h sg-h2">School Board Replaces Recess With Meeting About Recess</p>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Heading 3</span><code>h3</code></p>
+      <p class="sg-h sg-h3">Landlord Announces Rent Increase to Help Tenants Appreciate Home</p>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Heading 4</span><code>h4</code></p>
+      <p class="sg-h sg-h4">University Adds Fourth Vice Provost to Investigate Number of Vice Provosts</p>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Heading 5</span><code>h5</code></p>
+      <p class="sg-h sg-h5">From Our Bureau of Foregone Conclusions</p>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Heading 6</span><code>h6</code></p>
+      <p class="sg-h sg-h6">Continued on a Page Yet to Be Determined</p>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Headline with label and dek</span><code>.label .dek</code></p>
+      <p class="label label--accent">Politics</p>
+      <p class="sg-h sg-h2">Senate Passes Bill; Contents to Be Announced</p>
+      <p class="dek prose">
+        Lawmakers on both sides praised the measure as historic and asked reporters
+        what was in it.
+      </p>
+      <p class="label">By Our Correspondent &middot; Illustration by the Art Department</p>
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-rules">
+    <h2 id="sg-rules" class="sg-heading">IV. Rules</h2>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Hairline</span><code>&lt;hr&gt;</code></p>
+      <hr />
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Double</span><code>.rule--double</code></p>
+      <hr class="rule--double" />
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Thick over thin</span><code>.rule--thick-thin</code></p>
+      <hr class="rule--thick-thin" />
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Thin over thick</span><code>.rule--thin-thick</code></p>
+      <hr class="rule--thin-thick" />
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Short</span><code>.rule--short</code></p>
+      <hr class="rule--short" />
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Broken by an ornament</span><code>.rule-ornament</code></p>
+      <div class="rule-ornament" role="separator"><span class="ornament">&#x2767;&#xFE0E;</span></div>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Column rules</span><code>.columns</code></p>
+      <div class="columns">
+        <p>
+          The Transit Authority has unveiled a new timetable which it describes as
+          aspirational. Trains will depart at the listed times in principle.
+        </p>
+        <p>
+          A spokesman for the Authority said riders had asked for honesty and that the
+          Authority had considered it carefully before going another way.
+        </p>
+        <p>
+          Fares will rise in the spring to fund a survey asking riders how they feel
+          about fares. Early results suggest they have feelings.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-dropcap">
+    <h2 id="sg-dropcap" class="sg-heading">V. Drop Caps</h2>
+    <div class="sg-pair">
+      <div class="sg-specimen">
+        <p class="sg-meta"><span class="label">Standard</span><code>.drop-cap</code></p>
+        <p class="drop-cap">
+          Officials at the Bureau of Weights and Measures confirmed on Monday that the
+          city's official kilogram has gone missing, and that its replacement is
+          believed to be slightly heavier, though there is no longer any way to check.
+          Grocers have been asked to use their best judgment.
+        </p>
+      </div>
+      <div class="sg-specimen">
+        <p class="sg-meta">
+          <span class="label">Blackletter, in vermilion</span>
+          <code>.drop-cap--blackletter .drop-cap--accent</code>
+        </p>
+        <p class="drop-cap drop-cap--blackletter drop-cap--accent">
+          Residents of the Fourth Ward awoke yesterday to find that the long-promised
+          footbridge had been completed overnight, in the wrong ward. The Department
+          of Works called the structure a success and urged the Fourth Ward to visit
+          it when convenient.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-ornaments">
+    <h2 id="sg-ornaments" class="sg-heading">VI. Ornaments</h2>
+    <ul class="sg-ornaments">
+      <li>
+        <span class="ornament sg-ornament" aria-hidden="true">&#x2767;&#xFE0E;</span>
+        <span class="label">Hedera</span>
+        <span class="fine-print">Divides sections. <code>U+2767</code></span>
+      </li>
+      <li>
+        <span class="ornament sg-ornament" aria-hidden="true">&#x261E;&#xFE0E;</span>
+        <span class="label">Manicule</span>
+        <span class="fine-print">Points at things. <code>U+261E</code></span>
+      </li>
+      <li>
+        <span class="ornament sg-ornament" aria-hidden="true">&#x2720;&#xFE0E;</span>
+        <span class="label">Maltese cross</span>
+        <span class="fine-print">Marks notices. <code>U+2720</code></span>
+      </li>
+    </ul>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">As bullets</span><code>.list-ornament</code></p>
+      <ul class="list-ornament prose">
+        <li>Readers are reminded that the news is provided as-is.</li>
+        <li>Letters to the editor are read aloud and then filed under the desk.</li>
+        <li>The crossword contains no errors that were not intended.</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-masthead">
+    <h2 id="sg-masthead" class="sg-heading">VII. Masthead Vignette</h2>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Placeholder</span>
+        <span class="fine-print">Stands in until the commissioned vignette arrives.</span>
+      </p>
+      <div class="sg-vignette"><Vignette /></div>
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-illustration">
+    <h2 id="sg-illustration" class="sg-heading">VIII. Illustration</h2>
+    <p class="prose">
+      Engravings arrive as black lines on a white rectangle. Set
+      with <code>mix-blend-mode: multiply</code>, the white takes the colour of the
+      paper and only the ink remains.
+    </p>
+    <div class="sg-pair">
+      <figure class="illustration sg-unblended">
+        <img
+          src="/illustrations/placeholder-top-hat.svg"
+          alt="Line drawing of a top hat resting on its brim, on a white background."
+          width="400"
+          height="300"
+          loading="lazy"
+        />
+        <figcaption>Without the blend: the scan sits on the page like a postage stamp.</figcaption>
+      </figure>
+      <figure class="illustration">
+        <img
+          src="/illustrations/placeholder-top-hat.svg"
+          alt="The same line drawing of a top hat, its white background now the colour of the paper."
+          width="400"
+          height="300"
+          loading="lazy"
+        />
+        <figcaption>
+          With <code>.illustration</code>: {hat?.title}. {hat?.credit}
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-space">
+    <h2 id="sg-space" class="sg-heading">IX. Spacing</h2>
+    <ul class="sg-spaces">
+      {
+        spaces.map((s) => (
+          <li>
+            <code>{s}</code>
+            <span class="sg-space__bar" style={`width: var(${s})`} />
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .sg-intro {
+    max-width: 44rem;
+  }
+
+  .sg-section {
+    padding-block: var(--space-3);
+  }
+
+  /* Section headings on this page are small-cap labels with a numeral,
+     so they do not compete with the specimens beneath them. */
+  .sg-heading {
+    margin-bottom: var(--space-5);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+    color: var(--accent);
+  }
+
+  .sg-specimen {
+    margin-bottom: var(--space-6);
+    min-width: 0; /* lets a grid child shrink below its content's width */
+  }
+
+  .sg-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-4);
+    margin-bottom: var(--space-2);
+  }
+
+  .sg-font {
+    margin: 0;
+    line-height: var(--leading-snug);
+  }
+
+  code {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.8em;
+    font-variant-numeric: normal;
+    color: var(--ink-soft);
+    overflow-wrap: anywhere; /* long class names must wrap on a phone */
+  }
+
+  /* Heading specimens: the same values global.css gives h1 to h6. */
+  .sg-h {
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-headline);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  .sg-h1 { font-size: var(--text-h1); }
+  .sg-h2 { font-size: var(--text-h2); }
+  .sg-h3 { font-size: var(--text-h3); }
+  .sg-h4 { font-size: var(--text-h4); line-height: var(--leading-snug); }
+
+  .sg-h5,
+  .sg-h6 {
+    font-family: var(--font-label);
+    letter-spacing: 0.08em;
+    line-height: var(--leading-snug);
+  }
+
+  .sg-h5 { font-size: var(--text-lg); }
+  .sg-h6 { font-size: var(--text-base); color: var(--ink-soft); }
+
+  /* Colour swatches. */
+  .sg-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sg-swatch {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .sg-swatch__chip {
+    height: 5rem;
+    border: var(--rule-hair) solid var(--rule);
+  }
+
+  /* Two specimens side by side when there is room. */
+  .sg-pair {
+    display: grid;
+    gap: var(--space-5) var(--space-6);
+  }
+
+  @media (min-width: 48rem) {
+    .sg-pair {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* Ornaments. */
+  .sg-ornaments {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: var(--space-5);
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    list-style: none;
+    text-align: center;
+  }
+
+  .sg-ornaments li {
+    display: grid;
+    gap: var(--space-1);
+    justify-items: center;
+  }
+
+  .sg-ornament {
+    font-size: 3rem;
+  }
+
+  .sg-vignette {
+    width: min(14rem, 100%);
+  }
+
+  /* The "before" illustration: switch the blend off to show the problem. */
+  .sg-unblended img {
+    mix-blend-mode: normal;
+  }
+
+  /* Spacing bars. */
+  .sg-spaces {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sg-spaces li {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .sg-space__bar {
+    display: block;
+    height: 0.75rem;
+    background: var(--ink);
+  }
+</style>

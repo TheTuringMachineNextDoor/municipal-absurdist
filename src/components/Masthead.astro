@@ -1,0 +1,133 @@
+---
+// The nameplate: "The [vignette] Absurdist" in blackletter, with
+// "Municipal" arched over the vignette, and the dateline bar beneath.
+//
+// `as` chooses the wrapping tag. The front page passes "h1" because there
+// the paper's name is the page's main heading; every other page has its
+// own h1 (the headline), so the masthead is a plain <p>.
+
+import Vignette from './Vignette.astro';
+
+interface Props {
+  as?: 'h1' | 'p';
+}
+
+const { as: Tag = 'p' } = Astro.props;
+
+const dateOptions: Intl.DateTimeFormatOptions = {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+};
+
+// This runs when the site is BUILT, not when a reader opens it. The
+// script at the bottom corrects it in the browser.
+const built = new Date();
+const builtLabel = built.toLocaleDateString('en-US', dateOptions);
+const builtIso = built.toISOString().slice(0, 10);
+---
+
+<header class="masthead sheet">
+  <Tag class="masthead__name">
+    <a class="masthead__link" href="/">
+      <!-- Screen readers get the name once, in reading order. The
+           letters below are decoration as far as they are concerned. -->
+      <span class="visually-hidden">The Municipal Absurdist</span>
+      <span class="masthead__word" aria-hidden="true">The</span>
+      <span class="masthead__vignette"><Vignette /></span>
+      <span class="masthead__word" aria-hidden="true">Absurdist</span>
+    </a>
+  </Tag>
+
+  <div class="dateline label">
+    <span class="dateline__item dateline__item--start">Vol. I &middot; No. 1</span>
+    <time class="dateline__item" datetime={builtIso} data-dateline>{builtLabel}</time>
+    <span class="dateline__item dateline__item--end">Price: Your Attention</span>
+  </div>
+</header>
+
+<!-- A static site is built once and served as-is, so the date above is
+     the date of the last deploy. These few lines swap in the reader's own
+     date. `is:inline` tells Astro to leave the script exactly here. -->
+<script is:inline>
+  (function () {
+    var el = document.querySelector('[data-dateline]');
+    if (!el) return;
+    var now = new Date();
+    el.textContent = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    el.setAttribute('datetime', now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()));
+  })();
+</script>
+
+<style>
+  .masthead {
+    padding-top: var(--space-5);
+    text-align: center;
+  }
+
+  .masthead__name {
+    margin: 0;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  /* One font-size drives the whole nameplate: the vignette and the gaps
+     are sized in em, so they shrink with the lettering. The whole line
+     is about 7.6em wide, so 11.5vw fills a phone screen without
+     spilling: roughly 326px of the 343px available at 375px. */
+  .masthead__link {
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.12em;
+    max-width: 100%;
+    font-family: var(--font-masthead);
+    font-size: clamp(2rem, 11.5vw, 6.25rem);
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .masthead__link:hover {
+    color: var(--ink);
+  }
+
+  .masthead__word {
+    /* Blackletter sits low in its line box; nudge it onto the vignette's ground line. */
+    padding-bottom: 0.06em;
+  }
+
+  .masthead__vignette {
+    flex: none;
+    width: 1.75em;
+  }
+
+  /* The dateline bar: small caps between two thin rules. */
+  .dateline {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0 var(--space-4);
+    margin-top: var(--space-3);
+    padding-block: var(--space-2);
+    border-block: var(--rule-hair) solid var(--rule);
+    color: var(--ink);
+    font-size: var(--text-xs);
+  }
+
+  @media (min-width: 40rem) {
+    .dateline {
+      grid-template-columns: 1fr auto 1fr;
+      font-size: var(--text-sm);
+    }
+
+    .dateline__item--start { text-align: left; }
+    .dateline__item--end { text-align: right; }
+  }
+</style>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- PLACEHOLDER line art, drawn in-house. The opaque white rectangle is
+       deliberate: it imitates a scanned engraving, so the styleguide can
+       show mix-blend-mode: multiply removing it. -->
+  <rect width="400" height="300" fill="#FFFFFF"/>
+  <g fill="none" stroke="#1A1714" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- crown -->
+    <path d="M138 196 C134 150 132 104 136 62"/>
+    <path d="M262 196 C266 150 268 104 264 62"/>
+    <ellipse cx="200" cy="62" rx="64" ry="14"/>
+    <!-- band -->
+    <path d="M137 168 C160 180 240 180 263 168"/>
+    <path d="M138 190 C160 203 240 203 262 190"/>
+    <!-- brim -->
+    <path d="M138 196 C104 196 66 204 66 216 C66 234 134 244 200 244 C266 244 334 234 334 216 C334 204 296 196 262 196"/>
+    <path d="M84 222 C120 234 280 234 316 222" stroke-width="1.5"/>
+  </g>
+  <!-- hatching: shade on the right of the crown, and a ground shadow -->
+  <g fill="none" stroke="#1A1714" stroke-width="1.2" stroke-linecap="round">
+    <path d="M250 84 V160 M243 86 V163 M236 87 V165 M229 88 V166 M222 89 V167 M215 89 V168"/>
+    <path d="M148 172 l8 14 M160 176 l8 14 M172 178 l8 14 M184 179 l8 14 M196 180 l8 14 M208 179 l8 14 M220 178 l8 14 M232 176 l8 14 M244 173 l8 14"/>
+    <path d="M96 256 H304 M116 263 H284 M140 270 H260 M166 277 H234"/>
+  </g>
+</svg>

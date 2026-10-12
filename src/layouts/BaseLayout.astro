@@ -1,0 +1,72 @@
+---
+// Every page is wrapped in this layout: the <head>, the masthead, the
+// section nav, a <main> for the page's own content, and the footer.
+import '../styles/global.css';
+import Masthead from '../components/Masthead.astro';
+import SectionNav from '../components/SectionNav.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Pass "h1" on the front page only; see Masthead.astro. */
+  mastheadAs?: 'h1' | 'p';
+  /** Keep a page out of search engines (the styleguide, the 404). */
+  noindex?: boolean;
+}
+
+const siteName = 'The Municipal Absurdist';
+const {
+  title,
+  description = 'An independent newspaper of satire. The public is advised to remain calm.',
+  mastheadAs = 'p',
+  noindex = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} | ${siteName}` : siteName;
+
+// One request for all four families. `display=swap` shows the fallback
+// font immediately and swaps the real one in when it arrives, so text is
+// never invisible while fonts load.
+const fontsUrl =
+  'https://fonts.googleapis.com/css2' +
+  '?family=IM+Fell+English+SC' +
+  '&family=Libre+Caslon+Display' +
+  '&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400' +
+  '&family=UnifrakturMaguntia' +
+  '&display=swap';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#F4EFE4" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- preconnect opens the connection to Google's font servers early,
+         before the browser has discovered it needs them. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href={fontsUrl} />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Proceed directly to the news</a>
+    <Masthead as={mastheadAs} />
+    <SectionNav />
+    <main id="content" class="sheet">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+  main {
+    padding-top: var(--space-6);
+  }
+</style>

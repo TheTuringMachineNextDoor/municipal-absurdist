@@ -1,0 +1,30 @@
+---
+// Astro builds this to /404.html, which Vercel serves for any address
+// that has no page. A fuller version is planned for Phase 8; this one
+// exists now because the section links lead nowhere until Phase 4.
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Page Misplaced" noindex>
+  <article class="lost">
+    <p class="label label--accent">Error No. 404</p>
+    <h1>This Page Has Been Misplaced by the Department of Pages</h1>
+    <p class="dek">
+      A search has been ordered. The Department asks that readers not assist.
+    </p>
+    <hr class="rule--short" />
+    <p>
+      It is possible the page has not yet been printed. Several sections of this
+      newspaper remain under construction, a condition the city knows well.
+    </p>
+    <p><a href="/">Return to the front page</a></p>
+  </article>
+</BaseLayout>
+
+<style>
+  .lost {
+    max-width: var(--measure);
+    margin-inline: auto;
+    text-align: center;
+  }
+</style>

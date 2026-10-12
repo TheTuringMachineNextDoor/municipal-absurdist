@@ -1,0 +1,112 @@
+---
+// The footer, in house voice. Links to About, Submit, Support and the
+// Store are added as those pages are built (Phases 6 and 7), so that
+// nothing here points at a page that does not exist.
+const year = new Date().getFullYear();
+---
+
+<footer class="footer sheet">
+  <hr class="rule--thick-thin" />
+
+  <p class="footer__name">The Municipal Absurdist</p>
+  <p class="footer__motto label">The public is advised to remain calm.</p>
+
+  <div class="rule-ornament" role="separator"><span class="ornament">&#x2767;&#xFE0E;</span></div>
+
+  <div class="footer__notices">
+    <section>
+      <h2 class="footer__heading">Corrections</h2>
+      <p>
+        The Municipal Absurdist regrets every error it has been made aware of, and
+        several it has not. Corrections are issued promptly upon the third request.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="footer__heading">Notice to Readers</h2>
+      <p>
+        This is a work of satire. Any resemblance to actual events is the fault of
+        the events, which were consulted beforehand and declined to change.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="footer__heading">Office Hours</h2>
+      <p>
+        The offices are open to the public at all hours, there being no offices.
+        Complaints may be addressed to the Department of Complaints, which is full.
+      </p>
+    </section>
+  </div>
+
+  <hr />
+
+  <p class="footer__colophon fine-print">
+    &copy; {year} The Municipal Absurdist. Printed on the Internet at considerable
+    inconvenience. An independent publication, answerable to no one, including its editors.
+  </p>
+</footer>
+
+<style>
+  .footer {
+    margin-top: var(--space-8);
+    padding-bottom: var(--space-6);
+    text-align: center;
+  }
+
+  .footer__name {
+    margin: var(--space-5) 0 var(--space-1);
+    font-family: var(--font-masthead);
+    font-size: clamp(1.75rem, 1.3rem + 2vw, 2.5rem);
+    line-height: 1.1;
+  }
+
+  .footer__motto {
+    margin: 0;
+  }
+
+  .footer__notices {
+    display: grid;
+    gap: var(--space-5);
+    text-align: left;
+    font-size: var(--text-sm);
+  }
+
+  .footer__notices p {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .footer__heading {
+    margin: 0 0 var(--space-1);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.1em;
+  }
+
+  /* Three columns with hairlines between them once there is room. */
+  @media (min-width: 48rem) {
+    .footer__notices {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+
+    .footer__notices > section {
+      padding-inline: var(--space-5);
+      border-left: var(--rule-hair) solid var(--rule);
+    }
+
+    .footer__notices > section:first-child {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .footer__notices > section:last-child {
+      padding-right: 0;
+    }
+  }
+
+  .footer__colophon {
+    margin: 0;
+  }
+</style>
