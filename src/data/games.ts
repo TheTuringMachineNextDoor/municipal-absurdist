@@ -39,7 +39,7 @@ export const games: Game[] = [
   {
     slug: 'authors-and-faces',
     name: 'Authors & Faces',
-    blurb: 'Match the great writer to the portrait. All are long dead and unable to object.',
+    blurb: 'Match the great writer to the face, the name, or the famous line. All are long dead and unable to object.',
     image: 'pantagruel-03.webp',
     live: true,
   },

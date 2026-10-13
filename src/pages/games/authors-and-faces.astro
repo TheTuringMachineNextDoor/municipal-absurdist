@@ -1,7 +1,12 @@
 ---
-// Authors & Faces: a portrait of a writer and four names; pick the
-// right one. Eight portraits a day. The writers are in
-// src/data/authors-and-faces.ts; every portrait is in the public domain.
+// Authors & Faces: match a writer to their face, their name, or
+// something they wrote, in every direction. Eight questions a day.
+//
+// Each question shows one thing (a portrait, a name, or a quotation)
+// and offers four of another kind to choose from. So one question might
+// show a face and ask for the name; the next might show a line and ask
+// for the face. The writers are in src/data/authors-and-faces.ts; every
+// portrait is in the public domain.
 import GameLayout from '../../layouts/GameLayout.astro';
 import ResultsCard from '../../components/games/ResultsCard.astro';
 import { authors, CHOICES, ROUND_LENGTH } from '../../data/authors-and-faces';
@@ -19,13 +24,17 @@ const portraitCredits = Object.fromEntries(
 
 <GameLayout
   title="Authors & Faces"
-  standfirst="Match the great writer to the portrait. All are long dead and unable to object."
+  standfirst="Match the great writer to the face, the name, or the famous line. All are long dead and unable to object."
 >
   <Fragment slot="rules">
     <ul class="list-ornament">
-      <li>You are shown {ROUND_LENGTH} portraits, one at a time, each with {CHOICES} names.</li>
-      <li>Click the name you believe belongs to the face, or press its number on the keyboard.</li>
-      <li>The answer is then given, with a line about the writer and the credit for the portrait.</li>
+      <li>There are {ROUND_LENGTH} questions. Each shows you a portrait, a name, or a line a writer wrote.</li>
+      <li>
+        You are then offered {CHOICES} answers of another kind: names, portraits, or lines. Pick the one
+        that belongs to the same writer.
+      </li>
+      <li>Click an answer, or press its number on the keyboard.</li>
+      <li>The writer is then named, with their line, where it comes from, and the credit for any portrait shown.</li>
       <li>One round a day, the same for every reader. A new one is printed at midnight, Central time.</li>
     </ul>
   </Fragment>
@@ -33,37 +42,31 @@ const portraitCredits = Object.fromEntries(
   <script type="application/json" data-af-credits set:html={JSON.stringify(portraitCredits)} />
 
   <div class="af" data-af>
-    <p class="label af__progress" data-af-progress>Portrait 1 of {ROUND_LENGTH}</p>
+    <p class="label af__progress" data-af-progress>Question 1 of {ROUND_LENGTH}</p>
 
-    <!-- The alt text must not give the answer away, so it stays general
-         until the reader has answered; the script then names the sitter. -->
-    <figure class="af__figure">
-      <img class="af__portrait" data-af-portrait alt="Portrait of a writer" width="480" height="600" />
-      <figcaption class="fine-print af__credit" data-af-credit></figcaption>
-    </figure>
+    <!-- What is shown: one of these three, the other two hidden.
+         A portrait's alt text stays general until the reader answers,
+         so that it does not give the answer away. -->
+    <div class="af__prompt">
+      <img class="af__portrait" data-af-prompt="face" alt="Portrait of a writer" width="480" height="600" hidden />
+      <p class="af__prompt-name" data-af-prompt="name" hidden></p>
+      <blockquote class="af__prompt-quote" data-af-prompt="quote" hidden></blockquote>
+    </div>
 
-    <!-- tabindex="-1": focus moves here when a new portrait is shown. -->
-    <h2 class="af__question" data-af-question tabindex="-1">Who is this?</h2>
+    <!-- tabindex="-1": focus moves here when a new question appears. -->
+    <h2 class="af__question" data-af-question tabindex="-1"></h2>
 
-    <ol class="af__choices" data-af-choices>
-      {
-        Array.from({ length: CHOICES }, (_, number) => (
-          <li>
-            <button type="button" class="af__choice" data-af-choice>
-              <span class="af__number" aria-hidden="true">{number + 1}</span>
-              <span data-af-name />
-            </button>
-          </li>
-        ))
-      }
-    </ol>
+    <!-- The four answers are put here by the script. -->
+    <ol class="af__choices" data-af-choices></ol>
 
     <div class="af__verdict" data-af-verdict hidden>
       <p class="af__outcome" data-af-outcome></p>
       <p class="af__name" data-af-answer></p>
       <p class="af__line" data-af-line></p>
+      <p class="af__quoted" data-af-quoted></p>
+      <p class="fine-print af__credit" data-af-credit></p>
     </div>
-    <button type="button" class="af__next" data-af-next hidden>Next portrait</button>
+    <button type="button" class="af__next" data-af-next hidden>Next question</button>
 
     <p class="visually-hidden" role="status" data-af-live></p>
   </div>
@@ -85,8 +88,20 @@ const portraitCredits = Object.fromEntries(
 
   const GAME_ID = 'authors-and-faces';
 
-  // Ranks, from the bottom. `from` is the lowest share of right answers
-  // (out of 8) that earns it.
+  // The three things a writer can be known by.
+  type Kind = 'face' | 'name' | 'quote';
+
+  // Every way of asking: what is shown, and what the answers are.
+  const FORMS: { show: Kind; pick: Kind; ask: (author: Author) => string }[] = [
+    { show: 'face', pick: 'name', ask: () => 'Who is this?' },
+    { show: 'name', pick: 'face', ask: (a) => `Which of these is ${a.name}?` },
+    { show: 'quote', pick: 'name', ask: () => 'Who wrote this?' },
+    { show: 'quote', pick: 'face', ask: () => 'Which of these writers wrote this?' },
+    { show: 'face', pick: 'quote', ask: () => 'Which of these did this writer write?' },
+    { show: 'name', pick: 'quote', ask: (a) => `Which of these did ${a.name} write?` },
+  ];
+
+  // Ranks, from the bottom. `from` is the lowest number right (out of 8).
   const RANKS = [
     { from: 0, name: 'Has Not Done the Reading', blurb: 'The faces meant nothing to you. In fairness, most of them never met you either.' },
     { from: 3, name: 'Judges Books by Their Covers', blurb: 'You went by the beards. It is a method, and it has limits.' },
@@ -103,18 +118,24 @@ const portraitCredits = Object.fromEntries(
   const credits: Record<string, string> = JSON.parse(
     document.querySelector('[data-af-credits]')?.textContent ?? '{}',
   );
-  const creditFor = (author: Author) => credits[author.id] ?? '';
+  const portraitSrc = (author: Author) => `/illustrations/authors/${author.id}.webp`;
 
-  // Today's round: eight writers, and for each the three wrong names
-  // offered beside the right one. All seeded with the date, so every
-  // reader gets the same portraits and the same choices.
+  // Today's round: eight writers, the form each question takes, and the
+  // three wrong answers offered beside the right one. All seeded with
+  // the date, so every reader gets the same questions. The forms are
+  // dealt from a shuffled pack, so a round always has a mix.
   function buildRound(dateKey: string) {
     const seed = dayNumber(dateKey);
+    const pack = seededShuffle(FORMS, seed + 50);
     return seededShuffle(authors, seed)
       .slice(0, ROUND_LENGTH)
       .map((author, index) => {
         const others = seededShuffle(authors.filter((a) => a.id !== author.id), seed + 100 + index).slice(0, CHOICES - 1);
-        return { author, choices: seededShuffle([author, ...others], seed + 200 + index) };
+        return {
+          author,
+          form: pack[index % pack.length],
+          choices: seededShuffle([author, ...others], seed + 200 + index),
+        };
       });
   }
 
@@ -125,15 +146,19 @@ const portraitCredits = Object.fromEntries(
   function play(root: HTMLElement, resultsCard: HTMLElement) {
     const find = <T extends HTMLElement>(hook: string) => root.querySelector<T>(`[data-af-${hook}]`)!;
     const progress = find('progress');
-    const portrait = find<HTMLImageElement>('portrait');
-    const credit = find('credit');
+    const prompts = {
+      face: root.querySelector<HTMLImageElement>('[data-af-prompt="face"]')!,
+      name: root.querySelector<HTMLElement>('[data-af-prompt="name"]')!,
+      quote: root.querySelector<HTMLElement>('[data-af-prompt="quote"]')!,
+    };
     const question = find('question');
     const choicesList = find('choices');
-    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-af-choice]')];
     const verdict = find('verdict');
     const outcome = find('outcome');
     const answerEl = find('answer');
     const line = find('line');
+    const quoted = find('quoted');
+    const credit = find('credit');
     const nextButton = find<HTMLButtonElement>('next');
     const live = find('live');
 
@@ -144,6 +169,7 @@ const portraitCredits = Object.fromEntries(
     let index = 0;
     let marks: boolean[] = [];
     let answering = true;
+    let buttons: HTMLButtonElement[] = [];
 
     function reveal(stats = readStats(GAME_ID), result = { score: 0, marks: [] as boolean[] }) {
       const outOf = result.marks.length;
@@ -164,49 +190,110 @@ const portraitCredits = Object.fromEntries(
       });
     }
 
-    function deal() {
-      const { author, choices } = round[index];
-      answering = true;
-      progress.textContent = `Portrait ${index + 1} of ${round.length}`;
-      portrait.src = `/illustrations/authors/${author.id}.webp`;
-      portrait.alt = 'Portrait of a writer';
-      credit.textContent = '';
+    /** One answer button: a name, a quotation, or a portrait. */
+    function makeChoice(choice: Author, kind: Kind, number: number): HTMLButtonElement {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `af__choice af__choice--${kind}`;
+      button.dataset.afChoice = choice.id;
 
-      buttons.forEach((button, i) => {
-        button.querySelector<HTMLElement>('[data-af-name]')!.textContent = choices[i].name;
-        button.dataset.afChoice = choices[i].id;
-        button.disabled = false;
-        delete button.dataset.state;
-      });
+      const badge = document.createElement('span');
+      badge.className = 'af__number';
+      badge.setAttribute('aria-hidden', 'true');
+      badge.textContent = String(number);
+      button.append(badge);
+
+      if (kind === 'face') {
+        const image = document.createElement('img');
+        image.src = portraitSrc(choice);
+        image.alt = `Portrait ${number}`; // named once the reader has answered
+        image.width = 480;
+        image.height = 600;
+        const caption = document.createElement('span');
+        caption.className = 'af__caption';
+        button.append(image, caption);
+      } else {
+        const text = document.createElement('span');
+        text.className = 'af__text';
+        text.textContent = kind === 'name' ? choice.name : `“${choice.quote}”`;
+        button.append(text);
+      }
+
+      button.addEventListener('click', () => answer(choice.id));
+      return button;
+    }
+
+    function deal() {
+      const { author, form, choices } = round[index];
+      answering = true;
+      progress.textContent = `Question ${index + 1} of ${round.length}`;
+
+      // Show the one thing this question shows; hide the other two.
+      for (const [kind, element] of Object.entries(prompts)) element.hidden = kind !== form.show;
+      if (form.show === 'face') {
+        prompts.face.src = portraitSrc(author);
+        prompts.face.alt = 'Portrait of a writer';
+      } else if (form.show === 'name') {
+        prompts.name.textContent = author.name;
+      } else {
+        prompts.quote.textContent = `“${author.quote}”`;
+      }
+
+      question.textContent = form.ask(author);
+
+      buttons = choices.map((choice, i) => makeChoice(choice, form.pick, i + 1));
+      choicesList.className = `af__choices af__choices--${form.pick}`;
+      choicesList.replaceChildren(
+        ...buttons.map((button) => {
+          const item = document.createElement('li');
+          item.append(button);
+          return item;
+        }),
+      );
 
       verdict.hidden = true;
       nextButton.hidden = true;
-      live.textContent = `Portrait ${index + 1} of ${round.length}. Who is this? ${choices.map((c, i) => `${i + 1}, ${c.name}`).join('. ')}.`;
+
+      // For a screen reader: what is shown, the question, and the answers.
+      const shown =
+        form.show === 'face' ? 'A portrait of a writer.' : form.show === 'name' ? `${author.name}.` : `“${author.quote}”`;
+      const offered = choices
+        .map((c, i) => `${i + 1}, ${form.pick === 'face' ? 'a portrait' : form.pick === 'name' ? c.name : c.quote}`)
+        .join('. ');
+      live.textContent = `Question ${index + 1} of ${round.length}. ${shown} ${form.ask(author)} ${offered}.`;
       if (index > 0) question.focus({ preventScroll: true });
     }
 
     function answer(id: string) {
       if (!answering) return;
       answering = false;
-      const { author } = round[index];
+      const { author, form, choices } = round[index];
       const right = id === author.id;
       marks.push(right);
 
-      // Mark the right name, and the wrong one if that was picked.
-      for (const button of buttons) {
+      // Mark the right answer, and the wrong one if that was picked.
+      buttons.forEach((button, i) => {
         button.disabled = true;
         if (button.dataset.afChoice === author.id) button.dataset.state = 'right';
         else if (button.dataset.afChoice === id) button.dataset.state = 'wrong';
-      }
+        // Now the answer is out, every portrait can be named.
+        if (form.pick === 'face') {
+          button.querySelector('img')!.alt = `Portrait of ${choices[i].name}`;
+          button.querySelector('.af__caption')!.textContent = choices[i].name;
+        }
+      });
+      if (form.show === 'face') prompts.face.alt = `Portrait of ${author.name}`;
 
       outcome.textContent = right ? 'Correct.' : 'Incorrect.';
       answerEl.textContent = `${author.name} (${author.lived})`;
       line.textContent = author.line;
-      // Now that the answer is out, the sitter can be named and credited.
-      portrait.alt = `Portrait of ${author.name}`;
-      credit.textContent = creditFor(author);
+      quoted.textContent = `“${author.quote}” ${author.quoteFrom}.`;
 
-      nextButton.textContent = index === round.length - 1 ? 'See the result' : 'Next portrait';
+      // Credit every portrait that was on screen.
+      const shownPortraits = form.pick === 'face' ? choices : form.show === 'face' ? [author] : [];
+      credit.textContent = shownPortraits.map((a) => credits[a.id] ?? '').join(' ');
+
+      nextButton.textContent = index === round.length - 1 ? 'See the result' : 'Next question';
       verdict.hidden = false;
       nextButton.hidden = false;
       nextButton.focus({ preventScroll: true });
@@ -224,10 +311,9 @@ const portraitCredits = Object.fromEntries(
       reveal(recordResult(GAME_ID, today, yesterday, result), result);
     }
 
-    for (const button of buttons) button.addEventListener('click', () => answer(button.dataset.afChoice!));
     nextButton.addEventListener('click', next);
 
-    // Number keys pick a name.
+    // Number keys pick an answer.
     document.addEventListener('keydown', (event) => {
       if (root.hidden || !answering || event.altKey || event.ctrlKey || event.metaKey) return;
       const picked = buttons[Number(event.key) - 1];
@@ -249,13 +335,13 @@ const portraitCredits = Object.fromEntries(
     const saved = readStats(GAME_ID);
     if (saved.lastPlayed === today && saved.lastResult) reveal(saved, saved.lastResult);
     else deal();
-
-    // Keep the list from being announced as empty before the script runs.
-    choicesList.hidden = false;
   }
 </script>
 
-<style>
+<!-- `is:global` because the answer buttons are made by the script, and
+     Astro's scoped styles only reach elements written in this file.
+     Every rule starts with .af, so nothing leaks out. -->
+<style is:global>
   .af {
     text-align: center;
     --right: #1e5b3c;
@@ -263,8 +349,7 @@ const portraitCredits = Object.fromEntries(
   }
 
   .af[hidden],
-  .af__verdict[hidden],
-  .af__next[hidden] {
+  .af [hidden] {
     display: none;
   }
 
@@ -272,23 +357,41 @@ const portraitCredits = Object.fromEntries(
     margin-bottom: var(--space-3);
   }
 
-  /* The portrait, in a ruled frame like a picture on a wall. */
-  .af__figure {
-    margin: 0 auto var(--space-4);
-    max-width: 17rem;
+  .af__prompt {
+    margin-bottom: var(--space-4);
   }
 
+  /* A portrait being asked about, in a ruled frame like a picture on a wall. */
   .af__portrait {
-    width: 100%;
+    width: min(100%, 15rem);
+    margin-inline: auto;
     padding: var(--space-2);
     border: var(--rule-thick) double var(--rule);
     background: var(--paper);
   }
 
-  .af__credit {
-    min-height: 2.6em;
-    margin-top: var(--space-2);
+  /* A name being asked about, set like a nameplate. */
+  .af__prompt-name {
+    display: inline-block;
+    margin: 0;
+    padding: var(--space-3) var(--space-5);
+    border: var(--rule-thick) double var(--rule);
+    font-family: var(--font-headline);
+    font-size: var(--text-h2);
+    font-weight: var(--weight-headline);
+    line-height: var(--leading-tight);
+  }
+
+  /* A quotation being asked about. */
+  .af__prompt-quote {
+    margin: 0;
+    padding: var(--space-4) var(--space-3);
+    border: 0;
+    border-block: var(--rule-thick) double var(--rule);
+    font-size: var(--text-h4);
     font-style: italic;
+    line-height: var(--leading-snug);
+    text-wrap: balance;
   }
 
   .af__question {
@@ -300,21 +403,37 @@ const portraitCredits = Object.fromEntries(
     outline: none; /* focus is moved here by script, to be read aloud */
   }
 
-  /* Two names across when there is room, one on a narrow phone. */
   .af__choices {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
     gap: var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
+  /* Names: two across when there is room. Quotations: one per line,
+     since they are long. Portraits: two across on a phone, four on a desk. */
+  .af__choices--name {
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  }
+
+  .af__choices--face {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 40rem) {
+    .af__choices--face {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
   .af__choice {
+    position: relative;
     display: flex;
     align-items: center;
     gap: var(--space-3);
     width: 100%;
+    height: 100%;
     min-height: 3rem;
     padding: var(--space-2) var(--space-3);
     border: var(--rule-hair) solid var(--ink-soft);
@@ -322,8 +441,14 @@ const portraitCredits = Object.fromEntries(
     color: var(--ink);
     font: inherit;
     font-size: var(--text-lg);
+    line-height: var(--leading-snug);
     text-align: left;
     cursor: pointer;
+  }
+
+  .af__choice--quote {
+    font-size: var(--text-base);
+    font-style: italic;
   }
 
   .af__choice:hover:not(:disabled) {
@@ -333,7 +458,6 @@ const portraitCredits = Object.fromEntries(
 
   .af__choice:disabled {
     cursor: default;
-    color: var(--ink-soft);
   }
 
   .af__number {
@@ -343,37 +467,76 @@ const portraitCredits = Object.fromEntries(
     width: 1.75rem;
     height: 1.75rem;
     border: var(--rule-hair) solid currentColor;
+    background: var(--paper);
     font-family: var(--font-label);
     font-size: var(--text-sm);
+    font-style: normal;
     font-variant-numeric: lining-nums;
   }
 
-  /* After answering: the right name gets a thick green frame and the
-     word "Right"; a wrong pick gets a red one, struck through. The
+  /* A portrait as an answer: the picture fills the button, with its
+     number in the corner and, after answering, the name beneath. */
+  .af__choice--face {
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-1);
+  }
+
+  .af__choice--face img {
+    width: 100%;
+  }
+
+  .af__choice--face .af__number {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+  }
+
+  .af__caption {
+    min-height: 1.3em;
+    font-size: var(--text-sm);
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  /* After answering: the right answer gets a thick green frame and the
+     word "Right"; a wrong pick gets a red one and the word "Wrong". The
      words mean colour is never the only signal. */
   .af__choice[data-state='right'] {
-    border: 3px solid var(--right);
-    color: var(--ink);
+    outline: 3px solid var(--right);
+    outline-offset: -3px;
+  }
+
+  .af__choice[data-state='wrong'] {
+    outline: 3px solid var(--wrong);
+    outline-offset: -3px;
+  }
+
+  .af__choice[data-state]::after {
+    margin-left: auto;
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    font-style: normal;
+    letter-spacing: 0.1em;
   }
 
   .af__choice[data-state='right']::after {
     content: 'Right';
-    margin-left: auto;
-    font-family: var(--font-label);
-    font-size: var(--text-sm);
-    letter-spacing: 0.1em;
     color: var(--right);
   }
 
-  .af__choice[data-state='wrong'] {
-    border: 3px solid var(--wrong);
-    text-decoration: line-through;
-    text-decoration-color: var(--wrong);
+  .af__choice[data-state='wrong']::after {
+    content: 'Wrong';
+    color: var(--wrong);
+  }
+
+  .af__choice--face[data-state]::after {
+    margin: 0;
   }
 
   .af__verdict {
     margin-top: var(--space-4);
-    padding: var(--space-4);
+    padding: var(--space-4) var(--space-2);
     border-block: var(--rule-hair) solid var(--rule);
   }
 
@@ -394,9 +557,24 @@ const portraitCredits = Object.fromEntries(
 
   .af__line {
     max-width: 30rem;
-    margin: 0 auto;
+    margin: 0 auto var(--space-3);
     font-style: italic;
     color: var(--ink-soft);
+  }
+
+  .af__quoted {
+    max-width: 32rem;
+    margin: 0 auto;
+    font-size: var(--text-sm);
+  }
+
+  .af__credit {
+    margin: var(--space-3) 0 0;
+    font-style: italic;
+  }
+
+  .af__credit:empty {
+    display: none;
   }
 
   .af__next {
