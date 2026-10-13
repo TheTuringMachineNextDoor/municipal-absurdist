@@ -122,12 +122,20 @@ No dark mode at launch: the paper is the identity.
 
 ## Phases
 
-1. Setup, tokens, fonts, base layout, masthead, footer, `/styleguide`. Deploy.
-2. Article page and content collection
-3. Homepage
-4. Section fronts
-5. Contributors and portfolio pages
-6. Store and commissions
-7. Submit, About, Support, newsletter
-8. Polish, 404, SEO and Open Graph images, favicon
-9. (Later) Accounts, comments, likes via Supabase
+1. Setup, tokens, fonts, base layout, masthead, footer, `/styleguide`. Deploy. (done)
+2. Article page and content collection (done)
+3. Homepage (done)
+4. Games
+   - 4a Games hub + Real or Absurdist
+   - 4b Policy Reversal (adversarial Wordle-style word game)
+   - 4c Personality quiz
+   - 4d Authors & Faces (public-domain authors only)
+   - 4e Crossword + reader puzzle submissions (Tally)
+   - 4f Caption contest (Tally submissions, editor-picked winners)
+   - 4g The Mayor (Reigns-style swipe-decision game: original art, cards, and look; meters are Treasury, Public, Council, Press)
+5. Section fronts (a first version already exists at `/[section]`; this phase finishes them)
+6. Contributors and portfolio pages
+7. Store and commissions
+8. Submit, About, Support, newsletter
+9. Polish, 404, SEO and Open Graph images, favicon
+10. (Later) Accounts, comments, likes via Supabase

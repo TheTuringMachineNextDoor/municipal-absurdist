@@ -2,7 +2,7 @@
 
 export const site = {
   // The address the newsletter form sends to. Buttondown provides it in
-  // Phase 7; it looks like
+  // Phase 8; it looks like
   //   https://buttondown.com/api/emails/embed-subscribe/YOUR-NAME
   // While this is an empty string the signup form is shown switched off
   // and labelled "Subscriptions open shortly".
