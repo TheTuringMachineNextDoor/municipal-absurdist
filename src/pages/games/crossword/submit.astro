@@ -1,0 +1,147 @@
+---
+// How to send the paper a crossword, with the form to send it by.
+//
+// The form is a Tally form (tally.so), shown inside this page in a
+// frame. Its address is set in src/data/site.ts. Until one is set, the
+// page still explains what to send, and says the window is shut.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { site } from '../../../data/site';
+
+// Tally gives a share link like https://tally.so/r/abc123. The same form
+// can be shown inside another page at https://tally.so/embed/abc123.
+const formId = site.crosswordSubmissionForm.match(/tally\.so\/(?:r|embed|forms)\/([A-Za-z0-9]+)/)?.[1];
+const formLink = formId ? `https://tally.so/r/${formId}` : null;
+const formFrame = formId ? `https://tally.so/embed/${formId}?alignLeft=1&hideTitle=1&transparentBackground=1` : null;
+---
+
+<BaseLayout
+  title="Set a Crossword for Us"
+  description="How to submit a crossword to The Municipal Absurdist's Bureau of Amusement."
+>
+  <div class="submit">
+    <header class="submit__header">
+      <p class="label label--accent"><a href="/games/crossword">The Crossword</a></p>
+      <h1 class="submit__title">Set a Crossword for Us</h1>
+      <p class="dek">
+        The Bureau of Amusement accepts puzzles from the public. It also accepts complaints, but at a different window.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>What the Bureau Requires</h2>
+      <ul class="list-ornament">
+        <li>A grid five squares by five. Black squares are permitted, in moderation.</li>
+        <li>
+          Every white square must belong to two words, one across and one down, so that no letter depends on a single
+          clue.
+        </li>
+        <li>Words of three letters or more, each used once, all to be found in an ordinary dictionary.</li>
+        <li>
+          A clue for every word, in the manner of this paper: straight-faced, fair, and solvable by a person who has
+          never met you.
+        </li>
+        <li>At least one word concerning public life. A mayor, an audit, a pothole.</li>
+        <li>Your own work, not printed elsewhere.</li>
+      </ul>
+
+      <h2>How to Write It Down</h2>
+      <p>
+        Type the grid one row to a line, with a <code>#</code> for each black square. Then list the clues with their
+        answers. For example:
+      </p>
+      <pre class="submit__example" aria-label="An example grid and two of its clues">##MAP
+#MEMO
+AUDIT
+GLAD#
+EEL##
+
+Across
+MAP: Chart on which the proposed bypass is shown passing through your kitchen
+MEMO: Office note, sent to all staff and read by none
+
+Down
+MULE: Stubborn animal: half a horse, and all of the Zoning Board</pre>
+      <p>The clue numbers will be added by the Bureau, which owns the necessary equipment.</p>
+
+      <h2>What Happens Next</h2>
+      <p>
+        The editors read every puzzle and solve the promising ones. A puzzle that is printed appears under the name
+        you give, as “Set by” yourself. The editors may alter a clue for fairness or for length. They do not enter into
+        correspondence about 4 Down.
+      </p>
+
+      <h2 id="form">The Form</h2>
+      {
+        formFrame && formLink ? (
+          <>
+            <iframe class="submit__form" src={formFrame} title="Crossword submission form" loading="lazy" />
+            <p class="fine-print">
+              If the form does not appear, <a href={formLink}>open it in its own window</a>.
+            </p>
+          </>
+        ) : (
+          <p class="submit__closed">
+            <span class="label">Window Closed</span>
+            The submissions window is shut while the Bureau locates the key. It is expected to open shortly. Keep your
+            puzzle somewhere dry.
+          </p>
+        )
+      }
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .submit {
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .submit__header {
+    margin-bottom: var(--space-5);
+    text-align: center;
+  }
+
+  .submit__header a {
+    text-decoration: none;
+  }
+
+  .submit__title {
+    font-size: var(--text-h2);
+  }
+
+  .submit .prose {
+    max-width: none;
+  }
+
+  /* The example is set in the body face with wide spacing for the grid;
+     long clue lines wrap, so nothing runs off a phone screen. */
+  .submit__example {
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-left: var(--rule-thick) solid var(--rule);
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .submit__form {
+    display: block;
+    width: 100%;
+    height: 56rem;
+    border: var(--rule-hair) solid var(--rule);
+  }
+
+  .submit__closed {
+    padding: var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  .submit__closed .label {
+    display: block;
+    margin-bottom: var(--space-1);
+    color: var(--accent-text);
+  }
+</style>

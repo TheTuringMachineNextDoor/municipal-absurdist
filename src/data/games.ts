@@ -48,7 +48,7 @@ export const games: Game[] = [
     name: 'The Crossword',
     blurb: 'A daily grid containing no errors that were not intended.',
     image: 'pantagruel-04.webp',
-    live: false,
+    live: true,
   },
   {
     slug: 'caption-contest',

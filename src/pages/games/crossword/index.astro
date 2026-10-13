@@ -1,0 +1,867 @@
+---
+// The Crossword: a small grid a day, timed. The puzzles are in
+// src/data/crosswords.ts.
+//
+// The site is static, so this one page has to serve every day's puzzle:
+// the script below works out today's date in the reader's browser, picks
+// that day's puzzle, and draws the grid and clues itself.
+//
+// Each square is a real text box (<input>). That is what makes a phone
+// show its keyboard, and what lets a screen reader land on a square and
+// read its clue.
+import GameLayout from '../../../layouts/GameLayout.astro';
+import ResultsCard from '../../../components/games/ResultsCard.astro';
+import { crosswords } from '../../../data/crosswords';
+import { layOut } from '../../../lib/games/crossword';
+
+const developing = import.meta.env.DEV;
+
+// Check every puzzle now, while the site is being built. layOut() throws
+// if a clue is missing or a word is not in the grid, which stops the
+// build, so a broken puzzle cannot reach readers.
+crosswords.forEach((puzzle, index) => layOut(puzzle, `Crossword no. ${index + 1}`));
+---
+
+<GameLayout title="The Crossword" standfirst="A daily grid containing no errors that were not intended.">
+  <Fragment slot="rules">
+    <ul class="list-ornament">
+      <li>Fill every white square. Each clue’s answer runs across or down from its numbered square.</li>
+      <li>
+        Click a square and type. Click the same square again, or press the space bar, to switch between across and
+        down.
+      </li>
+      <li>The arrow keys move about the grid. Enter goes to the next clue. Backspace removes a letter.</li>
+      <li>
+        “Check” strikes out any wrong letters. “Reveal word” fills in the answer, and the fact is noted on your result.
+      </li>
+      <li>The clock starts with your first letter and stops when the grid is right.</li>
+      <li>One puzzle a day, the same for every reader. A new one is printed at midnight, Central time.</li>
+    </ul>
+  </Fragment>
+
+  <div class="xw" data-xw>
+    <p class="xw__meta">
+      <span class="label" data-xw-byline></span>
+      <span class="xw__time"><span class="label">Time</span> <span data-xw-time>0:00</span></span>
+    </p>
+
+    <!-- The clue being worked on, kept above the grid so that a phone's
+         keyboard does not cover it. -->
+    <div class="xw__current">
+      <button type="button" class="xw__step" data-xw-step="-1" aria-label="Previous clue">&larr;</button>
+      <p class="xw__current-clue">
+        <span class="label label--accent" data-xw-current-number></span>
+        <span data-xw-current-text></span>
+      </p>
+      <button type="button" class="xw__step" data-xw-step="1" aria-label="Next clue">&rarr;</button>
+    </div>
+
+    <!-- The squares are put here by the script. -->
+    <div class="xw__grid" role="group" aria-label="Crossword grid" data-xw-grid></div>
+
+    <div class="xw__tools" data-xw-tools>
+      <button type="button" class="xw__tool" data-xw-check>Check</button>
+      <button type="button" class="xw__tool" data-xw-reveal>Reveal word</button>
+      <button type="button" class="xw__tool" data-xw-clear>Clear the grid</button>
+    </div>
+    <!-- role="status": a screen reader reads out whatever is written here. -->
+    <p class="xw__status" role="status" data-xw-status></p>
+
+    <div class="xw__clues">
+      <section aria-labelledby="xw-across">
+        <h2 id="xw-across" class="label xw__clues-heading">Across</h2>
+        <ol class="xw__list" data-xw-list="across"></ol>
+      </section>
+      <section aria-labelledby="xw-down">
+        <h2 id="xw-down" class="label xw__clues-heading">Down</h2>
+        <ol class="xw__list" data-xw-list="down"></ol>
+      </section>
+    </div>
+  </div>
+
+  <ResultsCard>
+    {
+      developing && (
+        <button type="button" class="xw__replay" data-xw-replay>Play again (development only)</button>
+      )
+    }
+  </ResultsCard>
+
+  <aside class="xw-submit" aria-labelledby="xw-submit-heading">
+    <h2 id="xw-submit-heading" class="xw-submit__heading">Set a Puzzle for Us</h2>
+    <p>
+      The Bureau of Amusement accepts crosswords from the public and prints the sound ones under the setter’s name.
+    </p>
+    <p><a href="/games/crossword/submit">How to submit a crossword</a></p>
+  </aside>
+</GameLayout>
+
+<script>
+  import { crosswords } from '../../../data/crosswords';
+  import { formatTime, layOut, type Direction } from '../../../lib/games/crossword';
+  import { chicagoDateKey, dayNumber, formatDateKey } from '../../../lib/games/daily';
+  import { readStats, recordResult, type GameStats, type RoundResult } from '../../../lib/games/stats';
+  import { showResults } from '../../../lib/games/results';
+
+  const GAME_ID = 'crossword';
+  // A half-finished grid is kept here, so a refresh does not lose it.
+  const PROGRESS_KEY = 'absurdist:game:crossword:progress';
+
+  // Ranks for a grid solved without "Reveal word", fastest first.
+  // `within` is in seconds.
+  const RANKS = [
+    { within: 60, name: 'Municipal Lexicographer', blurb: 'Under a minute. The Bureau suspects you of setting it.' },
+    { within: 150, name: 'Senior Clerk of Words', blurb: 'Brisk and accurate. You would not last a week at City Hall.' },
+    { within: 360, name: 'Deputy Filler of Squares', blurb: 'A sound, unhurried performance, of the kind the city bills by the hour.' },
+    { within: Infinity, name: 'Thorough', blurb: 'You took your time. So does the Planning Department, and nobody questions its results.' },
+  ];
+  const ASSISTED = {
+    name: 'Assisted by the Clerk',
+    blurb: 'The grid is complete. The record will show that some of it was completed for you.',
+  };
+
+  const root = document.querySelector<HTMLElement>('[data-xw]');
+  const resultsCard = document.querySelector<HTMLElement>('[data-results]');
+  if (root && resultsCard) play(root, resultsCard);
+
+  function play(root: HTMLElement, resultsCard: HTMLElement) {
+    const find = <T extends HTMLElement>(hook: string) => root.querySelector<T>(`[data-xw-${hook}]`)!;
+    const grid = find('grid');
+    const timeEl = find('time');
+    const status = find('status');
+    const currentNumber = find('current-number');
+    const currentText = find('current-text');
+
+    const today = chicagoDateKey();
+    const yesterday = chicagoDateKey(new Date(Date.now() - 86_400_000));
+    // Today's puzzle: one a day, in order, round and round the list.
+    const puzzleIndex = dayNumber(today) % crosswords.length;
+    const puzzle = crosswords[puzzleIndex];
+    const { cells, entries, columns, rows } = layOut(puzzle);
+
+    find('byline').textContent = `No. ${puzzleIndex + 1} · Set by ${puzzle.setter}`;
+    grid.setAttribute('aria-label', `Crossword grid, ${columns} squares by ${rows}`);
+
+    // ---- The state of play ----
+    let letters: string[] = cells.map(() => ''); // what the reader has typed
+    let wrong = new Set<number>(); // squares struck out by Check
+    let revealed = new Set<number>(); // squares filled by Reveal word
+    let active = entries[0].cells[0]; // the square being typed in
+    let direction: Direction = 'across';
+    let seconds = 0;
+    let started = false;
+    let done = false;
+    let checks = 0;
+    let assisted = false; // true once Reveal word has been used
+    let wasFull = false;
+
+    const other = (d: Direction): Direction => (d === 'across' ? 'down' : 'across');
+    const currentEntry = () => entries[cells[active][direction]!];
+    const title = (d: Direction) => (d === 'across' ? 'Across' : 'Down');
+    const isFull = (entryIndex: number) => entries[entryIndex].cells.every((c) => letters[c]);
+
+    // ---- Draw the grid ----
+    grid.style.setProperty('--columns', String(columns));
+    const boxes: HTMLElement[] = [];
+    const inputs: (HTMLInputElement | null)[] = [];
+    cells.forEach((cell, index) => {
+      const box = document.createElement('div');
+      box.className = 'xw__cell';
+      boxes.push(box);
+      if (!cell.letter) {
+        box.classList.add('xw__cell--block');
+        box.setAttribute('aria-hidden', 'true');
+        inputs.push(null);
+        grid.append(box);
+        return;
+      }
+      if (cell.number) {
+        const number = document.createElement('span');
+        number.className = 'xw__number';
+        number.setAttribute('aria-hidden', 'true');
+        number.textContent = String(cell.number);
+        box.append(number);
+      }
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'xw__input';
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+      input.setAttribute('autocapitalize', 'characters');
+      input.setAttribute('autocorrect', 'off');
+      input.setAttribute('enterkeyhint', 'next');
+      inputs.push(input);
+      box.append(input);
+      grid.append(box);
+
+      // Arriving by Tab, or by a click on a different square.
+      input.addEventListener('focus', () => {
+        if (index !== active) select(index, direction, false);
+      });
+      // A click on the square already being typed in switches direction.
+      // pointerdown comes before the click moves focus, so it can tell.
+      let wasActive = false;
+      input.addEventListener('pointerdown', () => {
+        wasActive = document.activeElement === input;
+      });
+      input.addEventListener('click', () => {
+        if (wasActive) select(index, other(direction), false);
+      });
+      input.addEventListener('keydown', (event) => onKey(event));
+      // Phone keyboards do not always report which key was pressed, so
+      // the letter is also read from what lands in the box.
+      input.addEventListener('input', () => {
+        const typed = input.value.replace(/[^a-z]/gi, '').slice(-1).toUpperCase();
+        input.value = letters[index];
+        if (typed) {
+          active = index;
+          put(typed);
+        }
+      });
+      input.addEventListener('beforeinput', (event) => {
+        if (event.inputType === 'deleteContentBackward') {
+          event.preventDefault();
+          erase(true);
+        }
+      });
+    });
+
+    // ---- Draw the clues ----
+    const clueButtons: HTMLButtonElement[] = entries.map((entry, entryIndex) => {
+      const item = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'xw__clue';
+      const number = document.createElement('span');
+      number.className = 'xw__clue-number';
+      number.textContent = String(entry.number);
+      const text = document.createElement('span');
+      text.textContent = `${entry.clue} (${entry.answer.length})`;
+      button.append(number, text);
+      button.addEventListener('click', () => goTo(entryIndex));
+      item.append(button);
+      root.querySelector(`[data-xw-list="${entry.direction}"]`)!.append(item);
+      return button;
+    });
+
+    // ---- Moving about ----
+
+    /** Make a square the one being typed in, and redraw the highlights. */
+    function select(cell: number, way: Direction = direction, focus = true) {
+      // A square always belongs to a word each way in our grids, but be safe.
+      if (cells[cell][way] === null) way = other(way);
+      active = cell;
+      direction = way;
+      paint();
+      if (focus) inputs[cell]?.focus({ preventScroll: true });
+    }
+
+    /** Go to a clue: its first empty square, or its first square. */
+    function goTo(entryIndex: number) {
+      const entry = entries[entryIndex];
+      select(entry.cells.find((c) => !letters[c]) ?? entry.cells[0], entry.direction);
+    }
+
+    /** The next clue (step 1) or the one before (step -1), going round. */
+    function step(by: number) {
+      const here = cells[active][direction]!;
+      goTo((here + by + entries.length) % entries.length);
+    }
+
+    /** An arrow key: the next white square that way, if there is one. */
+    function move(dx: number, dy: number) {
+      let column = (active % columns) + dx;
+      let row = Math.floor(active / columns) + dy;
+      while (column >= 0 && row >= 0 && column < columns && row < rows) {
+        const cell = row * columns + column;
+        if (cells[cell].letter) {
+          select(cell, dx ? 'across' : 'down');
+          return;
+        }
+        column += dx;
+        row += dy;
+      }
+    }
+
+    function paint() {
+      const entry = currentEntry();
+      boxes.forEach((box, index) => {
+        const input = inputs[index];
+        if (!input) return;
+        box.dataset.state = index === active ? 'active' : entry.cells.includes(index) ? 'word' : '';
+        box.toggleAttribute('data-wrong', wrong.has(index));
+        box.toggleAttribute('data-revealed', revealed.has(index));
+        input.value = letters[index];
+        input.readOnly = done;
+        // Only the active square is a Tab stop, so that Tab passes through
+        // the grid in one press, not twenty-five. Arrows move within it.
+        input.tabIndex = index === active ? 0 : -1;
+        // What a screen reader says on this square.
+        const cell = cells[index];
+        const own = entries[(cell[direction] ?? cell[other(direction)])!];
+        input.setAttribute(
+          'aria-label',
+          `${own.number} ${title(own.direction)}, letter ${own.cells.indexOf(index) + 1} of ${own.cells.length}. ` +
+            `${own.clue}.${wrong.has(index) ? ' Marked wrong.' : ''}`,
+        );
+      });
+
+      currentNumber.textContent = `${entry.number} ${title(direction)}`;
+      currentText.textContent = `${entry.clue} (${entry.answer.length})`;
+
+      const crossing = cells[active][other(direction)];
+      clueButtons.forEach((button, index) => {
+        if (index === cells[active][direction]) button.setAttribute('aria-current', 'true');
+        else button.removeAttribute('aria-current');
+        button.toggleAttribute('data-crossing', index === crossing);
+        button.toggleAttribute('data-filled', isFull(index));
+      });
+    }
+
+    // ---- Typing ----
+
+    function put(letter: string) {
+      if (done) return;
+      startClock();
+      status.textContent = '';
+      letters[active] = letter;
+      wrong.delete(active);
+      revealed.delete(active);
+
+      // On to the next empty square of this word. At the end of a word
+      // that is now full, on to the next clue that is not.
+      const here = cells[active][direction]!;
+      const entry = entries[here];
+      const position = entry.cells.indexOf(active);
+      const nextEmpty = entry.cells.slice(position + 1).find((c) => !letters[c]);
+      const unfinished = entries.map((_, i) => (here + 1 + i) % entries.length).find((i) => !isFull(i));
+      if (nextEmpty !== undefined) select(nextEmpty);
+      else if (position < entry.cells.length - 1) select(entry.cells[position + 1]);
+      else if (isFull(here) && unfinished !== undefined) goTo(unfinished);
+      else paint();
+      save();
+      checkFinished();
+    }
+
+    /** Delete, or Backspace (which steps back when the square is empty). */
+    function erase(steppingBack: boolean) {
+      if (done) return;
+      if (!letters[active] && steppingBack) {
+        const entry = currentEntry();
+        const position = entry.cells.indexOf(active);
+        if (position > 0) active = entry.cells[position - 1];
+      }
+      letters[active] = '';
+      wrong.delete(active);
+      revealed.delete(active);
+      wasFull = false;
+      select(active);
+      save();
+    }
+
+    function onKey(event: KeyboardEvent) {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const arrows: Record<string, [number, number]> = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+      };
+      if (arrows[event.key]) {
+        event.preventDefault();
+        move(...arrows[event.key]);
+      } else if (event.key === 'Backspace' || event.key === 'Delete') {
+        event.preventDefault();
+        erase(event.key === 'Backspace');
+      } else if (event.key === ' ') {
+        event.preventDefault();
+        select(active, other(direction));
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        step(event.shiftKey ? -1 : 1);
+      } else if (/^[a-z]$/i.test(event.key)) {
+        event.preventDefault();
+        put(event.key.toUpperCase());
+      }
+    }
+
+    // ---- The clock ----
+    // It runs from the first letter, and only while the page is in view.
+    function startClock() {
+      started = true;
+    }
+    setInterval(() => {
+      if (!started || done || document.hidden) return;
+      seconds += 1;
+      timeEl.textContent = formatTime(seconds);
+      save();
+    }, 1000);
+
+    // ---- Remembering a half-finished grid ----
+    function save() {
+      if (done) return;
+      try {
+        localStorage.setItem(
+          PROGRESS_KEY,
+          JSON.stringify({ date: today, letters, seconds, checks, assisted, wrong: [...wrong], revealed: [...revealed] }),
+        );
+      } catch {
+        // Not remembered; the puzzle still works.
+      }
+    }
+
+    function restore() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? 'null');
+        if (!saved || saved.date !== today || saved.letters?.length !== cells.length) return;
+        letters = saved.letters.map((letter: unknown, i: number) =>
+          cells[i].letter && typeof letter === 'string' ? letter.slice(0, 1) : '',
+        );
+        seconds = Number(saved.seconds) || 0;
+        checks = Number(saved.checks) || 0;
+        assisted = saved.assisted === true;
+        wrong = new Set(saved.wrong ?? []);
+        revealed = new Set(saved.revealed ?? []);
+        started = letters.some(Boolean);
+        wasFull = cells.every((cell, i) => !cell.letter || letters[i]);
+      } catch {
+        // Nothing usable was saved; start with an empty grid.
+      }
+    }
+
+    // ---- The tools ----
+    find('check').addEventListener('click', () => {
+      if (!letters.some(Boolean)) {
+        status.textContent = 'There is nothing to check. The Bureau admires your caution.';
+        return;
+      }
+      checks += 1;
+      wrong = new Set(cells.flatMap((cell, i) => (letters[i] && letters[i] !== cell.letter ? [i] : [])));
+      status.textContent =
+        wrong.size === 0
+          ? 'No errors were found in what has been entered. The Bureau is as surprised as you are.'
+          : `${wrong.size} ${wrong.size === 1 ? 'square has' : 'squares have'} been struck out.`;
+      select(active);
+      save();
+    });
+
+    find('reveal').addEventListener('click', () => {
+      const entry = currentEntry();
+      startClock();
+      assisted = true;
+      for (const cell of entry.cells) {
+        if (letters[cell] !== cells[cell].letter) revealed.add(cell);
+        letters[cell] = cells[cell].letter!;
+        wrong.delete(cell);
+      }
+      status.textContent = `${entry.number} ${title(direction)} has been filled in. This has been noted.`;
+      select(active);
+      save();
+      checkFinished();
+    });
+
+    find('clear').addEventListener('click', () => {
+      // Letters go; the clock and the record of help received do not.
+      letters = cells.map(() => '');
+      wrong.clear();
+      revealed.clear();
+      wasFull = false;
+      status.textContent = 'The grid has been cleared. The clock has not.';
+      goTo(0);
+      save();
+    });
+
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-xw-step]')) {
+      button.addEventListener('click', () => step(Number(button.dataset.xwStep)));
+    }
+
+    // ---- Finishing ----
+    function checkFinished() {
+      const full = cells.every((cell, i) => !cell.letter || letters[i]);
+      if (full && cells.every((cell, i) => !cell.letter || letters[i] === cell.letter)) {
+        const result: RoundResult = {
+          score: seconds,
+          marks: [],
+          // Kept as text so the result can be shown again on a return visit.
+          detail: JSON.stringify({ assisted, checks }),
+        };
+        // `true`: for this game the lower score (a shorter time) is the better.
+        const stats = recordResult(GAME_ID, today, yesterday, result, true);
+        try {
+          localStorage.removeItem(PROGRESS_KEY);
+        } catch {
+          // Nothing to remove.
+        }
+        finish(stats, result);
+      } else if (full && !wasFull) {
+        status.textContent =
+          'The grid is full but not correct. The Bureau declines to say where. The Check button is less discreet.';
+      }
+      wasFull = full;
+    }
+
+    function finish(stats: GameStats, result: RoundResult) {
+      let detail = { assisted: false, checks: 0 };
+      try {
+        detail = { ...detail, ...JSON.parse(result.detail ?? '{}') };
+      } catch {
+        // Keep the defaults.
+      }
+      done = true;
+      seconds = result.score;
+      letters = cells.map((cell) => cell.letter ?? '');
+      wrong.clear();
+      timeEl.textContent = formatTime(seconds);
+      status.textContent = '';
+      root.dataset.done = 'true';
+      paint();
+
+      const rank = detail.assisted ? ASSISTED : RANKS.find((r) => seconds <= r.within)!;
+      const help = [
+        detail.assisted ? 'with words revealed' : '',
+        detail.checks > 0 ? `${detail.checks} ${detail.checks === 1 ? 'check' : 'checks'}` : '',
+      ].filter(Boolean);
+      // The share text shows the shape of the grid and gives nothing away.
+      const shape = Array.from({ length: rows }, (_, row) =>
+        cells
+          .slice(row * columns, (row + 1) * columns)
+          .map((cell) => (cell.letter ? '□' : '■'))
+          .join(''),
+      );
+      showResults(resultsCard, {
+        score: `Solved in ${formatTime(seconds)}`,
+        rank: rank.name,
+        blurb: rank.blurb,
+        shareText: [
+          `The Municipal Absurdist Crossword, ${formatDateKey(today)}`,
+          `${formatTime(seconds)} · ${rank.name}${help.length ? ` (${help.join(', ')})` : ''}`,
+          ...shape,
+          `${location.origin}${location.pathname}`,
+        ].join('\n'),
+        stats,
+        bestText: formatTime(stats.best),
+        note: 'A fresh grid is printed at midnight, Central time.',
+      });
+    }
+
+    // Development only: solve it again without waiting for midnight.
+    resultsCard.querySelector('[data-xw-replay]')?.addEventListener('click', () => {
+      done = false;
+      started = false;
+      seconds = 0;
+      checks = 0;
+      assisted = false;
+      wasFull = false;
+      letters = cells.map(() => '');
+      wrong.clear();
+      revealed.clear();
+      timeEl.textContent = formatTime(0);
+      delete root.dataset.done;
+      resultsCard.hidden = true;
+      goTo(0);
+    });
+
+    // ---- Begin ----
+    const saved = readStats(GAME_ID);
+    if (saved.lastPlayed === today && saved.lastResult) {
+      finish(saved, saved.lastResult);
+    } else {
+      restore();
+      timeEl.textContent = formatTime(seconds);
+      // Highlight the first clue, but leave focus where it is: taking it
+      // on arrival would open a phone's keyboard over the page.
+      const first = entries.findIndex((_, i) => !isFull(i));
+      const entry = entries[Math.max(first, 0)];
+      select(entry.cells.find((c) => !letters[c]) ?? entry.cells[0], entry.direction, false);
+    }
+  }
+</script>
+
+<!-- `is:global` because the squares and clues are made by the script, and
+     Astro's scoped styles only reach elements written in this file.
+     Every rule starts with .xw, so nothing leaks out. -->
+<style is:global>
+  .xw {
+    /* The word being worked on: the accent yellow, well watered down. */
+    --xw-word: color-mix(in srgb, var(--accent) 28%, var(--paper));
+    --xw-wrong: #a8321f;
+  }
+
+  .xw__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-hair) solid var(--rule);
+  }
+
+  .xw__time {
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* The clue in hand, with a button either side to step through the clues. */
+  .xw__current {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: stretch;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .xw__current-clue {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 4.5rem;
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    background: var(--xw-word);
+    line-height: var(--leading-snug);
+  }
+
+  .xw__step {
+    min-width: 2.75rem;
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-lg);
+    cursor: pointer;
+  }
+
+  .xw__step:hover,
+  .xw__tool:hover {
+    border-color: var(--ink);
+    background: var(--accent);
+    color: var(--ink);
+  }
+
+  /* The grid. Its background is ink and there is a 1px gap between the
+     squares, so the ink shows through as the lines. */
+  .xw__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--columns, 5), minmax(0, 1fr));
+    gap: 1px;
+    width: min(100%, 22rem);
+    margin-inline: auto;
+    padding: 2px;
+    background: var(--ink);
+  }
+
+  .xw__cell {
+    position: relative;
+    aspect-ratio: 1;
+    background: var(--paper);
+  }
+
+  .xw__cell--block {
+    background: var(--ink);
+  }
+
+  .xw__cell[data-state='word'] {
+    background: var(--xw-word);
+  }
+
+  .xw__cell[data-state='active'] {
+    background: var(--accent);
+  }
+
+  .xw__number {
+    position: absolute;
+    top: 0.15rem;
+    left: 0.25rem;
+    z-index: 1;
+    font-size: 0.75rem;
+    font-variant-numeric: lining-nums;
+    line-height: 1;
+    pointer-events: none; /* clicks go through to the text box beneath */
+  }
+
+  .xw__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0.5rem 0 0;
+    border: 0;
+    border-radius: 0; /* phones round text boxes unless told not to */
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--font-headline);
+    font-size: clamp(1.5rem, 8vw, 2.25rem);
+    font-weight: var(--weight-headline);
+    line-height: 1;
+    text-align: center;
+    text-transform: uppercase;
+    caret-color: transparent; /* the yellow square is the cursor */
+    cursor: pointer;
+  }
+
+  /* Keyboard focus: a heavy ink frame inside the yellow square. */
+  .xw__input:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: -3px;
+  }
+
+  /* A letter struck out by Check: red, with a line through the square.
+     The line is drawn as a tiny picture so that colour is not the only sign. */
+  .xw__cell[data-wrong] .xw__input {
+    color: var(--xw-wrong);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' preserveAspectRatio='none'%3E%3Cpath d='M0 10 10 0' stroke='%23a8321f' stroke-width='.35'/%3E%3C/svg%3E")
+      center / 100% 100% no-repeat;
+  }
+
+  /* A letter filled in by Reveal word: a small ink corner. */
+  .xw__cell[data-revealed]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0.3rem solid var(--ink);
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+    pointer-events: none;
+  }
+
+  .xw__tools {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+
+  .xw__tool {
+    min-height: 2.75rem;
+    padding: var(--space-1) var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  /* Once solved, the grid stays to be admired; the tools go. */
+  .xw[data-done] .xw__tools,
+  .xw[data-done] .xw__current {
+    display: none;
+  }
+
+  .xw[data-done] .xw__input {
+    cursor: default;
+  }
+
+  .xw__status {
+    min-height: 1.5em;
+    margin: var(--space-3) 0 0;
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  .xw__clues {
+    display: grid;
+    gap: var(--space-4) var(--space-5);
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  @media (min-width: 36rem) {
+    .xw__clues {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .xw__clues-heading {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-base);
+  }
+
+  .xw__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* A clue is a button: pressing it goes to its word in the grid. */
+  .xw__clue {
+    display: flex;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-left: var(--rule-thick) solid transparent;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .xw__clue-number {
+    flex: none;
+    min-width: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: lining-nums;
+  }
+
+  .xw__clue:hover {
+    background: var(--xw-word);
+  }
+
+  /* A clue whose word is filled in steps back a little. */
+  .xw__clue[data-filled] {
+    color: var(--ink-soft);
+  }
+
+  /* The clue in hand, and the one crossing it at the active square. */
+  .xw__clue[data-crossing] {
+    border-left-color: var(--ink-soft);
+  }
+
+  .xw__clue[aria-current] {
+    border-left-color: var(--ink);
+    background: var(--xw-word);
+    color: var(--ink);
+  }
+
+  .xw__replay {
+    margin-top: var(--space-3);
+    padding: var(--space-1) var(--space-3);
+    border: var(--rule-hair) dashed var(--ink-soft);
+    background: none;
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  /* The invitation to send in a puzzle, under the game. */
+  .xw-submit {
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-2);
+    border-block: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  .xw-submit__heading {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-h4);
+  }
+
+  .xw-submit p {
+    margin: 0 auto var(--space-2);
+    max-width: 30rem;
+  }
+
+  .xw-submit p:last-child {
+    margin-bottom: 0;
+  }
+</style>

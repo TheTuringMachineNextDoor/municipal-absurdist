@@ -7,4 +7,11 @@ export const site = {
   // While this is an empty string the signup form is shown switched off
   // and labelled "Subscriptions open shortly".
   newsletterAction: '',
+
+  // The Tally form readers use to send in a crossword. Paste the form's
+  // share link, which looks like
+  //   https://tally.so/r/abc123
+  // While this is an empty string the page at /games/crossword/submit
+  // explains what to send but says the window is shut.
+  crosswordSubmissionForm: '',
 };

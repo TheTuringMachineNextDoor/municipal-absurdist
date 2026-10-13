@@ -13,6 +13,9 @@ export interface Results {
   shareText: string;
   /** Leave out for a game with nothing to count. */
   stats?: GameStats;
+  /** How to print the best score, when it is not a plain number
+      (the crossword's is a time, "2:14"). */
+  bestText?: string;
   /** Optional extra line, e.g. "A new edition is printed at midnight." */
   note?: string;
 }
@@ -38,7 +41,7 @@ export function showResults(card: HTMLElement, results: Results) {
   set('note', results.note ?? '');
   if (results.stats) {
     set('played', String(results.stats.played));
-    set('best', String(results.stats.best));
+    set('best', results.bestText ?? String(results.stats.best));
     set('streak', String(results.stats.streak));
   }
 
