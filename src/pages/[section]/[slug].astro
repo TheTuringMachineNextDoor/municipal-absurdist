@@ -1,0 +1,83 @@
+---
+// The article page, at /section/slug (e.g. /politics/council-approves...).
+//
+// The square brackets in this file's path are placeholders. Because the
+// site is static, getStaticPaths() below tells Astro every real address
+// to build: one page per published article.
+import { getEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleHeader from '../../components/ArticleHeader.astro';
+import ArticleBody from '../../components/ArticleBody.astro';
+import Illustration from '../../components/Illustration.astro';
+import MoreFromSection from '../../components/MoreFromSection.astro';
+import { sections } from '../../data/sections';
+import { articlePath, getPublishedArticles, type Article } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const articles = await getPublishedArticles();
+  return articles.map((article) => ({
+    params: { section: article.data.section, slug: article.id },
+    props: {
+      article,
+      // Up to three others from the same section, newest first.
+      more: articles
+        .filter((other) => other.data.section === article.data.section && other.id !== article.id)
+        .slice(0, 3),
+    },
+  }));
+}
+
+interface Props {
+  article: Article;
+  more: Article[];
+}
+
+const { article, more } = Astro.props;
+const { data } = article;
+
+// `author` and `illustrator` are references: front matter holds only the
+// contributor's file name, and getEntry fetches the person.
+const author = await getEntry(data.author);
+const illustrator = data.illustrator ? await getEntry(data.illustrator) : undefined;
+const section = sections.find((s) => s.slug === data.section)!;
+
+const moreItems = await Promise.all(
+  more.map(async (other) => ({
+    href: articlePath(other),
+    title: other.data.title,
+    dek: other.data.dek,
+    author: (await getEntry(other.data.author)).data.name,
+  })),
+);
+---
+
+<BaseLayout title={data.title} description={data.dek}>
+  <article class="article">
+    <ArticleHeader
+      section={data.section}
+      title={data.title}
+      dek={data.dek}
+      author={author.data.name}
+      illustrator={illustrator?.data.name}
+      date={data.date}
+    />
+
+    <Illustration file={data.image} alt={data.imageAlt} credit={data.imageCredit} variant="lead" />
+
+    <ArticleBody html={article.rendered?.html ?? ''} />
+
+    <!-- The end mark: a printer's sign that the story is over. -->
+    <div class="rule-ornament article__end" role="separator">
+      <span class="ornament">&#x2767;&#xFE0E;</span>
+    </div>
+  </article>
+
+  <MoreFromSection sectionName={section.name} sectionHref={`/${section.slug}`} items={moreItems} />
+</BaseLayout>
+
+<style>
+  .article__end {
+    max-width: var(--measure);
+    margin: var(--space-6) auto 0;
+  }
+</style>

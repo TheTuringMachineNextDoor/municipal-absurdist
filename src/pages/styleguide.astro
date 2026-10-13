@@ -3,6 +3,10 @@
 // new component is finished, it gets a specimen here.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Vignette from '../components/Vignette.astro';
+import ArticleHeader from '../components/ArticleHeader.astro';
+import ArticleBody from '../components/ArticleBody.astro';
+import Illustration from '../components/Illustration.astro';
+import MoreFromSection from '../components/MoreFromSection.astro';
 // Credits are read from the same file that documents the images, so the
 // page and the record cannot disagree.
 import credits from '../../public/illustrations/credits.json';
@@ -50,6 +54,37 @@ const fonts = [
 const spaces = ['--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--space-8'];
 
 const hat = credits.find((c) => c.file === 'placeholder-top-hat.svg');
+
+// What Markdown hands to ArticleBody: paragraphs, a blockquote, and an
+// image on a line of its own. The component does the rest.
+const sampleBody = `
+<p>The Department of Parks announced on Tuesday that the duck pond in Founders Square will be closed for renovation, and that the ducks have been notified in writing. The work is expected to take six weeks, or eighteen months, depending on which page of the contract is consulted.</p>
+<blockquote><p>“The ducks have been very understanding. We have not heard a single complaint we were able to interpret.”</p><p>The Commissioner of Parks</p></blockquote>
+<p>A temporary pond has been established in the fountain outside the Hall of Records. Clerks there report that the arrangement is working well and that several of the ducks have begun filing.</p>
+<p><img src="/illustrations/pantagruel-11.webp" alt="Woodcut of a creature crouching beneath a large plumed shell, its tongue out."></p>
+<p>The Commissioner declined to say what the renovation would cost, noting that the figure was not yet final and that he preferred to be surprised.</p>
+`;
+
+const sampleMore = [
+  {
+    href: '/styleguide',
+    title: 'Mayor Cuts Ribbon on Ribbon Factory, Is Billed for Ribbon',
+    dek: 'The invoice was presented at the podium and has been referred to the Committee on Ceremonial Expenditure.',
+    author: 'Cornelius P. Wetherby',
+  },
+  {
+    href: '/styleguide',
+    title: 'Zoning Board Rules Empty Lot Too Historic to Build Upon',
+    dek: 'Preservationists praised the decision to protect what they called an irreplaceable example of nothing.',
+    author: 'Ottoline Fenwick-Drab',
+  },
+  {
+    href: '/styleguide',
+    title: 'Census Finds City Has Same Number of Residents, Different Ones',
+    dek: 'Officials said the population was stable and asked that it be left at that.',
+    author: 'Cornelius P. Wetherby',
+  },
+];
 ---
 
 <BaseLayout
@@ -316,8 +351,90 @@ const hat = credits.find((c) => c.file === 'placeholder-top-hat.svg');
 
   <hr />
 
+  <section class="sg-section" aria-labelledby="sg-article-header">
+    <h2 id="sg-article-header" class="sg-heading">IX. Article Header</h2>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Section, headline, dek, byline, dateline</span>
+        <code>&lt;ArticleHeader&gt;</code>
+        <span class="fine-print">Shown with a staff illustrator; without one it reads "Illustration from the Archives".</span>
+      </p>
+      <!-- On a real article the headline is the page's h1. This page
+           already has one, so the specimen sets it as a paragraph. -->
+      <div>
+        <ArticleHeader
+          as="p"
+          section="politics"
+          title="Parks Department to Close Duck Pond for Renovation; Ducks Informed"
+          dek="Notices were posted at the water's edge on Tuesday. The Department said it could not confirm they had been read."
+          author="Cornelius P. Wetherby"
+          illustrator="Ottoline Fenwick-Drab"
+          date={new Date('2026-10-12')}
+        />
+      </div>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Lead illustration with credit</span>
+        <code>&lt;Illustration variant="lead"&gt;</code>
+        <span class="fine-print">The credit comes from credits.json. An image with no entry stops the build.</span>
+      </p>
+      <Illustration file="pantagruel-08.webp" variant="lead" />
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">A wide illustration</span>
+        <span class="fine-print">Strips more than twice as wide as tall use the full column.</span>
+      </p>
+      <Illustration file="pantagruel-strip-1.webp" variant="inline" />
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-article-body">
+    <h2 id="sg-article-body" class="sg-heading">X. Article Body</h2>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Drop cap, pull quote, inline illustration</span>
+        <code>&lt;ArticleBody&gt;</code>
+      </p>
+      <ul class="list-ornament prose">
+        <li>The first paragraph takes a drop cap without being asked.</li>
+        <li>In Markdown, a line beginning with <code>&gt;</code> becomes a pull quote. A second line beneath it is the attribution.</li>
+        <li>
+          An image on a line of its own, <code>![description](/illustrations/file.webp)</code>,
+          becomes an illustration with its credit.
+        </li>
+      </ul>
+      <ArticleBody html={sampleBody} />
+    </div>
+  </section>
+
+  <hr />
+
+  <section class="sg-section" aria-labelledby="sg-more">
+    <h2 id="sg-more" class="sg-heading">XI. More from the Section</h2>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">With articles</span>
+        <code>&lt;MoreFromSection&gt; &lt;ArticleCard&gt;</code>
+      </p>
+      <MoreFromSection sectionName="Politics" sectionHref="/politics" items={sampleMore} />
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">With none</span>
+        <span class="fine-print">Shown when the article is the only one in its section.</span>
+      </p>
+      <MoreFromSection sectionName="Games" sectionHref="/games" items={[]} headingId="sg-more-empty" />
+    </div>
+  </section>
+
+  <hr />
+
   <section class="sg-section" aria-labelledby="sg-space">
-    <h2 id="sg-space" class="sg-heading">IX. Spacing</h2>
+    <h2 id="sg-space" class="sg-heading">XII. Spacing</h2>
     <ul class="sg-spaces">
       {
         spaces.map((s) => (

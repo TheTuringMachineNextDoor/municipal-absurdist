@@ -307,6 +307,42 @@ hr,
   color: var(--ink-soft);
 }
 
+/* The lead illustration above an article, and illustrations set within
+   the text. Both are centred and kept small: the woodcuts are small
+   scans, and enlarging them past their real size turns the lines soft. */
+.illustration--lead,
+.illustration--inline {
+  text-align: center;
+}
+
+.illustration--lead {
+  margin-block: var(--space-6);
+}
+
+.illustration--lead img,
+.illustration--inline img {
+  margin-inline: auto;
+}
+
+.illustration--lead img {
+  width: min(100%, 15rem);
+}
+
+.illustration--inline img {
+  width: min(100%, 12rem);
+}
+
+/* A wide image, such as a strip of figures, may use the whole column. */
+.illustration--wide img {
+  width: 100%;
+}
+
+.illustration--lead figcaption,
+.illustration--inline figcaption {
+  max-width: 24rem;
+  margin-inline: auto;
+}
+
 /* ---------- Utilities ---------- */
 
 /* Hidden from sight, still read aloud by screen readers. */

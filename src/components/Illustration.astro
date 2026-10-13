@@ -1,0 +1,37 @@
+---
+// An illustration with its credit. Give it a file name from
+// public/illustrations; the size, a fallback description, and the credit
+// all come from credits.json, so the credit is always shown.
+//
+// The image is set with `mix-blend-mode: multiply` (see .illustration in
+// global.css) so the scan's white background takes the colour of the paper.
+import { Image } from 'astro:assets';
+import { getIllustration, illustrationSrc, isWide } from '../lib/illustrations';
+
+interface Props {
+  file: string;
+  /** Describes the picture for this use. Falls back to credits.json. */
+  alt?: string;
+  /** Overrides the credit on record. */
+  credit?: string;
+  /** "lead" sits above an article; "inline" sits within the text. */
+  variant?: 'lead' | 'inline';
+}
+
+const { file, alt, credit, variant = 'inline' } = Astro.props;
+const record = getIllustration(file);
+---
+
+<figure class:list={['illustration', `illustration--${variant}`, { 'illustration--wide': isWide(record) }]}>
+  <!-- Files in public/ are served as they are; Astro's <Image> still
+       writes the width and height (no layout jump) and handles loading.
+       The lead image is above the fold, so it loads at once. -->
+  <Image
+    src={illustrationSrc(file)}
+    alt={alt ?? record.alt}
+    width={record.width}
+    height={record.height}
+    loading={variant === 'lead' ? 'eager' : 'lazy'}
+  />
+  <figcaption>{credit ?? record.credit}</figcaption>
+</figure>

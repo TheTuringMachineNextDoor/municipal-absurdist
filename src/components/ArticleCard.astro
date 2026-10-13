@@ -1,0 +1,46 @@
+---
+// A short notice of an article: headline, dek and byline. Used in the
+// "More from" strip; the homepage and section fronts will reuse it.
+interface Props {
+  href: string;
+  title: string;
+  dek: string;
+  author: string;
+}
+
+const { href, title, dek, author } = Astro.props;
+---
+
+<article class="article-card">
+  <h3 class="article-card__title"><a href={href}>{title}</a></h3>
+  <p class="article-card__dek">{dek}</p>
+  <p class="label article-card__byline">By {author}</p>
+</article>
+
+<style>
+  .article-card__title {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-h4);
+    line-height: var(--leading-snug);
+  }
+
+  .article-card__title a {
+    text-decoration: none;
+  }
+
+  .article-card__title a:hover {
+    text-decoration: underline;
+  }
+
+  .article-card__dek {
+    margin-bottom: var(--space-2);
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+
+  .article-card__byline {
+    margin: 0;
+    font-size: var(--text-xs);
+  }
+</style>

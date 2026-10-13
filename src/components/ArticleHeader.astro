@@ -1,0 +1,110 @@
+---
+// The top of an article: section label, headline, dek, byline with the
+// illustrator's credit, and the dateline.
+import { sections, type SectionSlug } from '../data/sections';
+import { formatDate } from '../lib/articles';
+
+interface Props {
+  section: SectionSlug;
+  title: string;
+  dek: string;
+  author: string;
+  /** Leave out when the illustration comes from the archives. */
+  illustrator?: string;
+  date: Date;
+  /** The headline's tag. "h1" on an article; the styleguide passes "p"
+      because that page already has its own h1. */
+  as?: 'h1' | 'p';
+}
+
+const { section, title, dek, author, illustrator, date, as: Headline = 'h1' } = Astro.props;
+const sectionName = sections.find((s) => s.slug === section)?.name ?? section;
+const { label, iso } = formatDate(date);
+---
+
+<header class="article-header">
+  <p class="label label--accent article-header__section">
+    <a href={`/${section}`}>{sectionName}</a>
+  </p>
+  <Headline class="article-header__title">{title}</Headline>
+  <p class="dek article-header__dek">{dek}</p>
+
+  <div class="article-header__meta label">
+    <p class="article-header__byline">
+      <span>By {author}</span>
+      <span class="article-header__dot" aria-hidden="true">&middot;</span>
+      <span>{illustrator ? `Illustrated by ${illustrator}` : 'Illustration from the Archives'}</span>
+    </p>
+    <p class="article-header__date"><time datetime={iso}>{label}</time></p>
+  </div>
+</header>
+
+<style>
+  .article-header {
+    max-width: 46rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .article-header__section {
+    margin-bottom: var(--space-3);
+  }
+
+  .article-header__section a {
+    text-decoration: none;
+  }
+
+  .article-header__section a:hover {
+    text-decoration: underline;
+  }
+
+  /* Spelled out in full, not left to the global h1 rule, so the
+     headline looks the same when the styleguide sets it as a <p>. */
+  .article-header__title {
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-headline);
+    font-size: var(--text-h1);
+    font-weight: var(--weight-headline);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  .article-header__dek {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  /* Byline and dateline sit between two hairlines, like the dateline bar
+     under the masthead. */
+  .article-header__meta {
+    margin-top: var(--space-5);
+    padding-block: var(--space-2);
+    border-block: var(--rule-hair) solid var(--rule);
+    color: var(--ink);
+    line-height: var(--leading-body);
+  }
+
+  .article-header__meta p {
+    margin: 0;
+  }
+
+  /* On a phone the byline's two halves stack and the dot is dropped. */
+  .article-header__byline span {
+    display: block;
+  }
+
+  .article-header__dot {
+    display: none !important;
+  }
+
+  @media (min-width: 40rem) {
+    .article-header__byline span {
+      display: inline;
+    }
+
+    .article-header__dot {
+      display: inline !important;
+      margin-inline: 0.4em;
+    }
+  }
+</style>
