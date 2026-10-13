@@ -198,6 +198,50 @@ blockquote {
   color: var(--paper);
 }
 
+/* ---------- Gliding stroke ---------- */
+
+/* After the menu on paulmccartney.com. The line (Stroke.astro) lies
+   across the middle of a word. `clip-path: inset(0 100% 0 0)` hides all
+   of it by cutting in from the right edge; on hover the cut animates
+   back to zero, so the line appears to be drawn from left to right.
+   Moving the pointer away plays it backwards.
+
+   `multiply` lets the letters show through the colour, like a marker
+   over print. The line is placed against the nearest positioned parent:
+   either the link itself or a .stroke-text span around the words. */
+.stroke-text {
+  position: relative;
+  display: inline-block;
+}
+
+.stroke {
+  position: absolute;
+  top: 50%;
+  left: -0.5em;
+  width: calc(100% + 1em);
+  height: var(--stroke-height, 0.7em);
+  max-width: none;
+  transform: translateY(-50%);
+  fill: var(--stroke, var(--accent));
+  mix-blend-mode: multiply;
+  pointer-events: none; /* the click goes to the link underneath */
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 450ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.stroke--flipped {
+  transform: translateY(-50%) scaleY(-1);
+}
+
+/* Hover for a mouse, active while pressed, focus-visible for the
+   keyboard. A link to the page you are on keeps its line. */
+.has-stroke:hover .stroke,
+.has-stroke:active .stroke,
+.has-stroke:focus-visible .stroke,
+.has-stroke[aria-current='page'] .stroke {
+  clip-path: inset(0);
+}
+
 /* ---------- Rules ---------- */
 
 /* A plain <hr> is a hairline. */
