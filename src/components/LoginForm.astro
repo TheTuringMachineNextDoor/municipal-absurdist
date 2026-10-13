@@ -1,18 +1,27 @@
 ---
-// The sign-in form, used by both /login and /signup. There is no
-// password: the reader gives an email address and is sent a link; the
-// link signs them in. So signing up and logging in are the same act,
-// and the paper never holds a password to lose.
+// The sign-in form, used by /login and /signup.
+//
+// There are two ways in, and a reader may use either:
+//   1. An email address and a password.
+//   2. A link sent by email, which signs them in when opened. No
+//      password is needed, and it doubles as "I forgot my password":
+//      sign in by link, then set a new password on the account page.
+//
+// `mode` decides what the main button does: "login" checks the password;
+// "signup" creates the account (Supabase then emails a link to confirm
+// the address is really theirs).
 interface Props {
+  mode: 'login' | 'signup';
   heading: string;
   /** The line under the heading. */
   dek: string;
 }
 
-const { heading, dek } = Astro.props;
+const { mode, heading, dek } = Astro.props;
+const joining = mode === 'signup';
 ---
 
-<article class="login" data-login>
+<article class="login" data-login={mode}>
   <p class="label label--accent">The Readers’ Register</p>
   <h1>{heading}</h1>
   <p class="dek">{dek}</p>
@@ -21,14 +30,48 @@ const { heading, dek } = Astro.props;
   <form class="login__form" data-login-form>
     <label class="label" for="login-email">Your email address</label>
     <input id="login-email" type="email" name="email" autocomplete="email" required placeholder="reader@example.com" />
-    <button type="submit">Send Me the Link</button>
+
+    <label class="label" for="login-password">{joining ? 'Choose a password' : 'Your password'}</label>
+    <input
+      id="login-password"
+      type="password"
+      name="password"
+      autocomplete={joining ? 'new-password' : 'current-password'}
+      minlength={joining ? 8 : undefined}
+      required
+      aria-describedby={joining ? 'login-password-hint' : undefined}
+    />
+    {joining && <p class="fine-print login__hint" id="login-password-hint">Eight characters or more.</p>}
+
+    <button type="submit" class="login__primary">{joining ? 'Enter Me in the Register' : 'Log In'}</button>
   </form>
+
+  <!-- The other way in. Not a form of its own: it uses the address
+       typed above, and ignores the password. -->
+  <div class="login__alt" data-login-alt>
+    <p class="label login__or">or</p>
+    <button type="button" class="login__secondary" data-login-link>Email Me a Sign-In Link</button>
+    <p class="fine-print">
+      {
+        joining
+          ? 'No password needed: the link signs you in. You can set a password later.'
+          : 'No password needed. Use this if you have forgotten yours, then set a new one on your account page.'
+      }
+    </p>
+  </div>
+
   <!-- role="status": a screen reader reads out what is written here. -->
   <p class="login__status" role="status" data-login-status></p>
 
   <p class="fine-print">
-    No password is asked for or kept. Your address is used to sign you in and for nothing else. An account lets
-    you save articles, mark the ones you approve of, and write letters to the editor.
+    {
+      joining ? (
+        <>Already in the register? <a href="/login">Log in</a>.</>
+      ) : (
+        <>Not yet in the register? <a href="/signup">Sign up</a>.</>
+      )
+    }
+    {' '}Your address is used to sign you in and for nothing else.
   </p>
 </article>
 
@@ -39,9 +82,15 @@ const { heading, dek } = Astro.props;
   if (root) run(root);
 
   async function run(root: HTMLElement) {
+    const joining = root.dataset.login === 'signup';
     const form = root.querySelector<HTMLFormElement>('[data-login-form]')!;
+    const alt = root.querySelector<HTMLElement>('[data-login-alt]')!;
     const status = root.querySelector<HTMLElement>('[data-login-status]')!;
-    const button = form.querySelector('button')!;
+    const emailInput = form.querySelector<HTMLInputElement>('#login-email')!;
+    const linkButton = root.querySelector<HTMLButtonElement>('[data-login-link]')!;
+    const submitButton = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    // Where an emailed link brings the reader back to.
+    const backTo = `${location.origin}/account`;
 
     // Already signed in: there is nothing to do here.
     if (await currentUser()) {
@@ -49,25 +98,79 @@ const { heading, dek } = Astro.props;
       return;
     }
 
+    const busy = (on: boolean) => {
+      submitButton.disabled = on;
+      linkButton.disabled = on;
+    };
+    /** After an email has been sent there is nothing more to do here. */
+    const sent = (message: string) => {
+      form.hidden = true;
+      alt.hidden = true;
+      status.textContent = message;
+    };
+
+    // ---- Email and password ----
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const email = new FormData(form).get('email')?.toString().trim() ?? '';
-      if (!email) return;
+      const data = new FormData(form);
+      const email = data.get('email')?.toString().trim() ?? '';
+      const password = data.get('password')?.toString() ?? '';
+      const supabase = await getSupabase();
+      if (!supabase || !email || !password) return;
+
+      busy(true);
+      status.textContent = 'The clerk is consulting the register.';
+
+      if (joining) {
+        const { data: made, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: backTo },
+        });
+        busy(false);
+        if (error) return void (status.textContent = `You could not be entered: ${error.message}`);
+        // If the project does not ask for the address to be confirmed,
+        // the reader is signed in at once.
+        if (made.session) return void location.assign('/account');
+        sent(
+          `A letter has been sent to ${email}. Open the link in it to confirm the address and finish signing up. ` +
+            'If you are already in the register, no letter will come: log in instead.',
+        );
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      busy(false);
+      if (error) {
+        status.textContent =
+          error.message === 'Invalid login credentials'
+            ? 'That address and password do not match the register. Try again, or have a sign-in link emailed to you.'
+            : `You could not be signed in: ${error.message}`;
+        return;
+      }
+      location.assign('/account');
+    });
+
+    // ---- The emailed link ----
+    linkButton.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      if (!email || !emailInput.checkValidity()) {
+        status.textContent = 'Enter your email address above first.';
+        emailInput.focus();
+        return;
+      }
       const supabase = await getSupabase();
       if (!supabase) return;
 
-      button.disabled = true;
+      busy(true);
       status.textContent = 'The clerk is writing out your link.';
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        // Where the emailed link brings the reader back to.
-        options: { emailRedirectTo: `${location.origin}/account` },
-      });
-      button.disabled = false;
-      status.textContent = error
-        ? `The link could not be sent: ${error.message}`
-        : `A letter has been sent to ${email}. Open the link in it to sign in. It may take a minute, and it may be hiding among the advertisements.`;
-      if (!error) form.hidden = true;
+      const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: backTo } });
+      busy(false);
+      if (error) return void (status.textContent = `The link could not be sent: ${error.message}`);
+      sent(
+        `A letter has been sent to ${email}. Open the link in it to sign in. It may take a minute, ` +
+          'and it may be hiding among the advertisements.',
+      );
     });
   }
 </script>
@@ -79,16 +182,21 @@ const { heading, dek } = Astro.props;
     text-align: center;
   }
 
+  .login [hidden] {
+    display: none;
+  }
+
   .login__form {
     display: grid;
     gap: var(--space-2);
     max-width: 24rem;
-    margin: var(--space-5) auto var(--space-3);
+    margin: var(--space-5) auto 0;
     text-align: left;
   }
 
-  .login__form[hidden] {
-    display: none;
+  /* A little air between one field and the next label. */
+  .login__form label:not(:first-child) {
+    margin-top: var(--space-2);
   }
 
   .login__form input {
@@ -101,24 +209,64 @@ const { heading, dek } = Astro.props;
     font: inherit;
   }
 
-  .login__form button {
+  .login__hint {
+    margin: 0;
+  }
+
+  .login__primary,
+  .login__secondary {
     min-height: 2.75rem;
+    padding: var(--space-1) var(--space-4);
     border: var(--rule-hair) solid var(--ink);
-    background: var(--ink);
-    color: var(--paper);
     font-family: var(--font-label);
     letter-spacing: 0.1em;
     cursor: pointer;
   }
 
-  .login__form button:hover:not(:disabled) {
+  /* The main way in is a block of ink; the other is an outline. */
+  .login__primary {
+    margin-top: var(--space-3);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .login__secondary {
+    width: 100%;
+    background: none;
+    color: var(--ink);
+  }
+
+  .login__primary:hover:not(:disabled),
+  .login__secondary:hover:not(:disabled) {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--ink);
   }
 
+  .login__alt {
+    max-width: 24rem;
+    margin: var(--space-4) auto 0;
+  }
+
+  /* "or", with a hairline either side. */
+  .login__or {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    color: var(--ink-soft);
+  }
+
+  .login__or::before,
+  .login__or::after {
+    content: '';
+    flex: 1;
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
   .login__status {
     min-height: 1.5em;
+    margin-top: var(--space-4);
     font-style: italic;
   }
 </style>

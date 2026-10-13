@@ -10,7 +10,7 @@ import { accountsConfigured } from '../lib/accounts';
 <BaseLayout title="Log In" noindex>
   {
     accountsConfigured ? (
-      <LoginForm heading="Log In" dek="Give your address and the clerk will send a link that lets you in." />
+      <LoginForm mode="login" heading="Log In" dek="State your name and business. The clerk will check both against the register." />
     ) : (
       <AccountsNotice heading="Log In" />
     )

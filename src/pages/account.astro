@@ -58,6 +58,31 @@ const articles = Object.fromEntries(
             </p>
           </section>
 
+          <section class="account__section" aria-labelledby="account-password">
+            <h2 id="account-password" class="account__heading">Your Password</h2>
+            <p class="account__note">
+              Set a password to sign in without waiting for an emailed link, or change the one you have. The link
+              will go on working either way.
+            </p>
+            <form class="account__name" data-account-password-form>
+              <label class="label" for="new-password">New password</label>
+              <div class="account__name-row">
+                <input
+                  id="new-password"
+                  name="password"
+                  type="password"
+                  minlength="8"
+                  required
+                  autocomplete="new-password"
+                  aria-describedby="new-password-hint"
+                />
+                <button type="submit">Set</button>
+              </div>
+              <p class="fine-print" id="new-password-hint">Eight characters or more.</p>
+              <p class="fine-print" role="status" data-account-password-status />
+            </form>
+          </section>
+
           <section class="account__section" aria-labelledby="account-saved">
             <h2 id="account-saved" class="account__heading">Saved for Later</h2>
             <ul class="account__list" data-account-list="saves" />
@@ -160,6 +185,21 @@ const articles = Object.fromEntries(
       const { error } = await supabase.from('profiles').update({ display_name: name }).eq('id', user.id);
       nameStatus.textContent = error ? `The name could not be changed: ${error.message}` : 'The register has been amended.';
       if (!error) status.textContent = `Good day, ${name}.`;
+    });
+
+    // ---- The password ----
+    // A reader who joined by emailed link has no password until they set
+    // one here. Setting one does not sign them out.
+    const passwordForm = find<HTMLFormElement>('password-form');
+    const passwordStatus = find('password-status');
+    passwordForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const input = passwordForm.querySelector('input')!;
+      const { error } = await supabase.auth.updateUser({ password: input.value });
+      passwordStatus.textContent = error
+        ? `The password could not be set: ${error.message}`
+        : 'The password has been set. You may use it the next time you log in.';
+      if (!error) input.value = '';
     });
 
     // ---- Saved and liked articles ----

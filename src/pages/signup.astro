@@ -1,6 +1,6 @@
 ---
-// /signup. The same form as /login: with no passwords, joining and
-// returning are the same act. See LoginForm.astro.
+// /signup. The same form as /login, set to create an account. See
+// LoginForm.astro.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AccountsNotice from '../components/AccountsNotice.astro';
 import LoginForm from '../components/LoginForm.astro';
@@ -11,6 +11,7 @@ import { accountsConfigured } from '../lib/accounts';
   {
     accountsConfigured ? (
       <LoginForm
+        mode="signup"
         heading="Sign Up"
         dek="Enter your name in the register. It costs nothing, and the register is not shown to anyone."
       />
