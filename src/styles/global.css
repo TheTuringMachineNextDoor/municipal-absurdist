@@ -169,6 +169,35 @@ blockquote {
   font-style: italic;
 }
 
+/* ---------- Highlighter ---------- */
+
+/* A headline struck through with a green marker pen, the words set in
+   white on top. Wrap the words in <span class="highlighter">.
+
+   The stroke is a small SVG drawing with wobbly edges and slanted ends,
+   used as the background and stretched to fit. `box-decoration-break:
+   clone` gives every line of a wrapped headline its own complete stroke
+   instead of one stroke cut into pieces.
+
+   The colour is written into the drawing (%231E5B3C is #1E5B3C), because
+   a background image cannot read CSS variables. If --accent changes,
+   change it here too. */
+.highlighter {
+  padding: 0.04em 0.4em 0.1em;
+  color: var(--paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath fill='%231E5B3C' d='M3 7 C22 3 41 8 63 5 S108 3 131 6 S176 4 198 3 L199 17 L196 26 L198 35 C171 38 148 34 121 37 S77 35 52 37 S19 35 2 38 L4 27 L1 19 Z'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* A selected highlighter line stays readable: white on ink. */
+.highlighter::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 /* ---------- Rules ---------- */
 
 /* A plain <hr> is a hairline. */

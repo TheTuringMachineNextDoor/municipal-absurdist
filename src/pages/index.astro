@@ -7,7 +7,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout mastheadAs="h1">
   <article class="notice">
     <p class="label label--accent">Notice to the Public</p>
-    <h2>First Edition Delayed by Circumstances Entirely Within Our Control</h2>
+    <h2 class="notice__headline">
+      <span class="highlighter">First Edition Delayed by Circumstances Entirely Within Our Control</span>
+    </h2>
     <p class="dek">
       The presses are warm, the editors are present, and the news has been asked to wait
       in the corridor until it is called.
@@ -30,6 +32,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .notice {
     max-width: var(--measure);
     margin-inline: auto;
+  }
+
+  /* Room between lines so one marker stroke does not run into the next. */
+  .notice__headline {
+    line-height: 1.45;
   }
 
   .notice h2,

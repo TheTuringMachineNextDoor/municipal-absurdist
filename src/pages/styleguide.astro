@@ -189,6 +189,13 @@ const sampleMore = [
       <p class="sg-h sg-h6">Continued on a Page Yet to Be Determined</p>
     </div>
     <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Highlighter</span><code>.highlighter</code>
+        <span class="fine-print">White type over a green marker stroke. For the occasional headline, not every one.</span>
+      </p>
+      <p class="sg-h sg-h2 sg-highlighted"><span class="highlighter">Mayor Underlines Own Remarks for Emphasis</span></p>
+    </div>
+    <div class="sg-specimen">
       <p class="sg-meta"><span class="label">Headline with label and dek</span><code>.label .dek</code></p>
       <p class="label label--accent">Politics</p>
       <p class="sg-h sg-h2">Senate Passes Bill; Contents to Be Announced</p>
@@ -494,6 +501,8 @@ const sampleMore = [
     line-height: var(--leading-tight);
     text-wrap: balance;
   }
+
+  .sg-highlighted { line-height: 1.45; }
 
   .sg-h1 { font-size: var(--text-h1); }
   .sg-h2 { font-size: var(--text-h2); }
