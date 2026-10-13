@@ -1,7 +1,16 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+import keystatic from '@keystatic/astro';
+
+// Keystatic (the admin panel at /keystatic) is only switched on while
+// running `npm run dev`. It needs a live server to save files, and the
+// published site is plain static HTML with no server at all. Leaving it
+// out of `npm run build` keeps the deployed site static, with no admin
+// page for strangers to find and no React shipped to readers.
+const isDev = process.argv.includes('dev');
 
 // https://astro.build/config
-// Static output is Astro's default, which is all Phase 1 needs.
-// Vercel serves the built `dist/` folder as-is; no adapter required yet.
-export default defineConfig({});
+export default defineConfig({
+  integrations: isDev ? [react(), keystatic()] : [],
+});

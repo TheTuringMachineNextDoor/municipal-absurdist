@@ -22,7 +22,7 @@ The full brief lives in `docs/brief.md`. Read it before any major feature work.
 ## Stack
 
 - **Astro**: framework, static-first. Use content collections for articles, artists, and products.
-- **Keystatic**: git-based CMS for editing content.
+- **Keystatic**: git-based CMS for editing content. Local mode, dev only: run `npm run dev` and open `http://127.0.0.1:4321/keystatic`. It is left out of the production build, so the deployed site stays static. It needs React (`@astrojs/react`, `react`, `react-dom`), used by the admin panel only.
 - **TypeScript**, plain CSS with custom properties. **No Tailwind, no UI kits.**
 - **Hosting**: Vercel (auto-deploy from `main`).
 - **Newsletter**: Buttondown embed form.
@@ -37,12 +37,15 @@ Ask before adding any dependency not listed here.
 ## Content model
 
 **Articles** (`src/content/articles/*.md`)
-- `title`, `dek` (subheadline), `section`, `author` (ref), `illustrator` (ref, optional), `date`, `image`, `imageCredit`, `featured` (bool), `draft` (bool)
+- `title`, `dek` (subheadline), `section`, `author` (ref), `illustrator` (ref, optional), `date`, `image`, `imageAlt` (optional), `imageCredit` (optional), `featured` (bool), `draft` (bool)
+- `image` is a file name from `public/illustrations/` that has an entry in `credits.json`. `imageAlt` and `imageCredit` fall back to that entry when blank.
+- In the body, a `>` blockquote is a pull quote (a second paragraph inside it is the attribution), and `![description](/illustrations/file.webp)` on its own line is an inline illustration with its credit added automatically.
+- Schemas live in `src/content.config.ts` (validation) and `keystatic.config.ts` (the editing form). Change both together.
 
 **Sections:** `politics`, `culture`, `education`, `money`, `comic`, `games`
 
 **Contributors** (`src/content/contributors/*.md`)
-- `name`, `role` (writer / illustrator / both), `bio`, `portrait`, `links`, `commissionsOpen` (bool), `tallyFormUrl`
+- `name`, `role` (writer / illustrator / both), `bio` (the Markdown body), `portrait`, `links`, `commissionsOpen` (bool), `tallyFormUrl`
 
 **Products** (`src/content/products/*.md`)
 - `title`, `artist` (ref), `image`, `price`, `stripeLink`, `edition` (e.g. "1 of 50"), `available` (bool)
