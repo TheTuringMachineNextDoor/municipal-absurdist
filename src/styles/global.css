@@ -276,7 +276,7 @@ hr,
 
 /* The blackletter variant, for features and the front page. */
 .drop-cap--blackletter::first-letter {
-  font-family: var(--font-masthead);
+  font-family: var(--font-blackletter);
   font-weight: 400;
   font-size: 4.9em;
   line-height: 0.88;

@@ -25,14 +25,15 @@ const {
 
 const pageTitle = title ? `${title} | ${siteName}` : siteName;
 
-// One request for all three families (Alegreya, its small caps, and the
-// blackletter). Only the weights listed are downloaded. `display=swap` shows the fallback
+// One request for all four families (Alegreya, its small caps, the
+// nameplate face, and the blackletter for drop caps). Only the weights listed are downloaded. `display=swap` shows the fallback
 // font immediately and swaps the real one in when it arrives, so text is
 // never invisible while fonts load.
 const fontsUrl =
   'https://fonts.googleapis.com/css2' +
   '?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400;1,500' +
   '&family=Alegreya+SC:wght@400;500' +
+  '&family=Manufacturing+Consent' +
   '&family=UnifrakturMaguntia' +
   '&display=swap';
 ---
@@ -45,7 +46,7 @@ const fontsUrl =
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
-    <meta name="theme-color" content="#F4EFE4" />
+    <meta name="theme-color" content="#FCFBF8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- preconnect opens the connection to Google's font servers early,

@@ -8,15 +8,16 @@
 
 :root {
   /* Colour. These five are the whole palette; see CLAUDE.md. */
-  --paper: #F4EFE4;   /* aged newsprint */
+  --paper: #FCFBF8;   /* clean newsprint: white with a little warmth */
   --ink: #1A1714;     /* near-black */
   --ink-soft: #4A443D;
   --rule: #2B2622;
-  --accent: #A8321F;  /* vermilion; use sparingly */
+  --accent: #1E5B3C;  /* bottle green; use sparingly */
 
   /* Type families. Each has a fallback stack for the moment before the
      Google Font arrives, and for readers whose network blocks it. */
-  --font-masthead: 'UnifrakturMaguntia', 'Old English Text MT', 'Palatino Linotype', serif;
+  --font-masthead: 'Manufacturing Consent', 'Old English Text MT', 'Palatino Linotype', serif;
+  --font-blackletter: 'UnifrakturMaguntia', 'Old English Text MT', 'Palatino Linotype', serif;
   --font-headline: 'Alegreya', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --font-body: 'Alegreya', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --font-label: 'Alegreya SC', 'Alegreya', Georgia, serif;
@@ -51,7 +52,7 @@
   --space-8: 4.5rem;
 
   /* Layout. */
-  --page-max: 72rem;                              /* widest the sheet gets */
+  --page-max: 90rem;                              /* widest the sheet gets: 1440px, a full laptop screen */
   --gutter: clamp(1rem, 0.4rem + 2.6vw, 2.5rem);  /* side margin; 16px at 375px */
   --measure: 34rem;                               /* comfortable line length for body copy */
 

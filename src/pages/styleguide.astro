@@ -2,7 +2,6 @@
 // The styleguide: a living reference of every design element. When a
 // new component is finished, it gets a specimen here.
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Vignette from '../components/Vignette.astro';
 import ArticleHeader from '../components/ArticleHeader.astro';
 import ArticleBody from '../components/ArticleBody.astro';
 import Illustration from '../components/Illustration.astro';
@@ -12,20 +11,27 @@ import MoreFromSection from '../components/MoreFromSection.astro';
 import credits from '../../public/illustrations/credits.json';
 
 const colors = [
-  { token: '--paper', hex: '#F4EFE4', note: 'Aged newsprint. The background of everything.' },
+  { token: '--paper', hex: '#FCFBF8', note: 'Clean newsprint. The background of everything.' },
   { token: '--ink', hex: '#1A1714', note: 'Near-black. Headlines and body copy.' },
   { token: '--ink-soft', hex: '#4A443D', note: 'Deks, labels, captions, fine print.' },
   { token: '--rule', hex: '#2B2622', note: 'Rules between sections and columns.' },
-  { token: '--accent', hex: '#A8321F', note: 'Vermilion. Used sparingly, like the truth.' },
+  { token: '--accent', hex: '#1E5B3C', note: 'Bottle green. Used sparingly, like the truth.' },
 ];
 
 const fonts = [
   {
-    name: 'UnifrakturMaguntia',
+    name: 'Manufacturing Consent',
     token: '--font-masthead',
-    use: 'Masthead and the blackletter drop cap only',
+    use: 'The nameplate only: masthead and footer',
     sample: 'The Municipal Absurdist',
     size: 'clamp(2rem, 1.2rem + 4vw, 3.5rem)',
+  },
+  {
+    name: 'UnifrakturMaguntia',
+    token: '--font-blackletter',
+    use: 'The blackletter drop cap only',
+    sample: 'Residents of the Fourth Ward',
+    size: 'var(--text-h3)',
   },
   {
     name: 'Alegreya, medium',
@@ -257,7 +263,7 @@ const sampleMore = [
       </div>
       <div class="sg-specimen">
         <p class="sg-meta">
-          <span class="label">Blackletter, in vermilion</span>
+          <span class="label">Blackletter, in green</span>
           <code>.drop-cap--blackletter .drop-cap--accent</code>
         </p>
         <p class="drop-cap drop-cap--blackletter drop-cap--accent">
@@ -303,21 +309,8 @@ const sampleMore = [
 
   <hr />
 
-  <section class="sg-section" aria-labelledby="sg-masthead">
-    <h2 id="sg-masthead" class="sg-heading">VII. Masthead Vignette</h2>
-    <div class="sg-specimen">
-      <p class="sg-meta">
-        <span class="label">Placeholder</span>
-        <span class="fine-print">Stands in until the commissioned vignette arrives.</span>
-      </p>
-      <div class="sg-vignette"><Vignette /></div>
-    </div>
-  </section>
-
-  <hr />
-
   <section class="sg-section" aria-labelledby="sg-illustration">
-    <h2 id="sg-illustration" class="sg-heading">VIII. Illustration</h2>
+    <h2 id="sg-illustration" class="sg-heading">VII. Illustration</h2>
     <p class="prose">
       Engravings arrive as black lines on a white rectangle. Set
       with <code>mix-blend-mode: multiply</code>, the white takes the colour of the
@@ -352,7 +345,7 @@ const sampleMore = [
   <hr />
 
   <section class="sg-section" aria-labelledby="sg-article-header">
-    <h2 id="sg-article-header" class="sg-heading">IX. Article Header</h2>
+    <h2 id="sg-article-header" class="sg-heading">VIII. Article Header</h2>
     <div class="sg-specimen">
       <p class="sg-meta">
         <span class="label">Section, headline, dek, byline, dateline</span>
@@ -393,7 +386,7 @@ const sampleMore = [
   <hr />
 
   <section class="sg-section" aria-labelledby="sg-article-body">
-    <h2 id="sg-article-body" class="sg-heading">X. Article Body</h2>
+    <h2 id="sg-article-body" class="sg-heading">IX. Article Body</h2>
     <div class="sg-specimen">
       <p class="sg-meta">
         <span class="label">Drop cap, pull quote, inline illustration</span>
@@ -414,7 +407,7 @@ const sampleMore = [
   <hr />
 
   <section class="sg-section" aria-labelledby="sg-more">
-    <h2 id="sg-more" class="sg-heading">XI. More from the Section</h2>
+    <h2 id="sg-more" class="sg-heading">X. More from the Section</h2>
     <div class="sg-specimen">
       <p class="sg-meta">
         <span class="label">With articles</span>
@@ -434,7 +427,7 @@ const sampleMore = [
   <hr />
 
   <section class="sg-section" aria-labelledby="sg-space">
-    <h2 id="sg-space" class="sg-heading">XII. Spacing</h2>
+    <h2 id="sg-space" class="sg-heading">XI. Spacing</h2>
     <ul class="sg-spaces">
       {
         spaces.map((s) => (
@@ -569,10 +562,6 @@ const sampleMore = [
 
   .sg-ornament {
     font-size: 3rem;
-  }
-
-  .sg-vignette {
-    width: min(14rem, 100%);
   }
 
   /* The "before" illustration: switch the blend off to show the problem. */

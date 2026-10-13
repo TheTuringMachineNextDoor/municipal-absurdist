@@ -71,23 +71,24 @@ Ask before adding any dependency not listed here.
 
 **The look:** an old newspaper crossed with an illustrated literary journal (*The Public Domain Review*). Authentic, collected, slightly eccentric, but clean, readable, and modern in usability.
 
-**Masthead:** blackletter, modeled on *The Orange Post* (1908): "The [vignette] Absurdist" with *Municipal* set small and arched above the vignette. Dateline bar below between thin rules. Until the artist delivers, use `UnifrakturMaguntia` text with a placeholder vignette.
+**Masthead:** "The Municipal Absurdist" on one line in a newspaper blackletter (`Manufacturing Consent`), no vignette. Beneath it the slogan in grey italic: *The world, as it unfortunately is*. Dateline bar below between thin rules.
 
 **Small mark:** a side profile of a formally dressed, pipe-smoking gentleman seated on a Victorian high-tank toilet, using a laptop, drawn straight-faced in engraved line style. Needs a detailed version and a simplified silhouette for favicon and avatar sizes. Use a placeholder SVG until the artist delivers.
 
 **Type** (Google Fonts):
-- Masthead: `UnifrakturMaguntia`
+- Nameplate (masthead and footer): `Manufacturing Consent`
+- Blackletter drop cap: `UnifrakturMaguntia`
 - Headlines: `Alegreya` (medium, 500)
 - Body: `Alegreya`
 - Labels, section names, bylines, datelines: `Alegreya SC` (small caps)
 
 **Color tokens** (`src/styles/tokens.css`):
 ```css
---paper: #F4EFE4;   /* aged newsprint */
+--paper: #FCFBF8;   /* clean newsprint: white with a little warmth */
 --ink: #1A1714;     /* near-black */
 --ink-soft: #4A443D;
 --rule: #2B2622;
---accent: #A8321F;  /* vermilion; use sparingly */
+--accent: #1E5B3C;  /* bottle green; use sparingly */
 ```
 No dark mode at launch: the paper is the identity.
 
