@@ -69,4 +69,27 @@ const contributors = defineCollection({
   }),
 });
 
-export const collections = { articles, contributors };
+const products = defineCollection({
+  loader: glob({ pattern: '*.md', base: './src/content/products' }),
+  // The description is the body of the Markdown file.
+  schema: z.object({
+    title: z.string(),
+    // Which shelf of the Store it sits on.
+    kind: z.enum(['print', 'merchandise']),
+    // Leave empty for work from the archives or made by the paper itself.
+    artist: z.preprocess(blankToUndefined, reference('contributors').optional()),
+    image: illustration,
+    // In whole dollars.
+    price: z.number().nonnegative(),
+    // The Stripe Payment Link that sells it. While this is blank the
+    // product is shown but cannot be bought ("Not yet on sale").
+    stripeLink: z.preprocess(blankToUndefined, z.string().url().optional()),
+    // e.g. "Edition of 50" or "A3, giclée on cotton paper".
+    edition: z.preprocess(blankToUndefined, z.string().optional()),
+    // Untick when it has sold out.
+    available: z.boolean().default(true),
+    sample: z.boolean().default(false),
+  }),
+});
+
+export const collections = { articles, contributors, products };

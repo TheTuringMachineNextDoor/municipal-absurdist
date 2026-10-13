@@ -1,0 +1,270 @@
+---
+// The Store, at /store: three shelves.
+//
+//   Art & Prints   work by the paper's artists, and from the archives
+//   Merchandise    goods bearing the paper's name
+//   Commissions    contributors who can be hired for custom work
+//
+// Products are Markdown files in src/content/products. Buying happens on
+// Stripe: each product has a Payment Link, and its page links to it.
+// There is no cart. Commissions are arranged through each contributor's
+// own form, on their page.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Portrait from '../../components/Portrait.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { contributorPath, getContributors, roleLabel } from '../../lib/contributors';
+import { getIllustration } from '../../lib/illustrations';
+import { formatPrice, getProducts, makerOf, productPath, saleState } from '../../lib/store';
+
+const products = await getProducts();
+const shelves = [
+  {
+    id: 'prints',
+    title: 'Art & Prints',
+    intro: 'Illustrations, cartoons and prints by the paper’s artists, and curiosities from the archives.',
+    empty: 'The walls are bare at present. The artists have been told, and are drawing faster.',
+    items: products.filter((p) => p.product.data.kind === 'print'),
+  },
+  {
+    id: 'merchandise',
+    title: 'Merchandise',
+    intro: 'Useful objects bearing the name of this newspaper, for readers who wish to be asked about it.',
+    empty: 'The shelves are being dusted. Goods are expected once the dust has been dealt with.',
+    items: products.filter((p) => p.product.data.kind === 'merchandise'),
+  },
+];
+
+const forHire = (await getContributors()).filter((c) => c.person.data.commissionsOpen);
+
+// Every picture on the page is credited once, at the foot.
+const credits = [...new Set(products.map((p) => getIllustration(p.product.data.image).credit))];
+---
+
+<BaseLayout
+  title="The Store"
+  description="Prints, goods and commissions from the artists and writers of The Municipal Absurdist."
+>
+  <header class="store-header">
+    <p class="label label--accent">The Store</p>
+    <h1>Goods, Prints &amp; Commissions</h1>
+    <p class="dek store-header__dek">
+      A small shop attached to a newspaper. Everything in it was made by someone, and the money goes to them
+      and to the paper, in that order where possible.
+    </p>
+    <nav class="store-header__nav label" aria-label="Parts of the Store">
+      <a href="#prints">Art &amp; Prints</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="#merchandise">Merchandise</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="#commissions">Commissions</a>
+    </nav>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  {
+    shelves.map((shelf) => (
+      <section class="shelf" id={shelf.id} aria-labelledby={`${shelf.id}-heading`}>
+        <h2 id={`${shelf.id}-heading`} class="shelf__heading">{shelf.title}</h2>
+        <p class="shelf__intro">{shelf.intro}</p>
+        {shelf.items.length > 0 ? (
+          <ul class="shelf__items">
+            {shelf.items.map(({ product, artist }) => {
+              const sale = saleState(product);
+              return (
+                <li>
+                  <ProductCard
+                    href={productPath(product)}
+                    title={product.data.title}
+                    image={product.data.image}
+                    price={formatPrice(product.data.price)}
+                    edition={product.data.edition}
+                    artist={artist}
+                    maker={makerOf(product)}
+                    notice={sale.canBuy ? undefined : sale.notice}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p class="shelf__empty">{shelf.empty}</p>
+        )}
+      </section>
+    ))
+  }
+
+  <section class="shelf" id="commissions" aria-labelledby="commissions-heading">
+    <h2 id="commissions-heading" class="shelf__heading">Commissions</h2>
+    <p class="shelf__intro">
+      Several of the paper’s artists and writers may be hired for work of your own: a caricature, an
+      illustration, a portrait, a poem, a speech. Each sets their own terms and price, agreed with you before
+      any work begins.
+    </p>
+    {
+      forHire.length > 0 ? (
+        <ul class="hire">
+          {forHire.map(({ person }) => (
+            <li class="hire__person">
+              <Portrait name={person.data.name} portrait={person.data.portrait} />
+              <div>
+                <h3 class="hire__name">{person.data.name}</h3>
+                <p class="label hire__role">{roleLabel(person.data.role)}</p>
+                <p class="hire__link">
+                  <a href={`${contributorPath(person)}#commissions`}>Commission {person.data.name}</a>
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="shelf__empty">
+          No one is taking commissions this week. The artists are occupied with deadlines, which is the polite
+          word for it.
+        </p>
+      )
+    }
+  </section>
+
+  <section class="store-terms" aria-labelledby="terms-heading">
+    <h2 id="terms-heading" class="label store-terms__heading">How Buying Works</h2>
+    <ul class="list-ornament">
+      <li>
+        Payment is taken by Stripe, on Stripe’s own page. This newspaper never sees your card, and would not
+        know what to do with it.
+      </li>
+      <li>There is no basket. Each item is bought on its own, which the editors find restful.</li>
+      <li>A commission is arranged with the artist or writer directly, through the form on their page.</li>
+    </ul>
+  </section>
+
+  {credits.length > 0 && <p class="fine-print store-credits">Pictures: {credits.join(' ')}</p>}
+</BaseLayout>
+
+<style>
+  .store-header {
+    text-align: center;
+  }
+
+  .store-header__dek {
+    max-width: 38rem;
+    margin-inline: auto;
+  }
+
+  .store-header__nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+  }
+
+  .shelf {
+    margin-top: var(--space-7);
+    /* When a link jumps here, stop a little above the heading. */
+    scroll-margin-top: var(--space-4);
+  }
+
+  /* A ruled label, like the section bands on the front page. */
+  .shelf__heading {
+    margin: 0 0 var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  .shelf__intro {
+    max-width: var(--measure-article);
+    margin-bottom: var(--space-5);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* Two across on a phone, three on a tablet, four on a desk. */
+  .shelf__items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40rem) {
+    .shelf__items {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .shelf__items {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .shelf__empty {
+    max-width: var(--measure);
+    padding: var(--space-4);
+    border: var(--rule-hair) solid var(--rule);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* People who take commissions. */
+  .hire {
+    display: grid;
+    gap: var(--space-5) var(--space-7);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 52rem) {
+    .hire {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .hire__person {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: center;
+  }
+
+  .hire__name {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-h4);
+  }
+
+  .hire__role {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .hire__link {
+    margin: 0;
+  }
+
+  .store-terms {
+    max-width: var(--measure-article);
+    margin: var(--space-8) auto 0;
+    padding-top: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  .store-terms__heading {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-base);
+    text-align: center;
+  }
+
+  .store-credits {
+    margin: var(--space-6) 0 0;
+    font-style: italic;
+    text-align: center;
+  }
+</style>

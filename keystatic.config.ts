@@ -141,5 +141,42 @@ export default config({
         bio: fields.markdoc({ label: 'Biography', extension: 'md' }),
       },
     }),
+    products: collection({
+      label: 'Store',
+      slugField: 'title',
+      path: 'src/content/products/*',
+      format: { contentField: 'description' },
+      columns: ['title', 'kind', 'price'],
+      schema: {
+        title: fields.slug({ name: { label: 'Title', validation: { isRequired: true } } }),
+        kind: fields.select({
+          label: 'Shelf',
+          options: [
+            { label: 'Art and prints', value: 'print' },
+            { label: 'Merchandise', value: 'merchandise' },
+          ],
+          defaultValue: 'print',
+        }),
+        artist: fields.relationship({
+          label: 'Artist',
+          description: 'Leave empty for work from the archives or made by the paper itself.',
+          collection: 'contributors',
+        }),
+        image: fields.select({
+          label: 'Picture',
+          options: illustrationOptions,
+          defaultValue: illustrationOptions[0].value,
+        }),
+        price: fields.number({ label: 'Price, in whole dollars', validation: { isRequired: true, min: 0 } }),
+        stripeLink: fields.url({
+          label: 'Stripe Payment Link',
+          description: 'While blank, the product is shown as "Not yet on sale".',
+        }),
+        edition: fields.text({ label: 'Edition or details', description: 'e.g. "Edition of 50".' }),
+        available: fields.checkbox({ label: 'Available', description: 'Untick when sold out.', defaultValue: true }),
+        sample: fields.checkbox({ label: 'Sample', description: 'A placeholder. Delete every sample before launch.' }),
+        description: fields.markdoc({ label: 'Description', extension: 'md' }),
+      },
+    }),
   },
 });

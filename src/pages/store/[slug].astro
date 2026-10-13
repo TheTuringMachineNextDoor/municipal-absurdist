@@ -1,0 +1,195 @@
+---
+// One product's own page, at /store/its-file-name: a large picture, the
+// description, the price, and the button that goes to Stripe to pay.
+import { render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getIllustration, illustrationSrc } from '../../lib/illustrations';
+import { formatPrice, getProducts, makerOf, saleState, type Product } from '../../lib/store';
+
+export async function getStaticPaths() {
+  return (await getProducts()).map(({ product, artist }) => ({
+    params: { slug: product.id },
+    props: { product, artist },
+  }));
+}
+
+interface Props {
+  product: Product;
+  artist?: { name: string; href: string };
+}
+
+const { product, artist } = Astro.props;
+const { data } = product;
+const picture = getIllustration(data.image);
+const sale = saleState(product);
+const shelf = data.kind === 'print' ? { name: 'Art & Prints', href: '/store#prints' } : { name: 'Merchandise', href: '/store#merchandise' };
+
+// The description is the Markdown body of the product's file.
+const { Content } = await render(product);
+---
+
+<BaseLayout title={data.title} description={`${data.title}, ${formatPrice(data.price)}, from the Store of The Municipal Absurdist.`}>
+  <article class="product">
+    <figure class="product__figure">
+      <div class="product__mount">
+        <Image
+          src={illustrationSrc(picture.file)}
+          alt={picture.alt}
+          width={picture.width}
+          height={picture.height}
+          loading="eager"
+        />
+      </div>
+      <figcaption class="fine-print product__credit">{picture.credit}</figcaption>
+    </figure>
+
+    <div class="product__details">
+      <p class="label label--accent">
+        <a href="/store">The Store</a> <span aria-hidden="true">&middot;</span> <a href={shelf.href}>{shelf.name}</a>
+      </p>
+      <h1 class="product__title">{data.title}</h1>
+      <p class="label product__maker">
+        {artist ? <>By <a href={artist.href}>{artist.name}</a></> : makerOf(product)}
+      </p>
+      {data.edition && <p class="product__edition">{data.edition}</p>}
+
+      <div class="product__description"><Content /></div>
+
+      <p class="product__price">{formatPrice(data.price)}</p>
+      {
+        sale.canBuy ? (
+          <>
+            <a class="product__buy" href={sale.link} rel="noopener">Purchase</a>
+            <p class="fine-print product__note">
+              You will be taken to Stripe to pay. This newspaper never sees your card.
+            </p>
+          </>
+        ) : (
+          <>
+            {/* Not a link: there is nowhere to send the reader yet. */}
+            <p class="product__buy product__buy--off">{sale.notice}</p>
+            <p class="fine-print product__note">
+              {data.available
+                ? 'The till has not yet been installed. It is expected shortly.'
+                : 'The last one has gone. The editors regret the inconvenience and admire your taste.'}
+            </p>
+          </>
+        )
+      }
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  /* Picture above the words on a phone; side by side on a desk. */
+  .product {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .product > * {
+    min-width: 0;
+  }
+
+  @media (min-width: 52rem) {
+    .product {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--space-7);
+      align-items: start;
+    }
+  }
+
+  .product__figure {
+    margin: 0;
+  }
+
+  .product__mount {
+    display: grid;
+    place-items: center;
+    padding: var(--space-5);
+    border: var(--rule-thick) double var(--rule);
+    background: color-mix(in srgb, var(--accent) 10%, var(--paper));
+  }
+
+  /* A small scan is shown larger, up to a sensible size, and never
+     wider than the mount. */
+  .product__mount img {
+    width: min(100%, 24rem);
+    mix-blend-mode: multiply;
+  }
+
+  .product__credit {
+    margin-top: var(--space-2);
+    font-style: italic;
+  }
+
+  .product__details a {
+    text-decoration: none;
+  }
+
+  .product__details a:hover {
+    text-decoration: underline;
+  }
+
+  .product__title {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-h2);
+  }
+
+  .product__maker {
+    margin-bottom: var(--space-1);
+  }
+
+  .product__edition {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .product__description {
+    max-width: var(--measure);
+    margin-block: var(--space-4);
+    font-size: var(--text-lg);
+  }
+
+  .product__price {
+    margin-bottom: var(--space-3);
+    font-family: var(--font-headline);
+    font-size: var(--text-h3);
+    font-variant-numeric: lining-nums;
+  }
+
+  /* The button: a square block of ink. The switched-off version is an
+     outline, so the two cannot be confused. */
+  .product__buy {
+    display: inline-block;
+    min-width: 12rem;
+    margin: 0;
+    padding: var(--space-3) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
+
+  a.product__buy:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .product__buy--off {
+    border-style: dashed;
+    border-color: var(--ink-soft);
+    background: none;
+    color: var(--ink-soft);
+  }
+
+  .product__note {
+    margin-top: var(--space-2);
+  }
+</style>

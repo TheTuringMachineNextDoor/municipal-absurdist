@@ -582,5 +582,41 @@
     "width": 480,
     "height": 600,
     "placeholder": false
+  },
+  {
+    "file": "store/tote-bag.svg",
+    "title": "Tote bag (specimen drawing)",
+    "alt": "Line drawing of a canvas tote bag printed with a top hat.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Specimen drawing made for The Municipal Absurdist. Not a photograph of the finished article.",
+    "width": 400,
+    "height": 480,
+    "placeholder": true
+  },
+  {
+    "file": "store/enamel-pin.svg",
+    "title": "Enamel pin (specimen drawing)",
+    "alt": "Line drawing of a round pin badge with a yellow rim and a top hat in the middle.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Specimen drawing made for The Municipal Absurdist. Not a photograph of the finished article.",
+    "width": 400,
+    "height": 480,
+    "placeholder": true
+  },
+  {
+    "file": "store/notebook.svg",
+    "title": "Notebook (specimen drawing)",
+    "alt": "Line drawing of a bound notebook with a top hat on the cover and a yellow band.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Specimen drawing made for The Municipal Absurdist. Not a photograph of the finished article.",
+    "width": 400,
+    "height": 480,
+    "placeholder": true
   }
 ]
