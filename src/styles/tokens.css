@@ -16,7 +16,7 @@
 
   /* Type families. Each has a fallback stack for the moment before the
      Google Font arrives, and for readers whose network blocks it. */
-  --font-masthead: 'Iceberg', 'Avenir Next Condensed', 'Arial Narrow', sans-serif;
+  --font-masthead: 'Nova Cut', 'Avenir Next', 'Trebuchet MS', sans-serif;
   --font-blackletter: 'UnifrakturMaguntia', 'Old English Text MT', 'Palatino Linotype', serif;
   --font-headline: 'Alegreya', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --font-body: 'Alegreya', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
