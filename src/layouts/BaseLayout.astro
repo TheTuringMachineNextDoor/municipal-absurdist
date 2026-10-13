@@ -57,9 +57,7 @@ const fontsUrl =
   </head>
   <body>
     <a class="skip-link" href="#content">Proceed directly to the news</a>
-    <!-- Only the front page (which passes "h1") gets the full masthead
-         with hat and slogan; every other page gets the compact one. -->
-    <Masthead as={mastheadAs} compact={mastheadAs !== 'h1'} />
+    <Masthead as={mastheadAs} />
     <SectionNav />
     <main id="content" class="sheet">
       <slot />

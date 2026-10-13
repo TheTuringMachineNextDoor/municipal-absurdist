@@ -56,7 +56,7 @@ Ask before adding any dependency not listed here.
 
 | Route | Purpose |
 |---|---|
-| `/` | Homepage: full masthead, lead story (2/3) beside latest headlines (1/3), a band per section, comic slot, recurring features (`src/data/features.ts`), newsletter box (`newsletterAction` in `src/data/site.ts`). Inner pages use the compact masthead. |
+| `/` | Homepage: full masthead, lead story (2/3) beside latest headlines (1/3), a band per section, comic slot, recurring features (`src/data/features.ts`), newsletter box (`newsletterAction` in `src/data/site.ts`). The full masthead (hat, name, slogan) is the same on every page. |
 | `/[section]` | Section front |
 | `/[section]/[slug]` | Article |
 | `/contributors` and `/contributors/[slug]` | Portfolio, bio, published work, commission form |
