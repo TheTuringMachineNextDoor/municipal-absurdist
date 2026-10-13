@@ -46,20 +46,21 @@ const picture = image ? getIllustration(image) : undefined;
 </article>
 
 <style>
-  /* A square frame; the woodcut is fitted inside it whole, whatever its
-     own proportions (object-fit: contain), and blended onto the paper. */
+  /* A small square frame. Whatever the picture's own shape, it is
+     cropped to fill the square (object-fit: cover). The crop favours
+     the upper part, where faces usually are. */
   .article-card__picture {
     display: block;
-    width: min(100%, 11rem);
+    width: min(100%, 13rem);
     aspect-ratio: 1;
-    margin: 0 auto var(--space-3);
+    margin: 0 0 var(--space-3);
   }
 
   .article-card__picture img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    mix-blend-mode: multiply;
+    object-fit: cover;
+    object-position: 50% 25%;
   }
 
   .article-card__section {

@@ -384,9 +384,10 @@ hr,
   color: var(--ink-soft);
 }
 
-/* The lead illustration above an article, and illustrations set within
-   the text. Both are centred and kept small: the woodcuts are small
-   scans, and enlarging them past their real size turns the lines soft. */
+/* The lead picture above an article, and pictures set within the text.
+   Both are centred. A landscape picture may use the full article
+   column; an upright one is held narrower so it does not fill the
+   screen from top to bottom. */
 .illustration--lead,
 .illustration--inline {
   text-align: center;
@@ -402,21 +403,24 @@ hr,
 }
 
 .illustration--lead img {
-  width: min(100%, 15rem);
+  width: min(100%, 54rem);
+}
+
+.illustration--lead.illustration--portrait img {
+  width: min(100%, 26rem);
 }
 
 .illustration--inline img {
-  width: min(100%, 12rem);
+  width: min(100%, 34rem);
 }
 
-/* A wide image, such as a strip of figures, may use the whole column. */
-.illustration--wide img {
-  width: 100%;
+.illustration--inline.illustration--portrait img {
+  width: min(100%, 18rem);
 }
 
 .illustration--lead figcaption,
 .illustration--inline figcaption {
-  max-width: 24rem;
+  max-width: 34rem;
   margin-inline: auto;
 }
 

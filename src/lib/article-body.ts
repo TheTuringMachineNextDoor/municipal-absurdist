@@ -3,7 +3,7 @@
 // In Markdown an inline illustration is written as an ordinary image on
 // a line of its own:
 //
-//   ![A bell-shaped creature with a snout.](/illustrations/pantagruel-04.webp)
+//   ![A lone polar bear on sea ice.](/illustrations/polar-bear.jpeg)
 //
 // Markdown renders that as <p><img ...></p>. This swaps each one for a
 // <figure> with the image's size (so the page does not jump as it loads)
@@ -12,7 +12,7 @@
 //
 // Pull quotes need no help: a Markdown blockquote (a line starting with
 // ">") is styled as a pull quote by ArticleBody.astro.
-import { getIllustration, isWide } from './illustrations';
+import { getIllustration, isPortrait } from './illustrations';
 
 const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -30,7 +30,7 @@ export function renderArticleBody(html: string): string {
     const alt = attribute(img, 'alt') || escapeHtml(record.alt);
 
     return (
-      `<figure class="illustration illustration--inline${isWide(record) ? ' illustration--wide' : ''}">` +
+      `<figure class="illustration illustration--inline${isPortrait(record) ? ' illustration--portrait' : ''}">` +
       `<img src="${src}" alt="${alt}" width="${record.width}" height="${record.height}" loading="lazy" decoding="async">` +
       `<figcaption>${escapeHtml(record.credit)}</figcaption>` +
       '</figure>'

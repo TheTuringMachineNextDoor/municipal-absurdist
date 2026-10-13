@@ -4,8 +4,7 @@ dek: Members hailed the ordinance as a triumph for open government and said its 
 section: politics
 author: cornelius-p-wetherby
 date: 2026-10-12
-image: pantagruel-12.webp
-imageAlt: Woodcut of a seated frog-like creature in a tall pointed hat, holding a staff of office with a tiny figure perched on top.
+image: censored-venus.webp
 featured: true
 draft: false
 ---
@@ -23,7 +22,7 @@ The President of the Council told this newspaper that the ordinance would transf
 
 Copies of the text may be requested in writing from the Office of Public Records. The Office confirmed that requests are answered in the order received and that it is presently answering those received in the spring of 2019.
 
-![Woodcut of a figure whose head is an open pot, holding up a small whisk.](/illustrations/pantagruel-06.webp)
+![Black-and-white photograph of a bearded man in a keeper's cap and heavy coat, a lighthouse behind him.](/illustrations/lighthouse-keeper.jpeg)
 
 A summary of the ordinance was issued on Friday morning. It runs to eleven pages, nine of which have been withheld under an exemption the ordinance is believed to have created. The two remaining pages consist of a title and a list of the members present, three of whose names have been removed.
 

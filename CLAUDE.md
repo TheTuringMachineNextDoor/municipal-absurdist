@@ -96,7 +96,7 @@ No dark mode at launch: the paper is the identity.
 **Layout and ornament:**
 - A multi-column newspaper grid on desktop that collapses to a single column on mobile.
 - Hairline and double rules between sections and columns, not cards.
-- Illustrations are black line art on paper; use `mix-blend-mode: multiply` so white backgrounds disappear.
+- Lead images may be photographs, paintings or line art. Line art on a white ground uses `mix-blend-mode: multiply` so the white disappears. Cards crop the image to a small square.
 - Use drop caps on article openings.
 - Use printer's ornaments (❧ ☞ ✠) as dividers and bullets, sparingly.
 

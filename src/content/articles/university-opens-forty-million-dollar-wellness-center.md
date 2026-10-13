@@ -4,8 +4,7 @@ dek: The building features a climbing wall, a meditation atrium, and a juice bar
 section: education
 author: ottoline-fenwick-drab
 date: 2026-10-10
-image: pantagruel-05.webp
-imageAlt: Woodcut of a hooded, round-bodied figure stooping forward under its own cloak.
+image: polar-bear.jpeg
 featured: false
 draft: false
 ---
@@ -21,7 +20,7 @@ The University’s counseling service remains in the basement of the old infirma
 
 Asked why none of the funds had been directed toward hiring counselors, the Vice President for Student Experience explained that counselors are a recurring expense, whereas a building is a legacy. She added that the atrium had been designed in consultation with a firm specializing in calm.
 
-![Woodcut of a round-bodied creature striding along while blowing a horn.](/illustrations/pantagruel-09.webp)
+![Japanese woodblock print of an enormous blue wave curling over three boats.](/illustrations/great-wave.jpeg)
 
 The Center is the gift of an alumnus who made his fortune in student lending and whose name appears above the entrance, on each of the beanbags, and on the water. In his remarks he recalled his own years at the University as the happiest of his life, there having been at that time no fee for them to speak of.
 

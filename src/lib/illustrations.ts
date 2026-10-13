@@ -16,7 +16,7 @@ const records = credits as IllustrationRecord[];
 /** Every file name recorded in credits.json. */
 export const illustrationFiles = records.map((r) => r.file);
 
-/** The record for a file such as "pantagruel-02.webp". Throws if the
+/** The record for a file such as "great-wave.jpeg". Throws if the
     image has no entry, so an uncredited image can never be published. */
 export function getIllustration(file: string): IllustrationRecord {
   const record = records.find((r) => r.file === file);
@@ -29,7 +29,7 @@ export function getIllustration(file: string): IllustrationRecord {
   return record;
 }
 
-/** A strip of figures, much wider than it is tall, is set full width. */
-export const isWide = (record: IllustrationRecord) => record.width > record.height * 2;
+/** Taller than it is wide. Upright pictures are set narrower. */
+export const isPortrait = (record: IllustrationRecord) => record.height > record.width;
 
 export const illustrationSrc = (file: string) => `/illustrations/${file}`;

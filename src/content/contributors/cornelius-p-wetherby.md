@@ -1,7 +1,6 @@
 ---
 name: Cornelius P. Wetherby
 role: writer
-portrait: pantagruel-03.webp
 links: []
 commissionsOpen: false
 ---

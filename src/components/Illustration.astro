@@ -6,7 +6,7 @@
 // The image is set with `mix-blend-mode: multiply` (see .illustration in
 // global.css) so the scan's white background takes the colour of the paper.
 import { Image } from 'astro:assets';
-import { getIllustration, illustrationSrc, isWide } from '../lib/illustrations';
+import { getIllustration, illustrationSrc, isPortrait } from '../lib/illustrations';
 
 interface Props {
   file: string;
@@ -22,7 +22,7 @@ const { file, alt, credit, variant = 'inline' } = Astro.props;
 const record = getIllustration(file);
 ---
 
-<figure class:list={['illustration', `illustration--${variant}`, { 'illustration--wide': isWide(record) }]}>
+<figure class:list={['illustration', `illustration--${variant}`, { 'illustration--portrait': isPortrait(record) }]}>
   <!-- Files in public/ are served as they are; Astro's <Image> still
        writes the width and height (no layout jump) and handles loading.
        The lead image is above the fold, so it loads at once. -->

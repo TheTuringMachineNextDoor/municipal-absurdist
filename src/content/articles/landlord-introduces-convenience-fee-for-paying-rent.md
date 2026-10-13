@@ -4,8 +4,7 @@ dek: Tenants who find the fee inconvenient may opt out of it for a modest additi
 section: money
 author: ottoline-fenwick-drab
 date: 2026-10-08
-image: pantagruel-02.webp
-imageAlt: Woodcut of a bearded figure standing in a barrel, raising a goblet in one hand and a jug in the other.
+image: man-with-cat.webp
 featured: false
 draft: false
 ---
@@ -20,8 +19,6 @@ Tenants who would prefer not to pay the Convenience Fee may decline it by submit
 > A spokesman for Pinnacle Living Solutions
 
 The new charge joins a schedule that already includes an Amenity Fee, a Common Area Fee, a Fee Administration Fee, and a monthly charge for Trash Valet, a service under which tenants carry their trash to the curb as before and are thanked for it by electronic mail.
-
-![Woodcut of a bell-shaped creature with a long snout, carrying a pot on a chain.](/illustrations/pantagruel-04.webp)
 
 A spokesman for the company rejected the suggestion that the fees amount to an increase in rent. Rent at the Halcyon Arms, he observed, has not risen in two years, and the company is proud of that record and advertises it on the side of the building.
 
