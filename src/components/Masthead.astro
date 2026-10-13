@@ -30,13 +30,17 @@ const builtIso = built.toISOString().slice(0, 10);
 
 <header class="masthead sheet">
   <Tag class="masthead__name">
-    <a class="masthead__link" href="/">
-      <!-- Screen readers get the name once, in reading order. The
-           letters below are decoration as far as they are concerned. -->
-      <span class="visually-hidden">The Municipal Absurdist</span>
-      <span class="masthead__word" aria-hidden="true">The</span>
-      <span class="masthead__vignette"><Vignette /></span>
-      <span class="masthead__word" aria-hidden="true">Absurdist</span>
+    <!-- The link's accessible name comes from aria-label alone. All the
+         visible lettering sits in one aria-hidden wrapper, so a screen
+         reader has exactly one thing to read: the label. (Before, a
+         hidden text span carried the name while each word was hidden
+         separately, which some screen readers still read twice.) -->
+    <a class="masthead__link" href="/" aria-label="The Municipal Absurdist">
+      <span class="masthead__lettering" aria-hidden="true">
+        <span class="masthead__word">The</span>
+        <span class="masthead__vignette"><Vignette /></span>
+        <span class="masthead__word">Absurdist</span>
+      </span>
     </a>
   </Tag>
 
@@ -83,16 +87,21 @@ const builtIso = built.toISOString().slice(0, 10);
      is about 7.6em wide, so 11.5vw fills a phone screen without
      spilling: roughly 326px of the 343px available at 375px. */
   .masthead__link {
-    display: inline-flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 0.12em;
+    display: inline-block;
     max-width: 100%;
     font-family: var(--font-masthead);
     font-size: clamp(2rem, 11.5vw, 6.25rem);
     color: var(--ink);
     text-decoration: none;
     white-space: nowrap;
+  }
+
+  .masthead__lettering {
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.12em;
+    max-width: 100%;
   }
 
   .masthead__link:hover {
