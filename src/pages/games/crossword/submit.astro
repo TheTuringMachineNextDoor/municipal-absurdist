@@ -5,13 +5,8 @@
 // frame. Its address is set in src/data/site.ts. Until one is set, the
 // page still explains what to send, and says the window is shut.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import TallyForm from '../../../components/TallyForm.astro';
 import { site } from '../../../data/site';
-
-// Tally gives a share link like https://tally.so/r/abc123. The same form
-// can be shown inside another page at https://tally.so/embed/abc123.
-const formId = site.crosswordSubmissionForm.match(/tally\.so\/(?:r|embed|forms)\/([A-Za-z0-9]+)/)?.[1];
-const formLink = formId ? `https://tally.so/r/${formId}` : null;
-const formFrame = formId ? `https://tally.so/embed/${formId}?alignLeft=1&hideTitle=1&transparentBackground=1` : null;
 ---
 
 <BaseLayout
@@ -71,22 +66,10 @@ MULE: Stubborn animal: half a horse, and all of the Zoning Board</pre>
       </p>
 
       <h2 id="form">The Form</h2>
-      {
-        formFrame && formLink ? (
-          <>
-            <iframe class="submit__form" src={formFrame} title="Crossword submission form" loading="lazy" />
-            <p class="fine-print">
-              If the form does not appear, <a href={formLink}>open it in its own window</a>.
-            </p>
-          </>
-        ) : (
-          <p class="submit__closed">
-            <span class="label">Window Closed</span>
-            The submissions window is shut while the Bureau locates the key. It is expected to open shortly. Keep your
-            puzzle somewhere dry.
-          </p>
-        )
-      }
+      <TallyForm url={site.crosswordSubmissionForm} title="Crossword submission form">
+        The submissions window is shut while the Bureau locates the key. It is expected to open shortly. Keep your
+        puzzle somewhere dry.
+      </TallyForm>
     </div>
   </div>
 </BaseLayout>
@@ -124,24 +107,5 @@ MULE: Stubborn animal: half a horse, and all of the Zoning Board</pre>
     line-height: var(--leading-snug);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-  }
-
-  .submit__form {
-    display: block;
-    width: 100%;
-    height: 56rem;
-    border: var(--rule-hair) solid var(--rule);
-  }
-
-  .submit__closed {
-    padding: var(--space-4);
-    border: var(--rule-thick) double var(--rule);
-    text-align: center;
-  }
-
-  .submit__closed .label {
-    display: block;
-    margin-bottom: var(--space-1);
-    color: var(--accent-text);
   }
 </style>

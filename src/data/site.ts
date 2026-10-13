@@ -14,4 +14,10 @@ export const site = {
   // While this is an empty string the page at /games/crossword/submit
   // explains what to send but says the window is shut.
   crosswordSubmissionForm: '',
+
+  // The Tally form readers use to enter the caption contest. Another
+  // share link, as above. The page passes the form the contest's number
+  // as a hidden field called "contest", so add a hidden field of that
+  // name to the form in Tally to see which drawing each caption is for.
+  captionContestForm: '',
 };

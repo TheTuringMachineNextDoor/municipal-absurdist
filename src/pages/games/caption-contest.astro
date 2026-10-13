@@ -1,0 +1,252 @@
+---
+// The Caption Contest: we print a drawing, readers send captions through
+// a Tally form, and the editors choose a winner. The contests and their
+// results are in src/data/caption-contests.ts; the form's address is in
+// src/data/site.ts.
+//
+// Nothing here needs a script. The editors announce a result by editing
+// the data file, and the page is rebuilt.
+import GameLayout from '../../layouts/GameLayout.astro';
+import TallyForm from '../../components/TallyForm.astro';
+import { captionContests } from '../../data/caption-contests';
+import { site } from '../../data/site';
+import { getIllustration, illustrationSrc } from '../../lib/illustrations';
+import { formatDateKey } from '../../lib/games/daily';
+
+// The last contest in the list is the open one; the rest are past,
+// shown newest first.
+const current = captionContests[captionContests.length - 1];
+const past = captionContests.slice(0, -1).reverse();
+const drawing = getIllustration(current.image);
+---
+
+<GameLayout
+  title="The Caption Contest"
+  standfirst="We supply the drawing. You supply the words. The editors supply the disappointment."
+>
+  <Fragment slot="rules">
+    <ul class="list-ornament">
+      <li>Study the drawing. Decide what is being said, announced, or denied.</li>
+      <li>Write one caption. Short is better. The drawing has already done most of the work.</li>
+      <li>Send it by the form below before the closing date, with the name you wish printed.</li>
+      <li>The editors choose a winner and print it here. Their decision is final and frequently regretted.</li>
+      <li>Captions must be your own. The drawing, being four hundred years old, need not be.</li>
+    </ul>
+  </Fragment>
+
+  <section class="cc" aria-labelledby="cc-current">
+    <h2 id="cc-current" class="label cc__number">Contest No. {current.number}</h2>
+    <figure class="cc__figure">
+      <img
+        class="cc__drawing"
+        src={illustrationSrc(current.image)}
+        alt={drawing.alt}
+        width={drawing.width}
+        height={drawing.height}
+      />
+      <figcaption>
+        <!-- The empty line the reader is being asked to fill. -->
+        <p class="cc__blank" aria-hidden="true">“<span></span>”</p>
+        <p class="fine-print cc__credit">{drawing.credit}</p>
+      </figcaption>
+    </figure>
+    <p class="cc__closes">Entries close on {formatDateKey(current.closes)}.</p>
+
+    <h3 class="cc__heading">Enter a Caption</h3>
+    <TallyForm
+      url={site.captionContestForm}
+      title="Caption contest entry form"
+      fields={{ contest: String(current.number) }}
+      height="40rem"
+    >
+      The entries window is shut while the Bureau locates the key. It is expected to open shortly. Compose your
+      caption in the meantime, and resist improving it.
+    </TallyForm>
+  </section>
+
+  {
+    past.length > 0 && (
+      <section class="cc-past" aria-labelledby="cc-past">
+        <h2 id="cc-past" class="cc-past__title">Previous Results</h2>
+        {past.map((contest) => {
+          const image = getIllustration(contest.image);
+          return (
+            <article class="cc-result">
+              <img
+                class="cc-result__drawing"
+                src={illustrationSrc(contest.image)}
+                alt={image.alt}
+                width={image.width}
+                height={image.height}
+                loading="lazy"
+              />
+              <div>
+                <h3 class="label">
+                  Contest No. {contest.number} · Closed {formatDateKey(contest.closes)}
+                </h3>
+                {contest.winner ? (
+                  <>
+                    <p class="label label--accent cc-result__place">The Winner</p>
+                    <blockquote class="cc-result__winner">
+                      <p>{contest.winner.text}</p>
+                      <footer>{contest.winner.by}</footer>
+                    </blockquote>
+                  </>
+                ) : (
+                  <p class="cc-result__pending">
+                    The editors are still deliberating. Voices have been raised.
+                  </p>
+                )}
+                {contest.runnersUp && contest.runnersUp.length > 0 && (
+                  <>
+                    <p class="label cc-result__place">Honourable Mentions</p>
+                    <ul class="cc-result__others">
+                      {contest.runnersUp.map((caption) => (
+                        <li>
+                          {caption.text} <span class="cc-result__by">{caption.by}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {contest.note && <p class="fine-print">{contest.note}</p>}
+                <p class="fine-print">{image.credit}</p>
+              </div>
+            </article>
+          );
+        })}
+      </section>
+    )
+  }
+</GameLayout>
+
+<style>
+  .cc {
+    text-align: center;
+  }
+
+  .cc__number {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-base);
+  }
+
+  /* The drawing in a double-ruled frame, like the comic on the front page. */
+  .cc__figure {
+    margin: 0;
+    padding: var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+  }
+
+  .cc__drawing {
+    width: auto;
+    max-width: 100%;
+    max-height: 24rem;
+    margin-inline: auto;
+    mix-blend-mode: multiply; /* the scan's white ground disappears into the paper */
+  }
+
+  /* An empty caption: quotation marks either side of a ruled line. */
+  .cc__blank {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--space-1);
+    margin: var(--space-3) 0 var(--space-2);
+    font-family: var(--font-headline);
+    font-size: var(--text-h3);
+    line-height: 1;
+  }
+
+  .cc__blank span {
+    width: min(70%, 18rem);
+    border-bottom: var(--rule-hair) solid var(--ink);
+  }
+
+  .cc__credit {
+    margin: 0;
+    font-style: italic;
+  }
+
+  .cc__closes {
+    margin: var(--space-3) 0 var(--space-5);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .cc__heading {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-h4);
+  }
+
+  .cc-past {
+    margin-top: var(--space-7);
+    border-top: var(--rule-thick) double var(--rule);
+  }
+
+  .cc-past__title {
+    margin: var(--space-4) 0;
+    font-size: var(--text-h3);
+    text-align: center;
+  }
+
+  /* A past contest: the drawing small on the left, the result beside it.
+     On a phone the drawing sits above. */
+  .cc-result {
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  @media (min-width: 34rem) {
+    .cc-result {
+      grid-template-columns: 9rem 1fr;
+    }
+  }
+
+  .cc-result__drawing {
+    width: auto;
+    max-height: 12rem;
+    margin-inline: auto;
+    mix-blend-mode: multiply;
+  }
+
+  .cc-result__place {
+    margin: var(--space-3) 0 var(--space-1);
+  }
+
+  .cc-result__winner {
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    border: 0;
+  }
+
+  .cc-result__winner p {
+    margin: 0;
+    font-family: var(--font-headline);
+    font-size: var(--text-h4);
+    font-style: italic;
+    line-height: var(--leading-snug);
+  }
+
+  .cc-result__winner footer,
+  .cc-result__by {
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+
+  .cc-result__by {
+    white-space: nowrap;
+  }
+
+  .cc-result__others {
+    margin: 0 0 var(--space-3);
+    padding-left: var(--space-4);
+  }
+
+  .cc-result__pending {
+    font-style: italic;
+  }
+</style>

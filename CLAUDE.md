@@ -65,6 +65,7 @@ Ask before adding any dependency not listed here.
 | `/about`, `/support` | Mission, staff, donations |
 | `/games` and `/games/[game]` | Games hub (list in `src/data/games.ts`) and each game. Games share `GameLayout`, `ResultsCard` and the helpers in `src/lib/games/` (daily puzzle in America/Chicago time, stats in localStorage, share text). |
 | `/games/crossword/submit` | How to send in a crossword, with the Tally form (`crosswordSubmissionForm` in `src/data/site.ts`). Puzzles live in `src/data/crosswords.ts`; the build checks each one. |
+| `/games/caption-contest` | Caption contest. Contests and results in `src/data/caption-contests.ts` (the last entry is the open one); entries via Tally (`captionContestForm` in `src/data/site.ts`). `TallyForm.astro` embeds any Tally form. |
 | `/styleguide` | Living reference of every design element (dev only) |
 
 ---

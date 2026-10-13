@@ -55,7 +55,7 @@ export const games: Game[] = [
     name: 'The Caption Contest',
     blurb: 'We supply the drawing. You supply the words. The editors supply the disappointment.',
     image: 'pantagruel-09.webp',
-    live: false,
+    live: true,
   },
   {
     slug: 'the-mayor',

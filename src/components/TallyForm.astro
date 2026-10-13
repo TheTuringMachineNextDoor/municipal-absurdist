@@ -1,0 +1,65 @@
+---
+// A Tally form (tally.so) shown inside the page in a frame, or, while no
+// form address has been set, a "Window Closed" notice in its place.
+// Used wherever readers send something in: crosswords, captions.
+//
+// `url` is the form's share link from Tally, like https://tally.so/r/abc123.
+// `fields` are passed to the form in its address; Tally calls these
+// "hidden fields", and they arrive with the submission (for example,
+// which contest a caption is for). Add a hidden field of the same name
+// to the form in Tally for it to be recorded.
+interface Props {
+  url: string;
+  /** What a screen reader calls the frame, e.g. "Caption entry form". */
+  title: string;
+  fields?: Record<string, string>;
+  /** Height of the frame, as CSS. A longer form needs more. */
+  height?: string;
+}
+
+const { url, title, fields = {}, height = '56rem' } = Astro.props;
+
+// The same form can be shown inside another page at /embed/ID.
+const formId = url.match(/tally\.so\/(?:r|embed|forms)\/([A-Za-z0-9]+)/)?.[1];
+const extra = new URLSearchParams(fields).toString();
+const link = formId ? `https://tally.so/r/${formId}${extra ? `?${extra}` : ''}` : null;
+const frame = formId
+  ? `https://tally.so/embed/${formId}?alignLeft=1&hideTitle=1&transparentBackground=1${extra ? `&${extra}` : ''}`
+  : null;
+---
+
+{
+  frame && link ? (
+    <>
+      <iframe class="tally" src={frame} title={title} loading="lazy" style={`height: ${height}`} />
+      <p class="fine-print">
+        If the form does not appear, <a href={link}>open it in its own window</a>.
+      </p>
+    </>
+  ) : (
+    <p class="tally-closed">
+      <span class="label">Window Closed</span>
+      <slot>The window is shut while the Bureau locates the key. It is expected to open shortly.</slot>
+    </p>
+  )
+}
+
+<style>
+  .tally {
+    display: block;
+    width: 100%;
+    border: var(--rule-hair) solid var(--rule);
+  }
+
+  .tally-closed {
+    padding: var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  .tally-closed .label {
+    display: block;
+    margin-bottom: var(--space-1);
+    color: var(--accent-text);
+  }
+</style>
