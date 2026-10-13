@@ -45,7 +45,7 @@ Ask before adding any dependency not listed here.
 **Sections:** `politics`, `culture`, `education`, `money`, `comic`, `games`
 
 **Contributors** (`src/content/contributors/*.md`)
-- `name`, `role` (writer / illustrator / both), `bio` (the Markdown body), `portrait`, `links`, `commissionsOpen` (bool), `tallyFormUrl`
+- `name`, `role` (writer / illustrator / both), `standing` (auto / main / occasional: where they are listed on `/about`), `bio` (the Markdown body), `portrait`, `links`, `commissionsOpen` (bool), `tallyFormUrl`
 
 **Products** (`src/content/products/*.md`)
 - `title`, `artist` (ref), `image`, `price`, `stripeLink`, `edition` (e.g. "1 of 50"), `available` (bool)
@@ -59,10 +59,11 @@ Ask before adding any dependency not listed here.
 | `/` | Homepage: full masthead, lead story (2/3) beside latest headlines (1/3), a band per section, comic slot, recurring features (`src/data/features.ts`), newsletter box (`newsletterAction` in `src/data/site.ts`). The full masthead (hat, name, slogan) is the same on every page. |
 | `/[section]` and `/[section]/page/[n]` | Section front (`SectionFront.astro`): the section's lead story beside headlines from the rest of the paper, then cards with dates, then older pages (12 cards a page). The Comic front shows strips large in frames instead. |
 | `/[section]/[slug]` | Article |
-| `/contributors` and `/contributors/[slug]` | The staff list, and a page for each contributor: bio, links, commission form (their own Tally form, shown when `commissionsOpen`), portfolio of pictures they drew, and articles they wrote. Helpers in `src/lib/contributors.ts`. Bylines on articles link here. |
+| `/contributors/[slug]` | A page for each contributor: bio, links, commission form (their own Tally form, shown when `commissionsOpen`), portfolio of pictures they drew, and articles they wrote. Helpers in `src/lib/contributors.ts`. Bylines on articles link here. There is no list page: the staff are listed on `/about`, and `/contributors` redirects there. |
 | `/store` | Prints and commissions |
 | `/submit` | Write for Us / Draw for Us / Create for Us |
-| `/about`, `/support` | Mission, staff, donations |
+| `/about` | What the paper is, what it stands for, why it is different and why it matters; then the staff: main writers and main artists with portraits, then occasional writers and artists as smaller lists. A contributor's `standing` (auto / main / occasional) decides which; auto means main after `MAIN_AFTER` pieces. |
+| `/support` | Donations |
 | `/games` and `/games/[game]` | Games hub (list in `src/data/games.ts`) and each game. Games share `GameLayout`, `ResultsCard` and the helpers in `src/lib/games/` (daily puzzle in America/Chicago time, stats in localStorage, share text). |
 | `/games/crossword/submit` | How to send in a crossword, with the Tally form (`crosswordSubmissionForm` in `src/data/site.ts`). Puzzles live in `src/data/crosswords.ts`; the build checks each one. |
 | `/games/caption-contest` | Caption contest. Contests and results in `src/data/caption-contests.ts` (the last entry is the open one); entries via Tally (`captionContestForm` in `src/data/site.ts`). `TallyForm.astro` embeds any Tally form. |

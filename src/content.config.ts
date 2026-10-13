@@ -58,6 +58,10 @@ const contributors = defineCollection({
   schema: z.object({
     name: z.string(),
     role: z.enum(['writer', 'illustrator', 'both']),
+    // Where they are listed on the About page: among the main staff, or
+    // among the occasional contributors beneath. "auto" decides by how
+    // much they have published (see src/lib/contributors.ts).
+    standing: z.preprocess(blankToUndefined, z.enum(['auto', 'main', 'occasional']).default('auto')),
     portrait: z.preprocess(blankToUndefined, illustration.optional()),
     links: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
     commissionsOpen: z.boolean().default(false),

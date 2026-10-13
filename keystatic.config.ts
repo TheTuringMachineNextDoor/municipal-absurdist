@@ -113,6 +113,17 @@ export default config({
           ],
           defaultValue: 'writer',
         }),
+        standing: fields.select({
+          label: 'Standing',
+          description:
+            'Where they are listed on the About page. Automatic lists them with the main staff once they have published a few pieces.',
+          options: [
+            { label: 'Automatic', value: 'auto' },
+            { label: 'Main staff', value: 'main' },
+            { label: 'Occasional contributor', value: 'occasional' },
+          ],
+          defaultValue: 'auto',
+        }),
         portrait: fields.select({
           label: 'Portrait',
           options: [{ label: 'None', value: '' }, ...illustrationOptions],

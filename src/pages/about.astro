@@ -1,0 +1,342 @@
+---
+// The About page: what the paper is, what it stands for, why it is
+// different and why it matters, and then the people who make it.
+//
+// The staff are in two tiers. The main writers and main artists get a
+// portrait and a line each. Occasional contributors, who have published
+// only a little so far, are listed by name beneath under smaller titles.
+// Which tier someone is in comes from the `standing` field on their
+// contributor file ("auto" promotes them once they have published
+// enough; see MAIN_AFTER in src/lib/contributors.ts).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Portrait from '../components/Portrait.astro';
+import { contributorPath, firstSentence, getContributors, roleLabel } from '../lib/contributors';
+
+const everyone = await getContributors();
+type Listed = (typeof everyone)[number];
+
+const pieces = (c: Listed) => c.written.length + c.illustrated.length;
+const count = (c: Listed) => `${pieces(c)} ${pieces(c) === 1 ? 'piece' : 'pieces'}`;
+// Within a tier, whoever has published most comes first.
+const byOutput = (a: Listed, b: Listed) => pieces(b) - pieces(a);
+
+const mainTiers = [
+  { title: 'The Writers', people: everyone.filter((c) => c.main && c.listedAs === 'writer').sort(byOutput) },
+  { title: 'The Artists', people: everyone.filter((c) => c.main && c.listedAs === 'artist').sort(byOutput) },
+].filter((tier) => tier.people.length > 0);
+
+const occasionalTiers = [
+  { title: 'Also Writing', people: everyone.filter((c) => !c.main && c.listedAs === 'writer').sort(byOutput) },
+  { title: 'Also Drawing', people: everyone.filter((c) => !c.main && c.listedAs === 'artist').sort(byOutput) },
+].filter((tier) => tier.people.length > 0);
+---
+
+<BaseLayout
+  title="About"
+  description="What The Municipal Absurdist is, what it stands for, and who makes it."
+>
+  <header class="about-header">
+    <p class="label label--accent">About</p>
+    <h1>A Real Newspaper for an Absurd World</h1>
+    <p class="dek about-header__dek">
+      And a home for the people who find it funny. The public is advised to remain calm.
+    </p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <div class="about prose">
+    <section aria-labelledby="about-what">
+      <h2 id="about-what">What This Newspaper Is</h2>
+      <p>
+        The Municipal Absurdist is an independent newspaper of satire. It covers world affairs, national
+        politics, state houses, city halls, schools, money, culture, and ordinary human behaviour, with the
+        seriousness of a newspaper and the humour the subject has earned.
+      </p>
+      <p>
+        Nothing in it happened. A good deal of it nearly did, and some of it will. We report it in the manner
+        of a broadsheet of 1908, because the events of the present day read best when set down by someone who
+        refuses to be surprised by them.
+      </p>
+    </section>
+
+    <section aria-labelledby="about-stand">
+      <h2 id="about-stand">What We Stand For</h2>
+      <ul class="list-ornament">
+        <li>
+          <strong>Independence.</strong> The paper belongs to no party and no cause. It is skeptical of
+          institutions and of ideologies alike, including the ones its staff happen to hold.
+        </li>
+        <li>
+          <strong>A target.</strong> Every piece knows what it is aiming at. We laugh at power, pretension,
+          and procedure. We do not laugh at people for being small.
+        </li>
+        <li>
+          <strong>Craft.</strong> A joke is written, edited, and checked like any other report. The facts
+          around it are right, so that the invention may be clearly ours.
+        </li>
+        <li>
+          <strong>A straight face.</strong> The paper does not wink, explain, or apologise for a joke. It does
+          correct errors, promptly, upon the third request.
+        </li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="about-different">
+      <h2 id="about-different">Why It Is Different</h2>
+      <p>
+        Most humour on the internet is delivered at speed and forgotten at the same rate. This paper is made
+        slowly, on purpose. It has sections, a masthead, illustrations, a crossword, and a house style, because
+        a joke told with full ceremony lands harder than one shouted in passing.
+      </p>
+      <p>
+        It is also made by people, and says which ones. Every article carries its writer’s name and every
+        picture its artist’s. The paper exists as much for them as for the reader: it is a place for young
+        writers, illustrators, and cartoonists to be published, to be seen, and where it can be managed, to be
+        paid.
+      </p>
+    </section>
+
+    <section aria-labelledby="about-matters">
+      <h2 id="about-matters">Why It Matters</h2>
+      <p>
+        The world takes itself very seriously and is frequently wrong. Satire is the oldest method of pointing
+        this out without being arrested, and in some centuries it has not even managed that.
+      </p>
+      <p>
+        A thing that can be laughed at can be looked at. Readers who will not sit through an account of a
+        zoning dispute will read one in which the zoning board has rezoned itself. They come away having
+        laughed, and knowing a little more about zoning boards than they intended. We consider this a public
+        service, and have said so to the Council, which has not replied.
+      </p>
+    </section>
+  </div>
+
+  <section class="staff" id="staff" aria-labelledby="staff-heading">
+    <h2 id="staff-heading" class="staff__heading">The Staff</h2>
+    <p class="staff__intro">
+      The persons responsible. Each has been informed that their name appears here, and several have asked why.
+    </p>
+
+    {
+      mainTiers.map((tier) => (
+        <section class="staff__tier">
+          <h3 class="staff__tier-title">{tier.title}</h3>
+          <ul class="staff__main">
+            {tier.people.map((c) => (
+              <li class="staff__person">
+                <Portrait name={c.person.data.name} portrait={c.person.data.portrait} />
+                <div>
+                  <h4 class="staff__name">
+                    <a href={contributorPath(c.person)}>{c.person.data.name}</a>
+                  </h4>
+                  <p class="label staff__role">
+                    {roleLabel(c.person.data.role)} · {count(c)}
+                  </p>
+                  <p class="staff__line">{firstSentence(c.person.body ?? '')}</p>
+                  {c.person.data.commissionsOpen && (
+                    <p class="label label--accent staff__commissions">Accepting commissions</p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    {
+      occasionalTiers.length > 0 && (
+        <div class="staff__occasional">
+          {occasionalTiers.map((tier) => (
+            <section>
+              <h3 class="label staff__small-title">{tier.title}</h3>
+              <ul class="staff__names">
+                {tier.people.map((c) => (
+                  <li>
+                    <a href={contributorPath(c.person)}>{c.person.data.name}</a>
+                    <span class="staff__count">{count(c)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )
+    }
+
+    <p class="staff__join">
+      <span class="ornament" aria-hidden="true">&#x261E;&#xFE0E;</span>
+      The paper is always in want of writers, illustrators and cartoonists. The door for submissions is being
+      hung and will open shortly.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .about-header {
+    text-align: center;
+  }
+
+  .about-header__dek {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  /* The four statements, in one reading column down the middle. */
+  .about {
+    max-width: var(--measure-article);
+    margin-inline: auto;
+  }
+
+  .about section + section {
+    margin-top: var(--space-6);
+  }
+
+  .about h2 {
+    font-size: var(--text-h3);
+  }
+
+  /* ---- The staff ---- */
+  .staff {
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: var(--rule-thick) double var(--rule);
+  }
+
+  .staff__heading {
+    text-align: center;
+  }
+
+  .staff__intro {
+    max-width: 36rem;
+    margin: 0 auto var(--space-5);
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  .staff__tier {
+    margin-top: var(--space-6);
+  }
+
+  /* A ruled label, like the section bands on the front page. */
+  .staff__tier-title {
+    margin: 0;
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-hair) solid var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  /* Main staff: one to a row on a phone, two across on a desk. */
+  .staff__main {
+    display: grid;
+    gap: 0 var(--space-7);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 52rem) {
+    .staff__main {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .staff__person {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    padding-block: var(--space-5);
+  }
+
+  .staff__name {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-h4);
+  }
+
+  .staff__name a,
+  .staff__names a {
+    text-decoration: none;
+  }
+
+  .staff__name a:hover,
+  .staff__names a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+
+  .staff__role {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .staff__line {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+
+  .staff__commissions {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-xs);
+  }
+
+  /* Occasional contributors: smaller titles, names only, side by side
+     when there is room. */
+  .staff__occasional {
+    display: grid;
+    gap: var(--space-5) var(--space-7);
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  @media (min-width: 40rem) {
+    .staff__occasional {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .staff__small-title {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--ink-soft);
+  }
+
+  .staff__names {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .staff__names li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-block: var(--space-1);
+  }
+
+  .staff__count {
+    flex: none;
+    font-family: var(--font-label);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+
+  .staff__join {
+    max-width: var(--measure);
+    margin: var(--space-6) auto 0;
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+</style>

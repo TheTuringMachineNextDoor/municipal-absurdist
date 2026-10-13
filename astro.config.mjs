@@ -13,4 +13,10 @@ const isDev = process.argv.includes('dev');
 // https://astro.build/config
 export default defineConfig({
   integrations: isDev ? [react(), keystatic()] : [],
+  // The staff are listed on the About page. Anyone who goes looking for
+  // /contributors is sent there. (Each person's own page is still at
+  // /contributors/their-name.)
+  redirects: {
+    '/contributors': '/about#staff',
+  },
 });
