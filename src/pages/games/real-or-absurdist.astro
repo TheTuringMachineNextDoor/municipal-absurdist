@@ -428,6 +428,15 @@ const open = realOrAbsurdistReady || developing;
     text-wrap: balance;
   }
 
+  /* Newspapers differ on capitals: some write "Bear Wanders Through
+     Restaurant", some "Bear wanders through restaurant". Ours always
+     use the first, which would give the game away. So every card is
+     shown with each word capitalised, whoever wrote it. */
+  .roa__headline,
+  .roa__quoted {
+    text-transform: capitalize;
+  }
+
   /* The words that fade in at the top corners while dragging. Their
      opacity is set from the script through two custom properties. */
   .roa__hint {
