@@ -1,0 +1,124 @@
+---
+// The sign-in form, used by both /login and /signup. There is no
+// password: the reader gives an email address and is sent a link; the
+// link signs them in. So signing up and logging in are the same act,
+// and the paper never holds a password to lose.
+interface Props {
+  heading: string;
+  /** The line under the heading. */
+  dek: string;
+}
+
+const { heading, dek } = Astro.props;
+---
+
+<article class="login" data-login>
+  <p class="label label--accent">The Readers’ Register</p>
+  <h1>{heading}</h1>
+  <p class="dek">{dek}</p>
+  <hr class="rule--short" />
+
+  <form class="login__form" data-login-form>
+    <label class="label" for="login-email">Your email address</label>
+    <input id="login-email" type="email" name="email" autocomplete="email" required placeholder="reader@example.com" />
+    <button type="submit">Send Me the Link</button>
+  </form>
+  <!-- role="status": a screen reader reads out what is written here. -->
+  <p class="login__status" role="status" data-login-status></p>
+
+  <p class="fine-print">
+    No password is asked for or kept. Your address is used to sign you in and for nothing else. An account lets
+    you save articles, mark the ones you approve of, and write letters to the editor.
+  </p>
+</article>
+
+<script>
+  import { currentUser, getSupabase } from '../lib/accounts';
+
+  const root = document.querySelector<HTMLElement>('[data-login]');
+  if (root) run(root);
+
+  async function run(root: HTMLElement) {
+    const form = root.querySelector<HTMLFormElement>('[data-login-form]')!;
+    const status = root.querySelector<HTMLElement>('[data-login-status]')!;
+    const button = form.querySelector('button')!;
+
+    // Already signed in: there is nothing to do here.
+    if (await currentUser()) {
+      location.replace('/account');
+      return;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = new FormData(form).get('email')?.toString().trim() ?? '';
+      if (!email) return;
+      const supabase = await getSupabase();
+      if (!supabase) return;
+
+      button.disabled = true;
+      status.textContent = 'The clerk is writing out your link.';
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        // Where the emailed link brings the reader back to.
+        options: { emailRedirectTo: `${location.origin}/account` },
+      });
+      button.disabled = false;
+      status.textContent = error
+        ? `The link could not be sent: ${error.message}`
+        : `A letter has been sent to ${email}. Open the link in it to sign in. It may take a minute, and it may be hiding among the advertisements.`;
+      if (!error) form.hidden = true;
+    });
+  }
+</script>
+
+<style>
+  .login {
+    max-width: var(--measure);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .login__form {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 24rem;
+    margin: var(--space-5) auto var(--space-3);
+    text-align: left;
+  }
+
+  .login__form[hidden] {
+    display: none;
+  }
+
+  .login__form input {
+    width: 100%;
+    padding: var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    border-radius: 0; /* phones round text boxes unless told not to */
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .login__form button {
+    min-height: 2.75rem;
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .login__form button:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .login__status {
+    min-height: 1.5em;
+    font-style: italic;
+  }
+</style>

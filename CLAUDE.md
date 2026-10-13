@@ -28,7 +28,7 @@ The full brief lives in `docs/brief.md`. Read it before any major feature work.
 - **Newsletter**: Buttondown embed form.
 - **Payments**: Stripe Payment Links (prints, donations). No cart.
 - **Commissions**: Tally form embedded on artist pages.
-- **Later, not now**: Supabase for accounts, likes, comments, saved articles.
+- **Supabase** (`@supabase/supabase-js`): reader accounts, likes, saved articles, comments. Used from the browser only; the site stays static.
 
 Ask before adding any dependency not listed here.
 
@@ -69,7 +69,7 @@ Ask before adding any dependency not listed here.
 | `/games/crossword/submit` | How to send in a crossword, with the Tally form (`crosswordSubmissionForm` in `src/data/site.ts`). Puzzles live in `src/data/crosswords.ts`; the build checks each one. |
 | `/games/caption-contest` | Caption contest. Contests and results in `src/data/caption-contests.ts` (the last entry is the open one); entries via Tally (`captionContestForm` in `src/data/site.ts`). `TallyForm.astro` embeds any Tally form. |
 | `/archive`, `/contact` | Every article by month; a Tally contact form (`contactForm` in `src/data/site.ts`) |
-| `/login`, `/signup` | Holding pages until accounts arrive in Phase 10 |
+| `/login`, `/signup`, `/account` | Reader accounts (Supabase). Sign-in is by emailed link, no passwords. `/account` shows the reader's name, saved and liked articles and their letters; an administrator also gets the Letters Desk for moderating. All of it is switched off, with holding notices, until `supabase` in `src/data/site.ts` is filled in. The database tables and access rules are in `supabase/schema.sql`, which also lists the setup steps. Browser-side helpers are in `src/lib/accounts.ts`. |
 | `/rss.xml`, `/sitemap.xml`, `/robots.txt` | The feed, the list of pages for search engines, and the note to their crawlers. Written by hand in `src/pages/` (no plugin). The site's address comes from `SITE_URL` or Vercel; see `astro.config.mjs`. |
 | `/styleguide` | Living reference of every design element (dev only) |
 
@@ -146,4 +146,4 @@ No dark mode at launch: the paper is the identity.
 7. Store and commissions (done)
 8. Submit, About, Support, newsletter (built; waiting on the Tally, Stripe and Buttondown addresses in `src/data/site.ts`)
 9. Polish, 404, SEO and Open Graph images, favicon (done)
-10. (Later) Accounts, comments, likes via Supabase
+10. Accounts, comments, likes via Supabase (reader accounts built, waiting on a Supabase project; the online editing desk for the administrator is not built yet)

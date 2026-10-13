@@ -30,6 +30,19 @@ export const site = {
     create: '',
   },
 
+  // Reader accounts (sign-in, likes, saved articles, letters) are kept
+  // in a Supabase project. Paste its Project URL and its "anon public"
+  // key here; both are in the project under Settings > API. The anon
+  // key is meant to be public: what protects the data is the set of
+  // rules in supabase/schema.sql, which also has the setup steps.
+  // While either is blank, accounts are switched off: the Log In page
+  // says the register is not yet open, likes are kept in the reader's
+  // own browser, and the Letters desk is shut.
+  supabase: {
+    url: '',
+    anonKey: '',
+  },
+
   // The Tally form on the Contact page (/contact). A share link, as above.
   contactForm: '',
 

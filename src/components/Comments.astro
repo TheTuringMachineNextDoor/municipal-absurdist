@@ -1,36 +1,220 @@
 ---
-// The comments section at the foot of an article.
+// "Letters to the Editor": the comments at the foot of an article.
 //
-// NOT YET WORKING, on purpose. Comments need somewhere to be stored and
-// someone to be signed in as, and both arrive with accounts (Phase 10,
-// Supabase). Until then the form is shown but switched off, with a
-// notice saying so, so no reader types a letter that goes nowhere.
+// Letters are kept in the database (the `comments` table; see
+// supabase/schema.sql). Anyone may read them. Only a signed-in reader
+// may write one. A writer may remove their own; an administrator may
+// hide or remove anyone's.
+//
+// While accounts are switched off (no Supabase details in site.ts) the
+// desk is shown shut, with the form disabled, so no reader types a
+// letter that goes nowhere.
+import { accountsConfigured } from '../lib/accounts';
+
+interface Props {
+  /** The article the letters are about: its slug. */
+  articleId: string;
+}
+
+const { articleId } = Astro.props;
 ---
 
-<section class="comments" aria-labelledby="comments-heading">
+<section class="comments" aria-labelledby="comments-heading" data-comments={accountsConfigured ? articleId : undefined}>
   <hr class="rule--double" />
   <h2 id="comments-heading" class="comments__heading">Letters to the Editor</h2>
 
-  <p class="comments__notice">
-    The Letters desk is not yet open. Readers wishing to object may do so aloud, where
-    their remarks will receive the same consideration.
-  </p>
+  {
+    accountsConfigured ? (
+      <>
+        <p class="comments__notice" data-comments-status role="status">The post is being sorted.</p>
+        {/* The letters are put here by the script. */}
+        <ol class="comments__list" data-comments-list />
 
-  <!-- `disabled` on a fieldset switches off everything inside it. -->
-  <form class="comments__form">
-    <fieldset disabled>
-      <legend class="visually-hidden">Write a letter (not yet open)</legend>
-      <label class="label" for="comment-text">Your letter</label>
-      <textarea id="comment-text" rows="4" placeholder="Sir or Madam: I write in the strongest possible terms."></textarea>
-      <button type="submit">Post Letter</button>
-    </fieldset>
-  </form>
+        <form class="comments__form" data-comments-form hidden>
+          <label class="label" for="comment-text">Your letter</label>
+          <textarea
+            id="comment-text"
+            rows="4"
+            maxlength="2000"
+            required
+            placeholder="Sir or Madam: I write in the strongest possible terms."
+          />
+          <p class="fine-print comments__signed">
+            Signing as <strong data-comments-name>A Reader</strong>. <a href="/account">Change the name</a>.
+          </p>
+          <button type="submit">Post Letter</button>
+          <p class="fine-print comments__error" role="alert" data-comments-error />
+        </form>
+
+        <p class="comments__notice" data-comments-signin hidden>
+          <a href="/login">Log in</a> to write a letter. The desk does not accept anonymous correspondence, having
+          received enough of it.
+        </p>
+      </>
+    ) : (
+      <>
+        <p class="comments__notice">
+          The Letters desk is not yet open. Readers wishing to object may do so aloud, where their remarks will
+          receive the same consideration.
+        </p>
+        {/* `disabled` on a fieldset switches off everything inside it. */}
+        <form class="comments__form">
+          <fieldset disabled>
+            <legend class="visually-hidden">Write a letter (not yet open)</legend>
+            <label class="label" for="comment-text">Your letter</label>
+            <textarea id="comment-text" rows="4" placeholder="Sir or Madam: I write in the strongest possible terms." />
+            <button type="submit">Post Letter</button>
+          </fieldset>
+        </form>
+      </>
+    )
+  }
 </section>
 
-<style>
+<script>
+  import { currentProfile, formatLetterDate, getSupabase } from '../lib/accounts';
+
+  interface Letter {
+    id: string;
+    body: string;
+    created_at: string;
+    user_id: string;
+    hidden: boolean;
+    profiles: { display_name: string } | null;
+  }
+
+  const section = document.querySelector<HTMLElement>('[data-comments]');
+  if (section) run(section);
+
+  async function run(section: HTMLElement) {
+    const articleId = section.dataset.comments!;
+    const find = <T extends HTMLElement>(hook: string) => section.querySelector<T>(`[data-comments-${hook}]`)!;
+    const status = find('status');
+    const list = find('list');
+    const form = find<HTMLFormElement>('form');
+    const signin = find('signin');
+    const errorLine = find('error');
+    const textarea = form.querySelector('textarea')!;
+
+    const supabase = await getSupabase();
+    if (!supabase) return;
+    const profile = await currentProfile();
+
+    /** One letter as a list item. Everything a reader typed is set with
+        textContent, never as HTML, so a letter cannot inject markup. */
+    function render(letter: Letter): HTMLLIElement {
+      const item = document.createElement('li');
+      item.className = 'comments__letter';
+      if (letter.hidden) item.dataset.hidden = 'true';
+
+      const body = document.createElement('p');
+      body.className = 'comments__body';
+      body.textContent = letter.body;
+
+      const meta = document.createElement('p');
+      meta.className = 'label comments__meta';
+      meta.textContent = `${letter.profiles?.display_name ?? 'A Reader'} · ${formatLetterDate(letter.created_at)}`;
+      if (letter.hidden) meta.textContent += ' · Hidden from readers';
+
+      item.append(body, meta);
+
+      const own = profile?.id === letter.user_id;
+      if (own || profile?.is_admin) {
+        const tools = document.createElement('p');
+        tools.className = 'comments__tools';
+
+        if (profile?.is_admin) {
+          const hide = document.createElement('button');
+          hide.type = 'button';
+          hide.textContent = letter.hidden ? 'Restore' : 'Hide';
+          hide.addEventListener('click', async () => {
+            const { error } = await supabase!.from('comments').update({ hidden: !letter.hidden }).eq('id', letter.id);
+            if (error) return void (errorLine.textContent = error.message);
+            item.replaceWith(render({ ...letter, hidden: !letter.hidden }));
+          });
+          tools.append(hide);
+        }
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = own ? 'Withdraw my letter' : 'Delete';
+        remove.addEventListener('click', async () => {
+          if (!confirm('Remove this letter for good?')) return;
+          const { error } = await supabase!.from('comments').delete().eq('id', letter.id);
+          if (error) return void (errorLine.textContent = error.message);
+          item.remove();
+          count();
+        });
+        tools.append(remove);
+        item.append(tools);
+      }
+      return item;
+    }
+
+    function count() {
+      const n = list.children.length;
+      status.textContent =
+        n === 0
+          ? 'No letters have been received. The editors choose to regard this as agreement.'
+          : `${n} ${n === 1 ? 'letter' : 'letters'} received.`;
+    }
+
+    // Oldest first, like a printed letters page. The join brings each
+    // writer's display name with their letter.
+    const { data, error } = await supabase
+      .from('comments')
+      .select('id, body, created_at, user_id, hidden, profiles(display_name)')
+      .eq('article_id', articleId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      status.textContent = 'The post has been delayed. Letters cannot be shown at present.';
+    } else {
+      list.replaceChildren(...((data ?? []) as unknown as Letter[]).map(render));
+      count();
+    }
+
+    if (!profile) {
+      signin.hidden = false;
+      return;
+    }
+
+    find('name').textContent = profile.display_name;
+    form.hidden = false;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorLine.textContent = '';
+      const body = textarea.value.trim();
+      if (!body) return;
+      const button = form.querySelector('button')!;
+      button.disabled = true;
+      const { data: posted, error: failed } = await supabase
+        .from('comments')
+        .insert({ article_id: articleId, user_id: profile.id, body })
+        .select('id, body, created_at, user_id, hidden, profiles(display_name)')
+        .single();
+      button.disabled = false;
+      if (failed || !posted) {
+        errorLine.textContent = failed?.message ?? 'The letter could not be posted.';
+        return;
+      }
+      list.append(render(posted as unknown as Letter));
+      textarea.value = '';
+      count();
+    });
+  }
+</script>
+
+<!-- `is:global` for the letters themselves, which the script creates.
+     Every rule starts with .comments. -->
+<style is:global>
   .comments {
     max-width: var(--measure-article);
     margin: var(--space-7) auto 0;
+  }
+
+  .comments [hidden] {
+    display: none;
   }
 
   .comments__heading {
@@ -47,6 +231,53 @@
     color: var(--ink-soft);
   }
 
+  .comments__list {
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .comments__letter {
+    padding-block: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  /* A hidden letter, as its writer or an administrator sees it. */
+  .comments__letter[data-hidden] .comments__body {
+    color: var(--ink-soft);
+    text-decoration: line-through;
+  }
+
+  .comments__body {
+    margin: 0 0 var(--space-2);
+    white-space: pre-wrap; /* keep the writer's line breaks */
+    overflow-wrap: anywhere;
+  }
+
+  .comments__meta {
+    margin: 0;
+    font-size: var(--text-xs);
+  }
+
+  .comments__tools {
+    display: flex;
+    gap: var(--space-3);
+    margin: var(--space-2) 0 0;
+  }
+
+  .comments__tools button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    font-family: var(--font-label);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .comments__form,
   .comments__form fieldset {
     display: grid;
     gap: var(--space-2);
@@ -55,17 +286,22 @@
     border: 0;
   }
 
+  .comments__form fieldset {
+    margin: 0;
+  }
+
   .comments__form textarea {
     width: 100%;
     padding: var(--space-3);
     border: var(--rule-hair) solid var(--ink-soft);
+    border-radius: 0;
     background: transparent;
     color: var(--ink);
     font: inherit;
     resize: vertical;
   }
 
-  .comments__form button {
+  .comments__form button[type='submit'] {
     justify-self: end;
     padding: var(--space-2) var(--space-4);
     border: var(--rule-hair) solid var(--ink-soft);
@@ -74,6 +310,25 @@
     font-family: var(--font-label);
     font-size: var(--text-sm);
     letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .comments__form button[type='submit']:hover:not(:disabled) {
+    border-color: var(--ink);
+    background: var(--accent);
+  }
+
+  .comments__signed,
+  .comments__error {
+    margin: 0;
+  }
+
+  .comments__error {
+    color: #a8321f;
+  }
+
+  .comments__error:empty {
+    display: none;
   }
 
   /* Switched off: faded, and the cursor says so. */

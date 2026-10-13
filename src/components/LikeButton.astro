@@ -1,70 +1,147 @@
 ---
-// A button to like an article. An article page has two, top and bottom;
-// pressing either marks both.
+// A button to mark an article: either to like it, or to save it for
+// later (`kind="save"`). An article page has a like button top and
+// bottom; pressing either marks both.
 //
-// FOR NOW the like is remembered only in the reader's own browser
-// (localStorage), so there is no count and it does not follow them to
-// another device. When accounts arrive (Phase 10, Supabase), only the two
-// functions marked in the script below need to change.
+// Where the mark is kept depends on the reader:
+//   - Not signed in (or accounts switched off): in their own browser
+//     only (localStorage). It does not follow them to another device.
+//   - Signed in: in the database as well (the `likes` or `saves` table),
+//     so it follows them, and shows on their account page.
+// There is no public count either way.
 interface Props {
-  /** What is being liked: the article's slug. */
+  /** What is being marked: the article's slug. */
   id: string;
+  kind?: 'like' | 'save';
 }
 
-const { id } = Astro.props;
+const { id, kind = 'like' } = Astro.props;
 ---
 
-<button class="like" type="button" data-like={id} aria-pressed="false">
-  <svg class="like__heart" viewBox="0 0 24 22" width="18" height="16" aria-hidden="true" focusable="false">
-    <path d="M12 20.5 C5 15 1.5 11.2 1.5 7 C1.5 3.8 3.9 1.5 6.8 1.5 C8.9 1.5 10.9 2.7 12 4.6 C13.1 2.7 15.1 1.5 17.2 1.5 C20.1 1.5 22.5 3.8 22.5 7 C22.5 11.2 19 15 12 20.5 Z" />
-  </svg>
-  <span data-like-label>Like this article</span>
+<button class="like" type="button" data-mark={kind} data-mark-id={id} aria-pressed="false">
+  {
+    kind === 'like' ? (
+      <svg class="like__icon" viewBox="0 0 24 22" width="18" height="16" aria-hidden="true" focusable="false">
+        <path d="M12 20.5 C5 15 1.5 11.2 1.5 7 C1.5 3.8 3.9 1.5 6.8 1.5 C8.9 1.5 10.9 2.7 12 4.6 C13.1 2.7 15.1 1.5 17.2 1.5 C20.1 1.5 22.5 3.8 22.5 7 C22.5 11.2 19 15 12 20.5 Z" />
+      </svg>
+    ) : (
+      // A bookmark: a ribbon with a notch cut from the foot.
+      <svg class="like__icon" viewBox="0 0 16 22" width="13" height="17" aria-hidden="true" focusable="false">
+        <path d="M1.5 1.5 H14.5 V20.5 L8 15 L1.5 20.5 Z" />
+      </svg>
+    )
+  }
+  <span data-mark-label>{kind === 'like' ? 'Like this article' : 'Save for later'}</span>
 </button>
 
 <!-- Astro bundles this once however many buttons are on the page. -->
 <script>
-  const KEY = 'absurdist:likes';
+  import { currentUser, getSupabase, looksSignedIn } from '../lib/accounts';
 
-  // --- Storage. Replace these two when likes move to a database. ---
-  function readLikes(): string[] {
+  type Kind = 'like' | 'save';
+
+  // For each kind: where it is kept in the browser, which database
+  // table it goes in, and what the button says.
+  const KINDS: Record<Kind, { key: string; table: string; off: string; on: string }> = {
+    like: { key: 'absurdist:likes', table: 'likes', off: 'Like this article', on: 'Liked' },
+    save: { key: 'absurdist:saved', table: 'saves', off: 'Save for later', on: 'Saved' },
+  };
+
+  // --- The browser's own copy ---
+  function readLocal(kind: Kind): string[] {
     try {
-      return JSON.parse(localStorage.getItem(KEY) ?? '[]');
+      return JSON.parse(localStorage.getItem(KINDS[kind].key) ?? '[]');
     } catch {
       return []; // private windows and blocked storage land here
     }
   }
 
-  function writeLikes(likes: string[]) {
+  function writeLocal(kind: Kind, ids: string[]) {
     try {
-      localStorage.setItem(KEY, JSON.stringify(likes));
+      localStorage.setItem(KINDS[kind].key, JSON.stringify(ids));
     } catch {
       // Nothing to do: the button still toggles for this visit.
     }
   }
-  // -----------------------------------------------------------------
 
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-like]')];
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-mark]')];
 
   // Show one article's state on every button for it.
-  function show(id: string, liked: boolean) {
+  function show(kind: Kind, id: string, marked: boolean) {
     for (const button of buttons) {
-      if (button.dataset.like !== id) continue;
-      button.setAttribute('aria-pressed', String(liked));
-      const label = button.querySelector('[data-like-label]');
-      if (label) label.textContent = liked ? 'Liked' : 'Like this article';
+      if (button.dataset.mark !== kind || button.dataset.markId !== id) continue;
+      button.setAttribute('aria-pressed', String(marked));
+      const label = button.querySelector('[data-mark-label]');
+      if (label) label.textContent = marked ? KINDS[kind].on : KINDS[kind].off;
     }
   }
 
-  const liked = new Set(readLikes());
-  for (const button of buttons) {
-    const id = button.dataset.like!;
-    show(id, liked.has(id));
-    button.addEventListener('click', () => {
-      if (liked.has(id)) liked.delete(id);
-      else liked.add(id);
-      writeLikes([...liked]);
-      show(id, liked.has(id));
-    });
+  for (const kind of ['like', 'save'] as const) {
+    const mine = buttons.filter((button) => button.dataset.mark === kind);
+    if (mine.length === 0) continue;
+    const ids = [...new Set(mine.map((button) => button.dataset.markId!))];
+    const marked = new Set(readLocal(kind));
+    let userId: string | null = null; // set below once we know someone is signed in
+
+    for (const id of ids) show(kind, id, marked.has(id));
+
+    for (const button of mine) {
+      const id = button.dataset.markId!;
+      button.addEventListener('click', async () => {
+        const now = !marked.has(id);
+        if (now) marked.add(id);
+        else marked.delete(id);
+        writeLocal(kind, [...marked]);
+        show(kind, id, now); // at once; the database catches up behind
+
+        if (!userId) return;
+        const supabase = await getSupabase();
+        if (!supabase) return;
+        const request = now
+          ? supabase.from(KINDS[kind].table).upsert({ user_id: userId, article_id: id })
+          : supabase.from(KINDS[kind].table).delete().eq('user_id', userId).eq('article_id', id);
+        const { error } = await request;
+        if (error) console.warn(`Could not record the ${kind}:`, error.message);
+      });
+    }
+
+    // Signed in: the database is the record. Marks made in this browser
+    // before signing in are sent up once; after that the buttons show
+    // what the database holds.
+    if (looksSignedIn()) {
+      (async () => {
+        const [supabase, user] = [await getSupabase(), await currentUser()];
+        if (!supabase || !user) return;
+        userId = user.id;
+        const { table } = KINDS[kind];
+
+        const sentFlag = `absurdist:sent:${kind}:${user.id}`;
+        let alreadySent = true;
+        try {
+          alreadySent = localStorage.getItem(sentFlag) === 'yes';
+        } catch {
+          // Storage blocked: skip the one-time upload.
+        }
+        if (!alreadySent && marked.size > 0) {
+          await supabase.from(table).upsert([...marked].map((article_id) => ({ user_id: user.id, article_id })));
+        }
+        try {
+          localStorage.setItem(sentFlag, 'yes');
+        } catch {
+          // Nothing to do.
+        }
+
+        const { data, error } = await supabase.from(table).select('article_id').in('article_id', ids);
+        if (error || !data) return;
+        const held = new Set(data.map((row) => row.article_id as string));
+        for (const id of ids) {
+          if (held.has(id)) marked.add(id);
+          else marked.delete(id);
+          show(kind, id, held.has(id));
+        }
+        writeLocal(kind, [...marked]);
+      })();
+    }
   }
 </script>
 
@@ -91,20 +168,21 @@ const { id } = Astro.props;
     color: var(--accent-text);
   }
 
-  .like__heart {
+  .like__icon {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.6;
+    stroke-linejoin: round;
     transition: fill 150ms, transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Liked: the heart fills with yellow and gives a small jump. */
+  /* Marked: the icon fills with yellow and gives a small jump. */
   .like[aria-pressed='true'] {
     border-color: var(--accent-text);
     color: var(--accent-text);
   }
 
-  .like[aria-pressed='true'] .like__heart {
+  .like[aria-pressed='true'] .like__icon {
     fill: var(--accent);
     transform: scale(1.15);
   }

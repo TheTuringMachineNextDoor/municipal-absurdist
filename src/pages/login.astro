@@ -1,9 +1,18 @@
 ---
-// A holding page until reader accounts are built. See AccountsNotice.
+// /login. While accounts are switched off (no Supabase details in
+// src/data/site.ts) this shows a holding notice instead of the form.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import AccountsNotice from '../components/AccountsNotice.astro';
+import LoginForm from '../components/LoginForm.astro';
+import { accountsConfigured } from '../lib/accounts';
 ---
 
 <BaseLayout title="Log In" noindex>
-  <AccountsNotice heading="Log In" />
+  {
+    accountsConfigured ? (
+      <LoginForm heading="Log In" dek="Give your address and the clerk will send a link that lets you in." />
+    ) : (
+      <AccountsNotice heading="Log In" />
+    )
+  }
 </BaseLayout>

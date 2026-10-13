@@ -1,0 +1,416 @@
+---
+// /account: the signed-in reader's own page. Their name, the articles
+// they have saved and liked, and the letters they have written. An
+// administrator also gets the Letters Desk: every recent letter on the
+// site, with the means to hide or delete it.
+//
+// The page is built without knowing who will read it (the site is
+// static), so it ships empty and the script fills it in for whoever is
+// signed in. The list of article titles is written into the page at
+// build time, because the database only stores each article's slug.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AccountsNotice from '../components/AccountsNotice.astro';
+import { articlePath, getPublishedArticles } from '../lib/articles';
+import { accountsConfigured } from '../lib/accounts';
+
+const articles = Object.fromEntries(
+  (await getPublishedArticles()).map((article) => [
+    article.id,
+    { title: article.data.title, href: articlePath(article) },
+  ]),
+);
+---
+
+<BaseLayout title="My Account" noindex>
+  {
+    !accountsConfigured ? (
+      <AccountsNotice heading="My Account" />
+    ) : (
+      <div class="account" data-account>
+        <script type="application/json" data-account-articles set:html={JSON.stringify(articles)} />
+
+        <header class="account__header">
+          <p class="label label--accent">The Readers’ Register</p>
+          <h1>My Account</h1>
+          <p class="dek" role="status" data-account-status>The clerk is finding your page.</p>
+        </header>
+
+        {/* Shown to a visitor who is not signed in. */}
+        <p class="account__out" data-account-out hidden>
+          You are not signed in. <a href="/login">Log in</a>, or <a href="/signup">sign up</a> if the register does
+          not yet know you.
+        </p>
+
+        {/* Everything below is shown once the reader is known. */}
+        <div data-account-in hidden>
+          <section class="account__section" aria-labelledby="account-name">
+            <h2 id="account-name" class="account__heading">Your Name in Print</h2>
+            <form class="account__name" data-account-name-form>
+              <label class="label" for="display-name">The name printed beside your letters</label>
+              <div class="account__name-row">
+                <input id="display-name" name="name" type="text" maxlength="40" required autocomplete="nickname" />
+                <button type="submit">Save</button>
+              </div>
+              <p class="fine-print" role="status" data-account-name-status />
+            </form>
+            <p class="fine-print">
+              Signed in as <span data-account-email />. Your address is never shown to other readers.
+            </p>
+          </section>
+
+          <section class="account__section" aria-labelledby="account-saved">
+            <h2 id="account-saved" class="account__heading">Saved for Later</h2>
+            <ul class="account__list" data-account-list="saves" />
+          </section>
+
+          <section class="account__section" aria-labelledby="account-liked">
+            <h2 id="account-liked" class="account__heading">Articles You Approved Of</h2>
+            <ul class="account__list" data-account-list="likes" />
+          </section>
+
+          <section class="account__section" aria-labelledby="account-letters">
+            <h2 id="account-letters" class="account__heading">Your Letters</h2>
+            <ul class="account__list" data-account-list="letters" />
+          </section>
+
+          {/* Administrators only; the script reveals it. The database
+              enforces this too: for anyone else these requests return
+              nothing they are not already allowed to see. */}
+          <section class="account__section account__desk" aria-labelledby="account-desk" data-account-desk hidden>
+            <h2 id="account-desk" class="account__heading">The Letters Desk</h2>
+            <p class="account__note">
+              You are an administrator. These are the fifty most recent letters on the site. Hide one to take
+              it out of public view; delete one to remove it for good.
+            </p>
+            <ul class="account__list" data-account-list="desk" />
+          </section>
+
+          <section class="account__section">
+            <button type="button" class="account__signout" data-account-signout>Sign Out</button>
+            <p class="fine-print">
+              To close your account and erase what it holds, <a href="/contact">write to the editors</a>.
+            </p>
+          </section>
+        </div>
+      </div>
+    )
+  }
+</BaseLayout>
+
+<script>
+  import { currentProfile, currentUser, formatLetterDate, getSupabase } from '../lib/accounts';
+
+  const root = document.querySelector<HTMLElement>('[data-account]');
+  if (root) run(root);
+
+  async function run(root: HTMLElement) {
+    const find = <T extends HTMLElement>(hook: string) => root.querySelector<T>(`[data-account-${hook}]`)!;
+    const list = (name: string) => root.querySelector<HTMLElement>(`[data-account-list="${name}"]`)!;
+    const status = find('status');
+    const articles: Record<string, { title: string; href: string }> = JSON.parse(
+      find('articles').textContent ?? '{}',
+    );
+
+    const supabase = await getSupabase();
+    if (!supabase) return;
+    // Arriving from the emailed link, the address carries the sign-in
+    // details; the library reads them as it starts, before this answers.
+    const user = await currentUser();
+    if (!user) {
+      status.textContent = 'This page belongs to whoever is signed in.';
+      find('out').hidden = false;
+      return;
+    }
+    const profile = (await currentProfile())!;
+
+    status.textContent = `Good day, ${profile.display_name}.`;
+    find('email').textContent = user.email ?? 'an address the clerk cannot read';
+    find('in').hidden = false;
+
+    // ---- Small builders ----
+    const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text; // textContent, never HTML
+      return node;
+    };
+    const articleLink = (id: string) => {
+      const known = articles[id];
+      const link = el('a', 'account__title', known?.title ?? `An article since withdrawn (${id})`);
+      if (known) link.href = known.href;
+      return link;
+    };
+    const empty = (target: HTMLElement, text: string) => target.replaceChildren(el('li', 'account__empty', text));
+    const action = (label: string, onClick: () => void) => {
+      const button = el('button', 'account__action', label);
+      button.type = 'button';
+      button.addEventListener('click', onClick);
+      return button;
+    };
+
+    // ---- The name ----
+    const nameForm = find<HTMLFormElement>('name-form');
+    const nameInput = nameForm.querySelector('input')!;
+    const nameStatus = find('name-status');
+    nameInput.value = profile.display_name;
+    nameForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const name = nameInput.value.trim();
+      if (!name) return;
+      const { error } = await supabase.from('profiles').update({ display_name: name }).eq('id', user.id);
+      nameStatus.textContent = error ? `The name could not be changed: ${error.message}` : 'The register has been amended.';
+      if (!error) status.textContent = `Good day, ${name}.`;
+    });
+
+    // ---- Saved and liked articles ----
+    for (const [table, nothing] of [
+      ['saves', 'Nothing saved. Press “Save for later” on any article and it will wait here.'],
+      ['likes', 'Nothing yet. You are a hard reader to please, and the editors respect it.'],
+    ] as const) {
+      const target = list(table);
+      const { data } = await supabase
+        .from(table)
+        .select('article_id, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (!data || data.length === 0) {
+        empty(target, nothing);
+        continue;
+      }
+      target.replaceChildren(
+        ...data.map((row) => {
+          const item = el('li', 'account__item');
+          item.append(
+            articleLink(row.article_id),
+            action('Remove', async () => {
+              const { error } = await supabase.from(table).delete().eq('user_id', user.id).eq('article_id', row.article_id);
+              if (error) return;
+              item.remove();
+              if (target.children.length === 0) empty(target, nothing);
+            }),
+          );
+          return item;
+        }),
+      );
+    }
+
+    // ---- Letters: the reader's own, and for an administrator the desk ----
+    interface Letter {
+      id: string;
+      article_id: string;
+      body: string;
+      created_at: string;
+      hidden: boolean;
+      profiles?: { display_name: string } | null;
+    }
+
+    function letterItem(letter: Letter, asAdmin: boolean): HTMLLIElement {
+      const item = el('li', 'account__item account__item--letter');
+      if (letter.hidden) item.dataset.hidden = 'true';
+      const words = el('div');
+      const meta = [
+        asAdmin ? (letter.profiles?.display_name ?? 'A Reader') : null,
+        formatLetterDate(letter.created_at),
+        letter.hidden ? 'Hidden from readers' : null,
+      ].filter(Boolean);
+      const on = el('p', 'label account__meta', `${meta.join(' · ')} · on `);
+      on.append(articleLink(letter.article_id));
+      words.append(el('p', 'account__body', letter.body), on);
+
+      const tools = el('div', 'account__tools');
+      if (asAdmin) {
+        tools.append(
+          action(letter.hidden ? 'Restore' : 'Hide', async () => {
+            const { error } = await supabase.from('comments').update({ hidden: !letter.hidden }).eq('id', letter.id);
+            if (!error) item.replaceWith(letterItem({ ...letter, hidden: !letter.hidden }, asAdmin));
+          }),
+        );
+      }
+      tools.append(
+        action(asAdmin ? 'Delete' : 'Withdraw', async () => {
+          if (!confirm('Remove this letter for good?')) return;
+          const { error } = await supabase.from('comments').delete().eq('id', letter.id);
+          if (!error) item.remove();
+        }),
+      );
+      item.append(words, tools);
+      return item;
+    }
+
+    const { data: mine } = await supabase
+      .from('comments')
+      .select('id, article_id, body, created_at, hidden')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (!mine || mine.length === 0) empty(list('letters'), 'You have written no letters. The editors thank you for your restraint.');
+    else list('letters').replaceChildren(...(mine as Letter[]).map((letter) => letterItem(letter, false)));
+
+    if (profile.is_admin) {
+      find('desk').hidden = false;
+      const { data: all } = await supabase
+        .from('comments')
+        .select('id, article_id, body, created_at, hidden, profiles(display_name)')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (!all || all.length === 0) empty(list('desk'), 'The in-tray is empty.');
+      else list('desk').replaceChildren(...(all as unknown as Letter[]).map((letter) => letterItem(letter, true)));
+    }
+
+    // ---- Leaving ----
+    find('signout').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      location.assign('/');
+    });
+  }
+</script>
+
+<!-- `is:global` because the lists are filled in by the script. Every
+     rule starts with .account. -->
+<style is:global>
+  .account {
+    max-width: var(--measure-article);
+    margin-inline: auto;
+  }
+
+  .account [hidden] {
+    display: none;
+  }
+
+  .account__header,
+  .account__out {
+    text-align: center;
+  }
+
+  .account__section {
+    margin-top: var(--space-6);
+  }
+
+  /* A ruled label, like the section bands on the front page. */
+  .account__heading {
+    margin: 0 0 var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  .account__name {
+    display: grid;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  .account__name-row {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .account__name input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .account__name button,
+  .account__signout {
+    min-height: 2.75rem;
+    padding: var(--space-1) var(--space-4);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .account__name button:hover,
+  .account__signout:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .account__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .account__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: var(--rule-hair) solid var(--rule);
+  }
+
+  .account__title {
+    font-family: var(--font-headline);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-headline);
+    line-height: var(--leading-snug);
+    text-decoration: none;
+  }
+
+  a.account__title:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+
+  .account__meta .account__title {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    text-decoration: underline;
+  }
+
+  .account__body {
+    margin: 0 0 var(--space-1);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .account__item[data-hidden] .account__body {
+    color: var(--ink-soft);
+    text-decoration: line-through;
+  }
+
+  .account__meta {
+    margin: 0;
+    font-size: var(--text-xs);
+  }
+
+  .account__tools {
+    display: flex;
+    flex: none;
+    gap: var(--space-3);
+  }
+
+  .account__action {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    font-family: var(--font-label);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .account__empty,
+  .account__note {
+    padding-block: var(--space-2);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+</style>

@@ -87,7 +87,10 @@ const moreItems = await Promise.all(
       date={data.date}
     />
 
-    <p class="article__like"><LikeButton id={article.id} /></p>
+    <p class="article__like">
+      <LikeButton id={article.id} />
+      <LikeButton id={article.id} kind="save" />
+    </p>
 
     <Illustration file={data.image} alt={data.imageAlt} credit={data.imageCredit} variant="lead" />
 
@@ -101,15 +104,19 @@ const moreItems = await Promise.all(
     <p class="article__like article__like--end"><LikeButton id={article.id} /></p>
   </article>
 
-  <Comments />
+  <Comments articleId={article.id} />
 
   <MoreFromSection sectionName={section.name} sectionHref={`/${section.slug}`} items={moreItems} />
 </BaseLayout>
 
 <style>
+  /* The like and save buttons, side by side, wrapping on a narrow screen. */
   .article__like {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
     margin: var(--space-4) 0 0;
-    text-align: center;
   }
 
   .article__like--end {
