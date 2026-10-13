@@ -12,7 +12,11 @@
   --ink: #1A1714;     /* near-black */
   --ink-soft: #4A443D;
   --rule: #2B2622;
-  --accent: #1E5B3C;  /* bottle green; use sparingly */
+  --accent: #F2C12E;  /* Wes Anderson yellow: for fills, strokes and underlines */
+  /* Yellow type on white paper cannot be read, so wherever the accent is
+     a colour for words or thin lines, this darker mustard is used. It
+     passes WCAG AA on the paper (5.5 to 1). */
+  --accent-text: #86600A;
 
   /* Type families. Each has a fallback stack for the moment before the
      Google Font arrives, and for readers whose network blocks it. */

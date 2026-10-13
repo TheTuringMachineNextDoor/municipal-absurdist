@@ -16,7 +16,8 @@ const colors = [
   { token: '--ink', hex: '#1A1714', note: 'Near-black. Headlines and body copy.' },
   { token: '--ink-soft', hex: '#4A443D', note: 'Deks, labels, captions, fine print.' },
   { token: '--rule', hex: '#2B2622', note: 'Rules between sections and columns.' },
-  { token: '--accent', hex: '#1E5B3C', note: 'Bottle green. Used sparingly, like the truth.' },
+  { token: '--accent', hex: '#F2C12E', note: 'Yellow. Fills, strokes and underlines. Used sparingly, like the truth.' },
+  { token: '--accent-text', hex: '#86600A', note: 'Mustard. The accent wherever it must be read as type.' },
 ];
 
 const fonts = [
@@ -192,7 +193,7 @@ const sampleMore = [
     <div class="sg-specimen">
       <p class="sg-meta">
         <span class="label">Highlighter</span><code>.highlighter</code>
-        <span class="fine-print">White type over a green marker stroke. For the occasional headline, not every one.</span>
+        <span class="fine-print">Ink over a yellow marker stroke. For the occasional headline, not every one.</span>
       </p>
       <p class="sg-h sg-h2 sg-highlighted"><span class="highlighter">Mayor Underlines Own Remarks for Emphasis</span></p>
     </div>
@@ -271,7 +272,7 @@ const sampleMore = [
       </div>
       <div class="sg-specimen">
         <p class="sg-meta">
-          <span class="label">Blackletter, in green</span>
+          <span class="label">Blackletter, in mustard</span>
           <code>.drop-cap--blackletter .drop-cap--accent</code>
         </p>
         <p class="drop-cap drop-cap--blackletter drop-cap--accent">
@@ -488,7 +489,7 @@ const sampleMore = [
     font-family: var(--font-label);
     font-size: var(--text-lg);
     letter-spacing: 0.12em;
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .sg-specimen {

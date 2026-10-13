@@ -87,8 +87,8 @@ const { id } = Astro.props;
   }
 
   .like:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-text);
+    color: var(--accent-text);
   }
 
   .like__heart {
@@ -98,10 +98,10 @@ const { id } = Astro.props;
     transition: fill 150ms, transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Liked: the heart fills with green and gives a small jump. */
+  /* Liked: the heart fills with yellow and gives a small jump. */
   .like[aria-pressed='true'] {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-text);
+    color: var(--accent-text);
   }
 
   .like[aria-pressed='true'] .like__heart {

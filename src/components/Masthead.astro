@@ -34,7 +34,7 @@ const builtIso = built.toISOString().slice(0, 10);
   <Tag class="masthead__name">
     <!-- Plain text in a link: sighted readers and screen readers get
          the same thing, once. -->
-    <!-- The green line glides across the name on hover or press. It is
+    <!-- The yellow line glides across the name on hover or press. It is
          not kept after the click: the front page loads with it gone. -->
     <a class="masthead__link has-stroke" href="/">The Municipal Absurdist<Stroke /></a>
   </Tag>
@@ -168,8 +168,8 @@ const builtIso = built.toISOString().slice(0, 10);
   }
 
   .dateline__button:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-text);
+    color: var(--accent-text);
   }
 
   @media (min-width: 40rem) {

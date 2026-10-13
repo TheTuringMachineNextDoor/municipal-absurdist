@@ -129,7 +129,7 @@ p {
 }
 
 .label--accent {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 small,
@@ -141,25 +141,25 @@ small,
 a {
   color: inherit;
   text-decoration-line: underline;
-  text-decoration-color: var(--accent); /* ink text, green underline */
-  text-decoration-thickness: 1px;
+  text-decoration-color: var(--accent); /* ink text, yellow underline */
+  text-decoration-thickness: 0.1em;     /* thick enough for the yellow to show */
   text-underline-offset: 0.18em;
 }
 
 a:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* Visible focus for keyboard readers. Square, like everything else. */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-text);
   outline-offset: 3px;
 }
 
 /* Text highlighted with the cursor. */
 ::selection {
   background: var(--accent);
-  color: var(--paper);
+  color: var(--ink);
 }
 
 blockquote {
@@ -171,28 +171,28 @@ blockquote {
 
 /* ---------- Highlighter ---------- */
 
-/* A headline struck through with a green marker pen, the words set in
-   white on top. Wrap the words in <span class="highlighter">.
+/* A headline struck through with a yellow marker pen, the words set in
+   ink on top (white would vanish on yellow). Wrap the words in <span class="highlighter">.
 
    The stroke is a small SVG drawing with wobbly edges and slanted ends,
    used as the background and stretched to fit. `box-decoration-break:
    clone` gives every line of a wrapped headline its own complete stroke
    instead of one stroke cut into pieces.
 
-   The colour is written into the drawing (%231E5B3C is #1E5B3C), because
+   The colour is written into the drawing (%23F2C12E is #F2C12E), because
    a background image cannot read CSS variables. If --accent changes,
    change it here too. */
 .highlighter {
   padding: 0.04em 0.4em 0.1em;
-  color: var(--paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath fill='%231E5B3C' d='M3 7 C22 3 41 8 63 5 S108 3 131 6 S176 4 198 3 L199 17 L196 26 L198 35 C171 38 148 34 121 37 S77 35 52 37 S19 35 2 38 L4 27 L1 19 Z'/%3E%3C/svg%3E");
+  color: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath fill='%23F2C12E' d='M3 7 C22 3 41 8 63 5 S108 3 131 6 S176 4 198 3 L199 17 L196 26 L198 35 C171 38 148 34 121 37 S77 35 52 37 S19 35 2 38 L4 27 L1 19 Z'/%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
 
-/* A selected highlighter line stays readable: white on ink. */
+/* A selected highlighter line inverts: white on ink. */
 .highlighter::selection {
   background: var(--ink);
   color: var(--paper);
@@ -308,7 +308,7 @@ hr,
   font-variant-emoji: text;
   font-size: 1.25em;
   line-height: 1;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* A list whose bullets are manicules. */
@@ -333,7 +333,7 @@ hr,
   font-variant-emoji: text;
   font-size: 1.2em;
   line-height: 1.3;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* ---------- Drop cap ---------- */
@@ -360,7 +360,7 @@ hr,
 }
 
 .drop-cap--accent::first-letter {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* ---------- Illustrations ---------- */
