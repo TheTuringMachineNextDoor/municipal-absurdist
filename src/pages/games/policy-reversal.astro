@@ -32,6 +32,13 @@ const keyRows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
   </Fragment>
 
   <div class="pr" data-pr>
+    <!-- The key: what each kind of tile means, always in view. -->
+    <ul class="pr__legend" aria-label="Key to the tiles">
+      <li><span class="pr__tile pr__tile--g" aria-hidden="true">A</span> Right letter, right place</li>
+      <li><span class="pr__tile pr__tile--y" aria-hidden="true">B</span> Right letter, wrong place</li>
+      <li><span class="pr__tile pr__tile--x" aria-hidden="true">C</span> Not in the word</li>
+    </ul>
+
     <p class="pr__statement" data-pr-statement>
       The administration has a word in mind and is entirely committed to it.
     </p>
@@ -351,6 +358,38 @@ const keyRows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
 
   .pr[hidden] {
     display: none;
+  }
+
+  /* The key above the board: three small sample tiles with their
+     meanings. Setting --tile here shrinks the tiles inside it. */
+  .pr__legend {
+    --tile: 1.75rem;
+    /* A phone: a short list, tiles lined up in a column. */
+    display: grid;
+    justify-content: center;
+    gap: var(--space-2) var(--space-5);
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3);
+    border-block: var(--rule-hair) solid var(--rule);
+    list-style: none;
+    font-size: var(--text-sm);
+  }
+
+  .pr__legend li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* Wider screens: all three side by side. */
+  @media (min-width: 40rem) {
+    .pr__legend {
+      display: flex;
+    }
+  }
+
+  .pr__legend .pr__tile--y {
+    border-width: 3px;
   }
 
   .pr__statement {
