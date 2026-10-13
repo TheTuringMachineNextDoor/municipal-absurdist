@@ -34,7 +34,7 @@ export const games: Game[] = [
     name: 'The Personality Quiz',
     blurb: 'Twelve questions to establish, for the record, which municipal department you are.',
     image: 'pantagruel-05.webp',
-    live: false,
+    live: true,
   },
   {
     slug: 'authors-and-faces',

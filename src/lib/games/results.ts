@@ -11,7 +11,8 @@ export interface Results {
   blurb: string;
   /** What the Share button copies: a few lines of plain text. */
   shareText: string;
-  stats: GameStats;
+  /** Leave out for a game with nothing to count. */
+  stats?: GameStats;
   /** Optional extra line, e.g. "A new edition is printed at midnight." */
   note?: string;
 }
@@ -35,9 +36,11 @@ export function showResults(card: HTMLElement, results: Results) {
   set('blurb', results.blurb);
   set('text', results.shareText);
   set('note', results.note ?? '');
-  set('played', String(results.stats.played));
-  set('best', String(results.stats.best));
-  set('streak', String(results.stats.streak));
+  if (results.stats) {
+    set('played', String(results.stats.played));
+    set('best', String(results.stats.best));
+    set('streak', String(results.stats.streak));
+  }
 
   const button = card.querySelector<HTMLButtonElement>('[data-results-share]');
   const status = card.querySelector<HTMLElement>('[data-results-status]');

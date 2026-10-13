@@ -1,0 +1,261 @@
+---
+// The Personality Quiz: twelve questions, one at a time, ending in a
+// municipal department. The questions and results are in
+// src/data/personality-quiz.ts. This is not a daily game: it can be
+// taken as often as the reader likes.
+import GameLayout from '../../layouts/GameLayout.astro';
+import ResultsCard from '../../components/games/ResultsCard.astro';
+import { departments, questions } from '../../data/personality-quiz';
+import { getIllustration } from '../../lib/illustrations';
+
+// One credit line for the woodcuts shown with the results.
+const credits = [...new Set(departments.map((d) => getIllustration(d.image).credit))];
+---
+
+<GameLayout
+  title="The Personality Quiz"
+  standfirst="Twelve questions to establish, for the record, which municipal department you are."
+>
+  <Fragment slot="rules">
+    <ul class="list-ornament">
+      <li>Answer each question with the option nearest the truth. None will be exactly right. This is deliberate.</li>
+      <li>Click an answer, or press its number on the keyboard. You may go back and change your mind.</li>
+      <li>At the end you are assigned a department. The assignment is final, though you may take the quiz again.</li>
+    </ul>
+  </Fragment>
+
+  <div class="quiz" data-quiz>
+    {
+      questions.map((question, index) => (
+        // All twelve are on the page; the script shows one at a time.
+        <section class="quiz__question" data-quiz-question hidden={index > 0}>
+          <p class="label quiz__progress">Question {index + 1} of {questions.length}</p>
+          {/* tabindex="-1": focus moves here when the question appears, so it is read aloud. */}
+          <h2 class="quiz__text" tabindex="-1">{question.text}</h2>
+          <ol class="quiz__answers">
+            {question.answers.map((answer, number) => (
+              <li>
+                <button type="button" class="quiz__answer" data-quiz-answer={answer.for}>
+                  <span class="quiz__number" aria-hidden="true">{number + 1}</span>
+                  <span>{answer.text}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+    <button type="button" class="quiz__back" data-quiz-back hidden>&larr; Previous question</button>
+  </div>
+
+  <ResultsCard stats={false}>
+    <img slot="top" class="quiz__figure" data-quiz-figure alt="" width="215" height="280" />
+    <button type="button" class="quiz__again" data-quiz-again>Take it again</button>
+  </ResultsCard>
+
+  <p class="fine-print quiz__credits">Illustrations: {credits.join(' ')}</p>
+</GameLayout>
+
+<script>
+  import { departments } from '../../data/personality-quiz';
+  import { showResults } from '../../lib/games/results';
+
+  const STORAGE_KEY = 'absurdist:game:personality-quiz';
+
+  const root = document.querySelector<HTMLElement>('[data-quiz]');
+  const resultsCard = document.querySelector<HTMLElement>('[data-results]');
+  if (root && resultsCard) run(root, resultsCard);
+
+  function run(root: HTMLElement, resultsCard: HTMLElement) {
+    const sections = [...root.querySelectorAll<HTMLElement>('[data-quiz-question]')];
+    const back = root.querySelector<HTMLButtonElement>('[data-quiz-back]')!;
+    const figure = resultsCard.querySelector<HTMLImageElement>('[data-quiz-figure]')!;
+
+    let current = 0;
+    let answers: string[] = []; // the department each answer counted toward
+
+    function show(index: number, moveFocus = true) {
+      current = index;
+      sections.forEach((section, i) => (section.hidden = i !== index));
+      back.hidden = index === 0;
+      if (moveFocus) sections[index].querySelector<HTMLElement>('.quiz__text')?.focus({ preventScroll: true });
+    }
+
+    // The department named most often wins. A tie goes to whichever of
+    // the tied departments was chosen most recently.
+    function tally(): string {
+      const counts = new Map<string, number>();
+      for (const id of answers) counts.set(id, (counts.get(id) ?? 0) + 1);
+      const most = Math.max(...counts.values());
+      return [...answers].reverse().find((id) => counts.get(id) === most)!;
+    }
+
+    function reveal(id: string) {
+      const department = departments.find((d) => d.id === id) ?? departments[0];
+      figure.src = `/illustrations/${department.image}`;
+      root.hidden = true;
+      showResults(resultsCard, {
+        score: department.name,
+        rank: department.motto,
+        blurb: department.description,
+        shareText: [
+          'The Municipal Absurdist Personality Quiz',
+          `I am ${department.name}. “${department.motto}”`,
+          `${location.origin}${location.pathname}`,
+        ].join('\n'),
+      });
+    }
+
+    function choose(id: string) {
+      answers[current] = id;
+      if (current < sections.length - 1) {
+        show(current + 1);
+        return;
+      }
+      const result = tally();
+      try {
+        localStorage.setItem(STORAGE_KEY, result);
+      } catch {
+        // Not remembered; the result is still shown.
+      }
+      reveal(result);
+    }
+
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-quiz-answer]')) {
+      button.addEventListener('click', () => choose(button.dataset.quizAnswer!));
+    }
+    back.addEventListener('click', () => show(current - 1));
+
+    // Number keys 1 to 4 pick an answer.
+    document.addEventListener('keydown', (event) => {
+      if (root.hidden || event.altKey || event.ctrlKey || event.metaKey) return;
+      const buttons = sections[current].querySelectorAll<HTMLButtonElement>('[data-quiz-answer]');
+      const picked = buttons[Number(event.key) - 1];
+      if (picked) {
+        event.preventDefault();
+        picked.click();
+      }
+    });
+
+    resultsCard.querySelector('[data-quiz-again]')?.addEventListener('click', () => {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // Nothing to forget.
+      }
+      answers = [];
+      resultsCard.hidden = true;
+      root.hidden = false;
+      show(0);
+    });
+
+    // Someone who has taken it before sees their department again.
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      saved = null;
+    }
+    if (saved && departments.some((d) => d.id === saved)) reveal(saved);
+    else show(0, false);
+  }
+</script>
+
+<style>
+  .quiz[hidden],
+  .quiz__question[hidden],
+  .quiz__back[hidden] {
+    display: none;
+  }
+
+  .quiz__progress {
+    margin-bottom: var(--space-2);
+    text-align: center;
+  }
+
+  .quiz__text {
+    margin-bottom: var(--space-5);
+    font-size: var(--text-h3);
+    text-align: center;
+  }
+
+  .quiz__text:focus {
+    outline: none; /* focus is moved here by script, to be read aloud */
+  }
+
+  .quiz__answers {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* An answer: a wide, square button with its number in a box. */
+  .quiz__answer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 3.25rem;
+    padding: var(--space-2) var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-lg);
+    line-height: var(--leading-snug);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .quiz__answer:hover {
+    border-color: var(--ink);
+    background: var(--accent);
+  }
+
+  .quiz__number {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: var(--rule-hair) solid currentColor;
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    font-variant-numeric: lining-nums;
+  }
+
+  .quiz__back,
+  .quiz__again {
+    margin-top: var(--space-4);
+    padding: var(--space-1) var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: none;
+    color: var(--ink-soft);
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .quiz__back:hover,
+  .quiz__again:hover {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+
+  /* The department's woodcut on the results card. */
+  .quiz__figure {
+    width: auto;
+    height: 9rem;
+    margin: 0 auto var(--space-3);
+    mix-blend-mode: multiply;
+  }
+
+  .quiz__credits {
+    margin: var(--space-5) 0 0;
+    font-style: italic;
+    text-align: center;
+  }
+</style>

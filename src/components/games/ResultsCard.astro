@@ -8,15 +8,18 @@
 // it filled in (the styleguide does).
 interface Props {
   demo?: { score: string; rank: string; blurb: string; shareText: string };
+  /** Pass false for a game with nothing to count (the quiz). */
+  stats?: boolean;
 }
 
-const { demo } = Astro.props;
+const { demo, stats = true } = Astro.props;
 ---
 
 <!-- tabindex="-1" lets the script move focus here when the result
      appears, so keyboard and screen-reader users land on it. -->
 <section class="results" data-results hidden={!demo} tabindex="-1" aria-labelledby="results-heading">
   <h2 id="results-heading" class="results__heading">Official Result</h2>
+  <slot name="top" />
   <p class="results__score" data-results-score>{demo?.score}</p>
   <p class="results__rank" data-results-rank>{demo?.rank}</p>
   <p class="results__blurb" data-results-blurb>{demo?.blurb}</p>
@@ -26,11 +29,11 @@ const { demo } = Astro.props;
   <!-- role="status" has screen readers announce "Copied" when it appears. -->
   <p class="fine-print results__status" role="status" data-results-status></p>
 
-  <dl class="results__stats">
+  {stats && <dl class="results__stats">
     <div><dt>Played</dt><dd data-results-played>{demo ? '12' : '0'}</dd></div>
     <div><dt>Best</dt><dd data-results-best>{demo ? '9' : '0'}</dd></div>
     <div><dt>Streak</dt><dd data-results-streak>{demo ? '4' : '0'}</dd></div>
-  </dl>
+  </dl>}
 
   <p class="results__note" data-results-note></p>
   <slot />
