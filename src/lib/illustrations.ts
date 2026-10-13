@@ -9,6 +9,10 @@ export interface IllustrationRecord {
   credit: string;
   width: number;
   height: number;
+  /** Optional. Where a cropped banner should centre, as a CSS position
+      such as "50% 68%" (across, down). Set it in credits.json when the
+      default crop cuts off the point of the picture. */
+  focus?: string;
 }
 
 const records = credits as IllustrationRecord[];

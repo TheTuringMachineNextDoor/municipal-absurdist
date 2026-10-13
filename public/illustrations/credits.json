@@ -56,17 +56,18 @@
   },
   {
     "file": "man-with-cat.webp",
-    "title": "A Gentleman and His Cat",
-    "alt": "Photograph of a grey-haired man in a tuxedo with a red rose in his lapel, holding a grey cat in a dark room.",
+    "title": "The Don and the Cat",
+    "alt": "Still from The Godfather: a grey-haired man in a tuxedo with a red rose in his lapel, holding a grey tabby cat.",
     "creator": "Not recorded",
-    "source": "Appears to be a still from a film; if so, the rights belong to the studio.",
+    "source": "Still from The Godfather (1972), as named by the editor. Film stills belong to the studio (Paramount Pictures).",
     "sourceUrl": null,
     "license": "NOT CLEARED. Rights unknown; do not publish until confirmed.",
     "credit": "Placeholder image. Source and rights to be confirmed before publication.",
     "width": 1715,
     "height": 2560,
     "placeholder": true,
-    "needsSource": true
+    "needsSource": true,
+    "focus": "50% 68%"
   },
   {
     "file": "lighthouse-keeper.jpeg",
@@ -126,10 +127,10 @@
   },
   {
     "file": "trump.jpeg",
-    "title": "Portrait (file named trump.jpeg)",
-    "alt": "Close portrait of an older man in a dark suit and blue tie, looking off to one side.",
+    "title": "Donald Trump",
+    "alt": "Close portrait of Donald Trump in a dark suit and blue tie, looking off to one side.",
     "creator": "Not recorded",
-    "source": "Portrait photograph; photographer and source not recorded. Subject taken from the file name.",
+    "source": "Portrait photograph of Donald Trump (subject named by the editor); photographer and source not recorded.",
     "sourceUrl": null,
     "license": "NOT CLEARED. Rights unknown; do not publish until confirmed.",
     "credit": "Placeholder image. Source and rights to be confirmed before publication.",
