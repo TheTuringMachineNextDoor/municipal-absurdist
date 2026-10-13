@@ -100,7 +100,8 @@ const credits = [...new Set(departments.map((d) => getIllustration(d.image).cred
         blurb: department.description,
         shareText: [
           'The Municipal Absurdist Personality Quiz',
-          `I am ${department.name}. “${department.motto}”`,
+          // "I am the Zoning Board", not "I am The Zoning Board".
+          `I am ${department.name.replace(/^The /, 'the ')}. “${department.motto}”`,
           `${location.origin}${location.pathname}`,
         ].join('\n'),
       });
