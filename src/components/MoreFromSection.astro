@@ -1,12 +1,12 @@
 ---
 // The strip at the foot of an article: up to three more pieces from the
 // same section, in columns divided by hairlines.
-import ArticleCard from './ArticleCard.astro';
+import ArticleList, { type ArticleListItem } from './ArticleList.astro';
 
 interface Props {
   sectionName: string;
   sectionHref: string;
-  items: { href: string; title: string; dek: string; author: string }[];
+  items: ArticleListItem[];
   /** Only needed if the strip appears twice on one page (the styleguide). */
   headingId?: string;
 }
@@ -22,13 +22,7 @@ const { sectionName, sectionHref, items, headingId = 'more-from-section' } = Ast
 
   {
     items.length > 0 ? (
-      <ul class="more__list">
-        {items.map((item) => (
-          <li class="more__item">
-            <ArticleCard {...item} />
-          </li>
-        ))}
-      </ul>
+      <ArticleList items={items} />
     ) : (
       <p class="more__empty">
         The {sectionName} desk has filed nothing further. Its correspondents are understood
@@ -58,46 +52,6 @@ const { sectionName, sectionHref, items, headingId = 'more-from-section' } = Ast
 
   .more__heading a:hover {
     text-decoration: underline;
-  }
-
-  .more__list {
-    display: grid;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  /* One column on a phone, with a hairline between items. */
-  .more__item {
-    padding-block: var(--space-4);
-    border-top: var(--rule-hair) solid var(--rule);
-  }
-
-  .more__item:first-child {
-    padding-top: 0;
-    border-top: 0;
-  }
-
-  /* Side by side when there is room; the hairline moves between columns. */
-  @media (min-width: 48rem) {
-    .more__list {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .more__item {
-      padding: 0 var(--space-5);
-      border-top: 0;
-      border-left: var(--rule-hair) solid var(--rule);
-    }
-
-    .more__item:first-child {
-      padding-left: 0;
-      border-left: 0;
-    }
-
-    .more__item:last-child {
-      padding-right: 0;
-    }
   }
 
   .more__empty {

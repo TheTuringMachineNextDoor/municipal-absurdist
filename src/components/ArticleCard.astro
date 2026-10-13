@@ -6,18 +6,26 @@ interface Props {
   title: string;
   dek: string;
   author: string;
+  /** Shown above the headline where sections are mixed. */
+  sectionName?: string;
 }
 
-const { href, title, dek, author } = Astro.props;
+const { href, title, dek, author, sectionName } = Astro.props;
 ---
 
 <article class="article-card">
+  {sectionName && <p class="label label--accent article-card__section">{sectionName}</p>}
   <h3 class="article-card__title"><a href={href}>{title}</a></h3>
   <p class="article-card__dek">{dek}</p>
   <p class="label article-card__byline">By {author}</p>
 </article>
 
 <style>
+  .article-card__section {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-xs);
+  }
+
   .article-card__title {
     margin-bottom: var(--space-2);
     font-size: var(--text-h4);

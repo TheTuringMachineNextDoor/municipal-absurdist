@@ -1,0 +1,122 @@
+---
+// The lead story of a page: illustration, section label, a large
+// headline that links to the article, the dek, and the byline. The
+// front page and each section front open with one.
+import Illustration from './Illustration.astro';
+import { formatDate } from '../lib/articles';
+
+interface Props {
+  href: string;
+  title: string;
+  dek: string;
+  author: string;
+  date: Date;
+  image: string;
+  imageAlt?: string;
+  imageCredit?: string;
+  /** Shown above the headline; leave out on a section's own page. */
+  sectionName?: string;
+  sectionHref?: string;
+  /** Set the headline in white over green marker strokes. */
+  highlighted?: boolean;
+}
+
+const { href, title, dek, author, date, image, imageAlt, imageCredit, sectionName, sectionHref, highlighted = false } =
+  Astro.props;
+const { label, iso } = formatDate(date);
+---
+
+<article class="lead">
+  <div class="lead__picture">
+    <Illustration file={image} alt={imageAlt} credit={imageCredit} variant="lead" />
+  </div>
+
+  <div class="lead__text">
+    {
+      sectionName && (
+        <p class="label label--accent lead__section">
+          {sectionHref ? <a href={sectionHref}>{sectionName}</a> : sectionName}
+        </p>
+      )
+    }
+    <h2 class:list={['lead__title', { 'lead__title--highlighted': highlighted }]}>
+      <a href={href}>{highlighted ? <span class="highlighter">{title}</span> : title}</a>
+    </h2>
+    <p class="dek lead__dek">{dek}</p>
+    <p class="label lead__byline">
+      By {author} <span aria-hidden="true">&middot;</span> <time datetime={iso}>{label}</time>
+    </p>
+    <p class="lead__more"><a href={href}>Read the full report</a></p>
+  </div>
+</article>
+
+<style>
+  .lead {
+    display: grid;
+    gap: var(--space-4);
+    text-align: center;
+  }
+
+  /* The lead figure brings its own generous margins for an article
+     page; here the grid does the spacing. */
+  .lead__picture :global(.illustration) {
+    margin-block: 0;
+  }
+
+  .lead__section a,
+  .lead__title a {
+    text-decoration: none;
+  }
+
+  .lead__section {
+    margin-bottom: var(--space-3);
+  }
+
+  .lead__title {
+    font-size: var(--text-h1);
+  }
+
+  .lead__title a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.12em;
+  }
+
+  /* Room between lines so one marker stroke does not run into the next. */
+  .lead__title--highlighted {
+    font-size: var(--text-h2);
+    line-height: 1.45;
+  }
+
+  .lead__dek {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  .lead__byline {
+    margin-bottom: var(--space-3);
+  }
+
+  .lead__more {
+    margin: 0;
+    font-style: italic;
+  }
+
+  /* Side by side on a desk: the woodcut on the left, the words beside
+     it, both centred on the page. */
+  @media (min-width: 52rem) {
+    .lead {
+      grid-template-columns: minmax(12rem, 18rem) minmax(0, 40rem);
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-7);
+      text-align: left;
+    }
+
+    .lead__dek {
+      margin-inline: 0;
+    }
+  }
+</style>

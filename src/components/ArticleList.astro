@@ -1,0 +1,81 @@
+---
+// A run of article cards in columns divided by hairlines: one column on
+// a phone, three on a desk. Used on the front page, the section fronts,
+// and the "More from" strip under an article.
+import ArticleCard from './ArticleCard.astro';
+
+export interface ArticleListItem {
+  href: string;
+  title: string;
+  dek: string;
+  author: string;
+  /** Shown above the headline where sections are mixed (the front page). */
+  sectionName?: string;
+}
+
+interface Props {
+  items: ArticleListItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<ul class="article-list">
+  {
+    items.map((item) => (
+      <li class="article-list__item">
+        <ArticleCard {...item} />
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .article-list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* One column on a phone, with a hairline between items. */
+  .article-list__item {
+    padding-block: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  .article-list__item:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* Three across when there is room; the hairline moves between the
+     columns. :nth-child(3n + 1) is the first card of each row, and
+     :nth-child(n + 4) is every card after the first row. */
+  @media (min-width: 48rem) {
+    .article-list {
+      grid-template-columns: repeat(3, 1fr);
+      row-gap: var(--space-5);
+    }
+
+    .article-list__item {
+      padding: 0 var(--space-5);
+      border-top: 0;
+      border-left: var(--rule-hair) solid var(--rule);
+    }
+
+    .article-list__item:nth-child(3n + 1) {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .article-list__item:nth-child(3n) {
+      padding-right: 0;
+    }
+
+    .article-list__item:nth-child(n + 4) {
+      padding-top: var(--space-5);
+      border-top: var(--rule-hair) solid var(--rule);
+    }
+  }
+</style>

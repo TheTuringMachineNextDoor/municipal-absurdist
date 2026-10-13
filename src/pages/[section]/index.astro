@@ -1,0 +1,89 @@
+---
+// A section front, at /politics, /culture and so on: the section's name,
+// its newest article as the lead, and the rest beneath in columns.
+//
+// One page is built for every section in sections.ts, whether or not
+// anything has been filed under it yet.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import LeadStory from '../../components/LeadStory.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import { sections } from '../../data/sections';
+import { getPublishedArticles, summarize } from '../../lib/articles';
+
+export function getStaticPaths() {
+  return sections.map((section) => ({ params: { section: section.slug }, props: { section } }));
+}
+
+interface Props {
+  section: (typeof sections)[number];
+}
+
+const { section } = Astro.props;
+
+// Newest first, so the first one is the lead.
+const filed = (await getPublishedArticles()).filter((a) => a.data.section === section.slug);
+const [lead, ...rest] = await Promise.all(filed.map(summarize));
+
+// On the section's own page the cards need no section label.
+const restItems = rest.map(({ href, title, dek, author }) => ({ href, title, dek, author }));
+---
+
+<BaseLayout title={section.name} description={section.blurb}>
+  <header class="front-header">
+    <p class="label label--accent">Section</p>
+    <h1>{section.name}</h1>
+    <p class="dek front-header__blurb">{section.blurb}</p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  {
+    lead ? (
+      <>
+        <LeadStory {...lead} sectionName={undefined} sectionHref={undefined} />
+        {restItems.length > 0 && (
+          <section class="front-rest" aria-labelledby="front-rest-heading">
+            <div class="rule-ornament" role="separator">
+              <span class="ornament">&#x2767;&#xFE0E;</span>
+            </div>
+            <h2 id="front-rest-heading" class="front-rest__heading">Also in {section.name}</h2>
+            <ArticleList items={restItems} />
+          </section>
+        )}
+      </>
+    ) : (
+      <p class="front-empty">
+        Nothing has yet been filed under {section.name}. The desk has been staffed, the
+        pencils sharpened, and the first deadline extended as a courtesy.
+      </p>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .front-header {
+    text-align: center;
+  }
+
+  .front-header__blurb {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  .front-rest__heading {
+    margin-bottom: var(--space-5);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
+
+  .front-empty {
+    max-width: var(--measure);
+    margin: var(--space-6) auto;
+    font-size: var(--text-lg);
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+</style>

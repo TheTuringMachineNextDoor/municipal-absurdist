@@ -1,47 +1,63 @@
 ---
-// Front page. The real homepage is Phase 3; until then this is a notice
-// in house voice so that the masthead has somewhere to lead.
+// The front page: the lead story, then everything else, newest first.
+// The comic, recurring features and newsletter signup join it later.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import LeadStory from '../components/LeadStory.astro';
+import ArticleList from '../components/ArticleList.astro';
+import { getPublishedArticles, summarize } from '../lib/articles';
+
+const articles = await getPublishedArticles();
+
+// The lead is the newest article marked "featured"; failing that, the
+// newest article of any kind.
+const leadArticle = articles.find((a) => a.data.featured) ?? articles[0];
+const lead = leadArticle && (await summarize(leadArticle));
+const rest = await Promise.all(articles.filter((a) => a !== leadArticle).map(summarize));
+const restItems = rest.map(({ href, title, dek, author, sectionName }) => ({ href, title, dek, author, sectionName }));
 ---
 
 <BaseLayout mastheadAs="h1">
-  <article class="notice">
-    <p class="label label--accent">Notice to the Public</p>
-    <h2 class="notice__headline">
-      <span class="highlighter">First Edition Delayed by Circumstances Entirely Within Our Control</span>
-    </h2>
-    <p class="dek">
-      The presses are warm, the editors are present, and the news has been asked to wait
-      in the corridor until it is called.
-    </p>
-    <div class="rule-ornament" role="separator"><span class="ornament">&#x2767;&#xFE0E;</span></div>
-    <p class="drop-cap">
-      The Municipal Absurdist will commence publication shortly. A committee has been
-      formed to determine how shortly, and a second committee has been formed to
-      oversee the first. Both report excellent progress and have requested more chairs.
-    </p>
-    <p>
-      In the interim, readers may inspect the type, rules, and ornaments in
-      the <a href="/styleguide">Office of Typographical Standards</a>. Admission is free
-      and the exits are clearly marked.
-    </p>
-  </article>
+  {
+    lead ? (
+      <>
+        <LeadStory {...lead} highlighted />
+
+        {restItems.length > 0 && (
+          <section class="latest" aria-labelledby="latest-heading">
+            <hr class="rule--thick-thin" />
+            <h2 id="latest-heading" class="latest__heading">Also in This Edition</h2>
+            <ArticleList items={restItems} />
+          </section>
+        )}
+      </>
+    ) : (
+      <p class="edition-empty">
+        The first edition is delayed by circumstances entirely within our control. The
+        presses are warm, and the news has been asked to wait in the corridor.
+      </p>
+    )
+  }
 </BaseLayout>
 
 <style>
-  .notice {
-    max-width: var(--measure);
-    margin-inline: auto;
+  .latest {
+    margin-top: var(--space-7);
   }
 
-  /* Room between lines so one marker stroke does not run into the next. */
-  .notice__headline {
-    line-height: 1.45;
-  }
-
-  .notice h2,
-  .notice .dek,
-  .notice .label {
+  .latest__heading {
+    margin: var(--space-4) 0 var(--space-5);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
     text-align: center;
+  }
+
+  .edition-empty {
+    max-width: var(--measure);
+    margin: var(--space-6) auto;
+    font-size: var(--text-lg);
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
   }
 </style>

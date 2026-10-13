@@ -1,5 +1,6 @@
 // Helpers shared by every page that lists or links to articles.
-import { getCollection, type CollectionEntry } from 'astro:content';
+import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
+import { sections } from '../data/sections';
 
 export type Article = CollectionEntry<'articles'>;
 
@@ -8,6 +9,25 @@ export type Article = CollectionEntry<'articles'>;
 export async function getPublishedArticles(): Promise<Article[]> {
   const all = await getCollection('articles', ({ data }) => import.meta.env.DEV || !data.draft);
   return all.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+}
+
+/** The few facts a card or lead story needs, with the author's name
+    looked up from the contributors collection. */
+export async function summarize(article: Article) {
+  const author = await getEntry(article.data.author);
+  const section = sections.find((s) => s.slug === article.data.section)!;
+  return {
+    href: articlePath(article),
+    title: article.data.title,
+    dek: article.data.dek,
+    author: author.data.name,
+    date: article.data.date,
+    image: article.data.image,
+    imageAlt: article.data.imageAlt,
+    imageCredit: article.data.imageCredit,
+    sectionName: section.name,
+    sectionHref: `/${section.slug}`,
+  };
 }
 
 /** The address of an article: /section/slug. The slug is the file name. */

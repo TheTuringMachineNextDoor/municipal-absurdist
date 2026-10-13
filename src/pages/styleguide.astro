@@ -6,6 +6,7 @@ import ArticleHeader from '../components/ArticleHeader.astro';
 import ArticleBody from '../components/ArticleBody.astro';
 import Illustration from '../components/Illustration.astro';
 import MoreFromSection from '../components/MoreFromSection.astro';
+import LeadStory from '../components/LeadStory.astro';
 // Credits are read from the same file that documents the images, so the
 // page and the record cannot disagree.
 import credits from '../../public/illustrations/credits.json';
@@ -433,8 +434,31 @@ const sampleMore = [
 
   <hr />
 
+  <section class="sg-section" aria-labelledby="sg-lead">
+    <h2 id="sg-lead" class="sg-heading">XI. Lead Story</h2>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Opens the front page and each section front</span>
+        <code>&lt;LeadStory&gt;</code>
+        <span class="fine-print">The front page adds <code>highlighted</code> for the marker strokes.</span>
+      </p>
+      <LeadStory
+        href="/styleguide"
+        title="Parks Department to Close Duck Pond for Renovation; Ducks Informed"
+        dek="Notices were posted at the water's edge on Tuesday. The Department said it could not confirm they had been read."
+        author="Cornelius P. Wetherby"
+        date={new Date('2026-10-12')}
+        image="pantagruel-10.webp"
+        sectionName="Politics"
+        sectionHref="/politics"
+      />
+    </div>
+  </section>
+
+  <hr />
+
   <section class="sg-section" aria-labelledby="sg-space">
-    <h2 id="sg-space" class="sg-heading">XI. Spacing</h2>
+    <h2 id="sg-space" class="sg-heading">XII. Spacing</h2>
     <ul class="sg-spaces">
       {
         spaces.map((s) => (
