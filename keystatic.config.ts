@@ -73,18 +73,29 @@ export default config({
           defaultValue: { kind: 'today' },
           validation: { isRequired: true },
         }),
+        // The lead picture: upload one here, or choose one already in
+        // the library. An upload wins if both are set.
+        upload: fields.image({
+          label: 'Upload a lead picture',
+          description:
+            'JPEG, PNG or WebP, ideally under 500 KB and at least 1,200 pixels wide. Only upload pictures the paper may print: your own, commissioned, licensed, or in the public domain.',
+          directory: 'public/illustrations/uploads/articles',
+          publicPath: '/illustrations/uploads/articles/',
+        }),
         image: fields.select({
-          label: 'Lead illustration',
-          options: illustrationOptions,
-          defaultValue: illustrationOptions[0].value,
+          label: 'Or choose one from the library',
+          options: [{ label: 'None (I have uploaded one)', value: '' }, ...illustrationOptions],
+          defaultValue: '',
         }),
         imageAlt: fields.text({
-          label: 'Description of the illustration',
-          description: 'For readers who cannot see it. Leave blank to use the description on record.',
+          label: 'Description of the picture',
+          description:
+            'What the picture shows, for readers who cannot see it. Required for an upload. For a library picture, leave blank to use the description on record.',
         }),
         imageCredit: fields.text({
-          label: 'Illustration credit',
-          description: 'Leave blank to use the credit on record in credits.json.',
+          label: 'Picture credit',
+          description:
+            'Who made it and where it is from, as it should be printed. Required for an upload. For a library picture, leave blank to use the credit on record.',
         }),
         featured: fields.checkbox({ label: 'Featured', description: 'Eligible to lead the front page.' }),
         draft: fields.checkbox({
@@ -98,13 +109,20 @@ export default config({
         // Plain .md files, so they stay readable outside the panel.
         // Pull quote: use the quote button; a second paragraph inside
         // the quote is its attribution.
-        // Inline illustration: type a line of its own in this form,
+        // A picture within the text: use the image button in the
+        // toolbar to upload one. Give it alt text (the description) and
+        // a title (the credit, printed beneath it). A library picture
+        // can still be typed on a line of its own, in this form:
         //   ![Description of the picture](/illustrations/pantagruel-04.webp)
-        // The panel shows that line as text; the site turns it into the
-        // picture with its credit.
         body: fields.markdoc({
           label: 'Body',
           extension: 'md',
+          options: {
+            image: {
+              directory: 'public/illustrations/uploads/inline',
+              publicPath: '/illustrations/uploads/inline/',
+            },
+          },
         }),
       },
     }),
@@ -137,8 +155,19 @@ export default config({
           ],
           defaultValue: 'auto',
         }),
+        portraitUpload: fields.image({
+          label: 'Upload a portrait',
+          description:
+            'Upright (taller than wide) works best. It is cropped to a 4:5 frame.',
+          directory: 'public/illustrations/uploads/contributors',
+          publicPath: '/illustrations/uploads/contributors/',
+        }),
+        portraitCredit: fields.text({
+          label: 'Portrait credit',
+          description: 'Who took or drew it. Required for an uploaded portrait.',
+        }),
         portrait: fields.select({
-          label: 'Portrait',
+          label: 'Or choose a portrait from the library',
           options: [{ label: 'None', value: '' }, ...illustrationOptions],
           defaultValue: '',
         }),
@@ -175,10 +204,25 @@ export default config({
           description: 'Leave empty for work from the archives or made by the paper itself.',
           collection: 'contributors',
         }),
+        upload: fields.image({
+          label: 'Upload a picture',
+          description:
+            'JPEG, PNG or WebP, ideally under 500 KB. Shown whole, not cropped.',
+          directory: 'public/illustrations/uploads/products',
+          publicPath: '/illustrations/uploads/products/',
+        }),
         image: fields.select({
-          label: 'Picture',
-          options: illustrationOptions,
-          defaultValue: illustrationOptions[0].value,
+          label: 'Or choose one from the library',
+          options: [{ label: 'None (I have uploaded one)', value: '' }, ...illustrationOptions],
+          defaultValue: '',
+        }),
+        imageAlt: fields.text({
+          label: 'Description of the picture',
+          description: 'For readers who cannot see it. Required for an upload.',
+        }),
+        imageCredit: fields.text({
+          label: 'Picture credit',
+          description: 'Required for an upload.',
         }),
         price: fields.number({ label: 'Price, in whole dollars', validation: { isRequired: true, min: 0 } }),
         stripeLink: fields.url({

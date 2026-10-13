@@ -38,8 +38,8 @@ Ask before adding any dependency not listed here.
 
 **Articles** (`src/content/articles/*.md`)
 - `title`, `dek` (subheadline), `section`, `author` (ref), `illustrator` (ref, optional), `date`, `image`, `imageAlt` (optional), `imageCredit` (optional), `featured` (bool), `draft` (bool), `sample` (bool; placeholder articles to delete before launch)
-- `image` is a file name from `public/illustrations/` that has an entry in `credits.json`. `imageAlt` and `imageCredit` fall back to that entry when blank.
-- In the body, a `>` blockquote is a pull quote (a second paragraph inside it is the attribution), and `![description](/illustrations/file.webp)` on its own line is an inline illustration with its credit added automatically.
+- The lead picture is either chosen from the library (`image`: a file in `public/illustrations/` with an entry in `credits.json`; `imageAlt` and `imageCredit` fall back to that entry when blank) or uploaded in the editing form (`upload`; saved under `public/illustrations/uploads/`, and then `imageAlt` and `imageCredit` are required). Either way the rest of the site reads `image`, and `getIllustration()` returns the same kind of record. Products and contributor portraits work the same way (`upload`, `portraitUpload` + `portraitCredit`).
+- In the body, a `>` blockquote is a pull quote (a second paragraph inside it is the attribution), and `![description](/illustrations/file.webp)` on its own line is an inline illustration with its credit added automatically. A picture uploaded into the body with the editor's image button takes its credit from the image's title.
 - Schemas live in `src/content.config.ts` (validation) and `keystatic.config.ts` (the editing form). Change both together.
 
 **Sections:** `politics`, `culture`, `education`, `money`, `comic`, `games`

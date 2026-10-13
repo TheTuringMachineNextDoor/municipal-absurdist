@@ -51,7 +51,11 @@ const firstName = data.name.split(' ')[0];
 <BaseLayout title={data.name} description={`${data.name}, ${roleLabel(data.role).toLowerCase()} for The Municipal Absurdist.`}>
   <article class="person">
     <header class="person__header">
-      <Portrait name={data.name} portrait={data.portrait} size="large" />
+      <div>
+        <Portrait name={data.name} portrait={data.portrait} size="large" />
+        {/* Every picture is credited, portraits included. */}
+        {data.portrait && <p class="fine-print person__portrait-credit">{getIllustration(data.portrait).credit}</p>}
+      </div>
       <div>
         <p class="label label--accent"><a href="/about#staff">The Staff</a></p>
         <h1 class="person__name">{data.name}</h1>
@@ -152,6 +156,12 @@ const firstName = data.name.split(' ')[0];
       gap: var(--space-6);
       text-align: left;
     }
+  }
+
+  .person__portrait-credit {
+    max-width: 10rem;
+    margin: var(--space-2) 0 0;
+    font-style: italic;
   }
 
   .person__header a {
