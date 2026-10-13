@@ -13,6 +13,7 @@ import ComicSlot from '../components/ComicSlot.astro';
 import FeaturesStrip from '../components/FeaturesStrip.astro';
 import NewsletterBox from '../components/NewsletterBox.astro';
 import GameNotice from '../components/games/GameNotice.astro';
+import Pagination from '../components/Pagination.astro';
 import ResultsCard from '../components/games/ResultsCard.astro';
 // Credits are read from the same file that documents the images, so the
 // page and the record cannot disagree.
@@ -545,6 +546,16 @@ const sampleMore = [
           }}
         />
       </div>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Pagination</span>
+        <code>&lt;Pagination page pages hrefFor label&gt;</code>
+        <span class="fine-print">
+          Under a section front that runs to more than one page. Shows nothing when there is only one.
+        </span>
+      </p>
+      <Pagination page={2} pages={5} hrefFor={(n) => `#page-${n}`} label="Specimen" />
     </div>
   </section>
 

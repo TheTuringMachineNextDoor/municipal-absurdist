@@ -46,5 +46,7 @@ export function formatDate(date: Date) {
       timeZone: 'UTC',
     }),
     iso: date.toISOString().slice(0, 10),
+    // "Oct 12, 2026", for places with little room (the cards).
+    short: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }),
   };
 }

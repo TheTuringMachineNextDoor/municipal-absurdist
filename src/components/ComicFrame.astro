@@ -1,0 +1,110 @@
+---
+// One comic, framed like a printed cartoon: a double-ruled box, the
+// panel (which links to the comic's own page), its title, a caption,
+// and the credit. Used in the front page's comic slot and, larger, on
+// the Comic section front.
+import { Image } from 'astro:assets';
+import { formatDate } from '../lib/articles';
+import { getIllustration, illustrationSrc } from '../lib/illustrations';
+
+interface Props {
+  href: string;
+  title: string;
+  /** The line beneath the title. */
+  caption: string;
+  image: string;
+  imageAlt?: string;
+  imageCredit?: string;
+  /** Shown on the Comic section front: who filed it, and when. */
+  author?: string;
+  date?: Date;
+  /** Let the panel run the full width of the frame (the section front). */
+  wide?: boolean;
+  /** Pass "eager" for the first strip on a page, so it is not held back. */
+  loading?: 'lazy' | 'eager';
+}
+
+const { href, title, caption, image, imageAlt, imageCredit, author, date, wide = false, loading = 'lazy' } = Astro.props;
+const picture = getIllustration(image);
+const when = date && formatDate(date);
+---
+
+<figure class:list={['comic-frame', { 'comic-frame--wide': wide }]}>
+  <a class="comic-frame__panel" href={href}>
+    <Image
+      src={illustrationSrc(picture.file)}
+      alt={imageAlt ?? picture.alt}
+      width={picture.width}
+      height={picture.height}
+      loading={loading}
+    />
+  </a>
+  <figcaption class="comic-frame__caption">
+    <span class="comic-frame__title">{title}</span>
+    <span class="comic-frame__text">{caption}</span>
+    {
+      (author || when) && (
+        <span class="label comic-frame__byline">
+          {author && <>Filed by {author}</>}
+          {author && when && <span aria-hidden="true"> &middot; </span>}
+          {when && <time datetime={when.iso}>{when.label}</time>}
+        </span>
+      )
+    }
+    <span class="fine-print comic-frame__credit">{imageCredit ?? picture.credit}</span>
+  </figcaption>
+</figure>
+
+<style>
+  /* The printed-cartoon frame: a thin line inside a thicker one. */
+  .comic-frame {
+    margin: 0;
+    padding: var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  .comic-frame__panel {
+    display: block;
+  }
+
+  .comic-frame__panel img {
+    width: min(100%, 28rem);
+    margin-inline: auto;
+    mix-blend-mode: multiply; /* a strip on white paper takes the page's colour */
+  }
+
+  /* On the section front the panel may be larger, but never taller than
+     most of a screen: a square strip at full width would need scrolling
+     to read. A wide, short strip still runs the full width. */
+  .comic-frame--wide .comic-frame__panel img {
+    width: auto;
+    max-width: 100%;
+    max-height: min(42rem, 85vh);
+  }
+
+  .comic-frame__caption {
+    display: grid;
+    gap: var(--space-1);
+    margin-top: var(--space-3);
+  }
+
+  .comic-frame__title {
+    font-family: var(--font-headline);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-headline);
+  }
+
+  .comic-frame--wide .comic-frame__title {
+    font-size: var(--text-h3);
+  }
+
+  .comic-frame__text {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .comic-frame__byline {
+    font-size: var(--text-xs);
+  }
+</style>

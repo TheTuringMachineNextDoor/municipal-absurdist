@@ -2,8 +2,7 @@
 // The comic on the front page, framed like a printed cartoon: a ruled
 // box, the panel, a caption, and the artist's credit. Leave out `comic`
 // and it shows a placeholder frame instead.
-import { Image } from 'astro:assets';
-import { getIllustration, illustrationSrc } from '../lib/illustrations';
+import ComicFrame from './ComicFrame.astro';
 
 interface Props {
   comic?: {
@@ -18,30 +17,14 @@ interface Props {
 }
 
 const { comic } = Astro.props;
-const picture = comic ? getIllustration(comic.image) : undefined;
 ---
 
 <section class="comic" aria-labelledby="comic-heading">
   <h2 id="comic-heading" class="comic__heading">The Comic</h2>
 
   {
-    comic && picture ? (
-      <figure class="comic__frame">
-        <a class="comic__panel" href={comic.href}>
-          <Image
-            src={illustrationSrc(picture.file)}
-            alt={comic.imageAlt ?? picture.alt}
-            width={picture.width}
-            height={picture.height}
-            loading="lazy"
-          />
-        </a>
-        <figcaption class="comic__caption">
-          <span class="comic__title">{comic.title}</span>
-          <span class="comic__text">{comic.caption}</span>
-          <span class="fine-print comic__credit">{comic.imageCredit ?? picture.credit}</span>
-        </figcaption>
-      </figure>
+    comic ? (
+      <ComicFrame {...comic} />
     ) : (
       <div class="comic__frame comic__frame--empty">
         <p class="comic__placeholder">
@@ -68,33 +51,6 @@ const picture = comic ? getIllustration(comic.image) : undefined;
     padding: var(--space-4);
     border: var(--rule-thick) double var(--rule);
     text-align: center;
-  }
-
-  .comic__panel {
-    display: block;
-  }
-
-  .comic__panel img {
-    width: min(100%, 28rem);
-    margin-inline: auto;
-    mix-blend-mode: multiply; /* a strip on white paper takes the page's colour */
-  }
-
-  .comic__caption {
-    display: grid;
-    gap: var(--space-1);
-    margin-top: var(--space-3);
-  }
-
-  .comic__title {
-    font-family: var(--font-headline);
-    font-size: var(--text-lg);
-    font-weight: var(--weight-headline);
-  }
-
-  .comic__text {
-    font-style: italic;
-    color: var(--ink-soft);
   }
 
   .comic__frame--empty {

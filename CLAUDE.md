@@ -57,7 +57,7 @@ Ask before adding any dependency not listed here.
 | Route | Purpose |
 |---|---|
 | `/` | Homepage: full masthead, lead story (2/3) beside latest headlines (1/3), a band per section, comic slot, recurring features (`src/data/features.ts`), newsletter box (`newsletterAction` in `src/data/site.ts`). The full masthead (hat, name, slogan) is the same on every page. |
-| `/[section]` | Section front |
+| `/[section]` and `/[section]/page/[n]` | Section front (`SectionFront.astro`): the section's lead story beside headlines from the rest of the paper, then cards with dates, then older pages (12 cards a page). The Comic front shows strips large in frames instead. |
 | `/[section]/[slug]` | Article |
 | `/contributors` and `/contributors/[slug]` | Portfolio, bio, published work, commission form |
 | `/store` | Prints and commissions |
@@ -136,7 +136,7 @@ No dark mode at launch: the paper is the identity.
    - 4e Crossword + reader puzzle submissions (Tally)
    - 4f Caption contest (Tally submissions, editor-picked winners)
    - 4g The Mayor (Reigns-style swipe-decision game: original art, cards, and look; meters are Treasury, Public, Council, Press)
-5. Section fronts (a first version already exists at `/[section]`; this phase finishes them)
+5. Section fronts (done)
 6. Contributors and portfolio pages
 7. Store and commissions
 8. Submit, About, Support, newsletter

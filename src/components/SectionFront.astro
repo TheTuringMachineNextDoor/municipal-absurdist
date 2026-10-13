@@ -1,0 +1,214 @@
+---
+// A whole section front: the section's name, then (on page one) its lead
+// story beside headlines from the rest of the paper, then its other
+// articles as cards, then links to older pages and the newsletter box.
+// The Comic section is laid out differently: strips, large, one to a row.
+//
+// Both /politics and /politics/page/2 are drawn by this component; they
+// only differ in the `page` they pass.
+import ArticleList from './ArticleList.astro';
+import ComicFrame from './ComicFrame.astro';
+import LatestList from './LatestList.astro';
+import LeadStory from './LeadStory.astro';
+import NewsletterBox from './NewsletterBox.astro';
+import Pagination from './Pagination.astro';
+import Stroke from './Stroke.astro';
+import { perPage, sectionContents, sectionPageHref, type Section } from '../lib/section-front';
+import { summarize } from '../lib/articles';
+
+interface Props {
+  section: Section;
+  page?: number;
+}
+
+const { section, page = 1 } = Astro.props;
+const isComic = section.slug === 'comic';
+
+const contents = await sectionContents(section);
+const size = perPage(section);
+const onThisPage = await Promise.all(contents.rest.slice((page - 1) * size, page * size).map(summarize));
+// The lead and the side column appear on the first page only.
+const lead = page === 1 && contents.lead ? await summarize(contents.lead) : undefined;
+const elsewhere = page === 1 ? await Promise.all(contents.elsewhere.map(summarize)) : [];
+
+// On a section's own page the cards need no section label.
+const cards = onThisPage.map(({ sectionName, sectionHref, ...card }) => card);
+const empty = !lead && onThisPage.length === 0;
+---
+
+<header class="front-header" style={`--stroke: ${section.ink}`}>
+  <p class="label label--accent">Section</p>
+  <h1 class="front-header__name">
+    <!-- The section's own colour, drawn under its name like the stroke
+         that crosses it in the navigation. -->
+    <span class="stroke-text">{section.name}<Stroke /></span>
+  </h1>
+  {
+    page === 1 ? (
+      <p class="dek front-header__blurb">{section.blurb}</p>
+    ) : (
+      <p class="label front-header__page">
+        Page {page} of {contents.pages} · <a href={sectionPageHref(section, 1)}>Return to the first page</a>
+      </p>
+    )
+  }
+</header>
+
+<hr class="rule--thick-thin" />
+
+{
+  empty && (
+    <p class="front-empty">
+      Nothing has yet been filed under {section.name}. The desk has been staffed, the pencils sharpened, and the
+      first deadline extended as a courtesy.
+    </p>
+  )
+}
+
+{
+  lead && (
+    <div class:list={['front-top', { 'front-top--alone': elsewhere.length === 0 }]}>
+      <div class="front-top__lead">
+        <LeadStory {...lead} sectionName={undefined} sectionHref={undefined} />
+      </div>
+      {elsewhere.length > 0 && (
+        <div class="front-top__aside">
+          <LatestList items={elsewhere} heading="Also in the Paper" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+{
+  isComic && onThisPage.length > 0 && (
+    <ol class="front-comics">
+      {onThisPage.map((comic, index) => (
+        <li>
+          <ComicFrame
+            href={comic.href}
+            title={comic.title}
+            caption={comic.dek}
+            image={comic.image}
+            imageAlt={comic.imageAlt}
+            imageCredit={comic.imageCredit}
+            author={comic.author}
+            date={comic.date}
+            wide
+            loading={index === 0 ? 'eager' : 'lazy'}
+          />
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+{
+  !isComic && cards.length > 0 && (
+    <section class="front-more" aria-labelledby="front-more-heading">
+      <h2 id="front-more-heading" class="front-more__heading">
+        {page === 1 ? `More in ${section.name}` : `Earlier in ${section.name}`}
+      </h2>
+      <ArticleList items={cards} />
+    </section>
+  )
+}
+
+<Pagination
+  page={page}
+  pages={contents.pages}
+  hrefFor={(n) => sectionPageHref(section, n)}
+  label={section.name}
+/>
+
+<div class="front-newsletter">
+  <NewsletterBox />
+</div>
+
+<style>
+  .front-header {
+    text-align: center;
+  }
+
+  /* The stroke normally hides until its link is hovered, and crosses
+     the middle of the word. Here it is always drawn, and sits under the
+     name as an underline. :global because the stroke is another
+     component's element. */
+  .front-header__name :global(.stroke) {
+    top: 100%;
+    height: 0.16em;
+    clip-path: none;
+  }
+
+  .front-header__blurb {
+    max-width: 36rem;
+    margin: var(--space-3) auto 0;
+  }
+
+  .front-header__page {
+    margin: var(--space-3) 0 0;
+  }
+
+  .front-empty {
+    max-width: var(--measure);
+    margin: var(--space-6) auto;
+    font-size: var(--text-lg);
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  /* Lead and side column: stacked on a phone; two-thirds and one-third
+     on a desk, with a hairline between, as on the front page. */
+  .front-top {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .front-top > * {
+    min-width: 0; /* lets a column shrink instead of pushing the page sideways */
+  }
+
+  @media (min-width: 60rem) {
+    .front-top {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    }
+
+    .front-top--alone {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .front-top__aside {
+      padding-left: var(--space-6);
+      border-left: var(--rule-hair) solid var(--rule);
+    }
+  }
+
+  .front-more {
+    margin-top: var(--space-7);
+  }
+
+  /* A ruled label, like the section bands on the front page. */
+  .front-more__heading {
+    margin: 0 0 var(--space-5);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  /* Strips, one to a row, no wider than is comfortable to read. */
+  .front-comics {
+    display: grid;
+    gap: var(--space-6);
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+  }
+
+  .front-newsletter {
+    margin-top: var(--space-7);
+  }
+</style>

@@ -1,0 +1,72 @@
+---
+// "Newer" and "Older" links under a list that runs to several pages,
+// with "Page 2 of 5" between them. Shows nothing when there is only one
+// page. `hrefFor` turns a page number into that page's address.
+interface Props {
+  page: number;
+  pages: number;
+  hrefFor: (page: number) => string;
+  /** What is being paged through, for screen readers: "Politics". */
+  label: string;
+}
+
+const { page, pages, hrefFor, label } = Astro.props;
+---
+
+{
+  pages > 1 && (
+    <nav class="pagination" aria-label={`${label}, more pages`}>
+      {page > 1 ? (
+        <a class="pagination__link" href={hrefFor(page - 1)} rel="prev">
+          <span aria-hidden="true">&larr;</span> Newer
+        </a>
+      ) : (
+        <span></span>
+      )}
+      <p class="label pagination__where">
+        Page {page} of {pages}
+      </p>
+      {page < pages ? (
+        <a class="pagination__link pagination__link--next" href={hrefFor(page + 1)} rel="next">
+          Older <span aria-hidden="true">&rarr;</span>
+        </a>
+      ) : (
+        <span></span>
+      )}
+    </nav>
+  )
+}
+
+<style>
+  /* Three columns so the page count stays centred whether or not there
+     is a link either side of it. */
+  .pagination {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-block: var(--space-3);
+    border-block: var(--rule-hair) solid var(--rule);
+  }
+
+  .pagination__where {
+    margin: 0;
+  }
+
+  .pagination__link {
+    font-family: var(--font-label);
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+
+  .pagination__link:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+
+  .pagination__link--next {
+    justify-self: end;
+  }
+</style>

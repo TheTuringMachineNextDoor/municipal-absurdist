@@ -1,0 +1,35 @@
+---
+// Page two onward of a section front: /politics/page/2 and so on.
+// These exist only for a section with more articles than fit on its
+// first page; for most sections, most of the time, none are built.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionFront from '../../../components/SectionFront.astro';
+import { sections } from '../../../data/sections';
+import { sectionContents, type Section } from '../../../lib/section-front';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const section of sections) {
+    if (section.slug === 'games') continue;
+    const { pages } = await sectionContents(section);
+    for (let page = 2; page <= pages; page++) {
+      paths.push({ params: { section: section.slug, page: String(page) }, props: { section, page } });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  section: Section;
+  page: number;
+}
+
+const { section, page } = Astro.props;
+---
+
+<BaseLayout
+  title={`${section.name}, page ${page}`}
+  description={`Earlier reports from the ${section.name} desk. ${section.blurb}`}
+>
+  <SectionFront section={section} page={page} />
+</BaseLayout>

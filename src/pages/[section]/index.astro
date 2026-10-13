@@ -1,13 +1,15 @@
 ---
-// A section front, at /politics, /culture and so on: the section's name
-// and its articles as small illustrated cards, three to a row.
+// The first page of a section front, at /politics, /culture and so on.
+// The layout itself is in src/components/SectionFront.astro; later
+// pages, when a section has enough articles to need them, are made by
+// src/pages/[section]/page/[page].astro.
 //
 // One page is built for every section in sections.ts, whether or not
 // anything has been filed under it yet.
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ArticleList from '../../components/ArticleList.astro';
+import SectionFront from '../../components/SectionFront.astro';
 import { sections } from '../../data/sections';
-import { getPublishedArticles, summarize } from '../../lib/articles';
+import type { Section } from '../../lib/section-front';
 
 export function getStaticPaths() {
   // Games has its own page, the hub at src/pages/games/index.astro.
@@ -17,53 +19,12 @@ export function getStaticPaths() {
 }
 
 interface Props {
-  section: (typeof sections)[number];
+  section: Section;
 }
 
 const { section } = Astro.props;
-
-// Newest first. On the section's own page the cards need no section label.
-const filed = (await getPublishedArticles()).filter((a) => a.data.section === section.slug);
-const items = (await Promise.all(filed.map(summarize))).map(({ sectionName, sectionHref, date, ...card }) => card);
 ---
 
 <BaseLayout title={section.name} description={section.blurb}>
-  <header class="front-header">
-    <p class="label label--accent">Section</p>
-    <h1>{section.name}</h1>
-    <p class="dek front-header__blurb">{section.blurb}</p>
-  </header>
-
-  <hr class="rule--thick-thin" />
-
-  {
-    items.length > 0 ? (
-      <ArticleList items={items} />
-    ) : (
-      <p class="front-empty">
-        Nothing has yet been filed under {section.name}. The desk has been staffed, the
-        pencils sharpened, and the first deadline extended as a courtesy.
-      </p>
-    )
-  }
+  <SectionFront section={section} />
 </BaseLayout>
-
-<style>
-  .front-header {
-    text-align: center;
-  }
-
-  .front-header__blurb {
-    max-width: 36rem;
-    margin-inline: auto;
-  }
-
-  .front-empty {
-    max-width: var(--measure);
-    margin: var(--space-6) auto;
-    font-size: var(--text-lg);
-    font-style: italic;
-    text-align: center;
-    color: var(--ink-soft);
-  }
-</style>

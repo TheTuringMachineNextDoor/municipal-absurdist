@@ -17,6 +17,8 @@ export interface ArticleListItem {
   imageAlt?: string;
   /** Overrides the credit on record for that image. */
   imageCredit?: string;
+  /** Printed after the byline; leave out where dates are not wanted. */
+  date?: Date;
 }
 
 interface Props {
@@ -47,6 +49,7 @@ const credits = [
           sectionName={item.sectionName}
           image={item.image}
           imageAlt={item.imageAlt}
+          date={item.date}
         />
       </li>
     ))

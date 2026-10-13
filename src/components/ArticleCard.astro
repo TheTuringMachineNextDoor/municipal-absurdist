@@ -3,6 +3,7 @@
 // byline. Sized to sit three to a row on the front page, the section
 // fronts, and the "More from" strip.
 import { Image } from 'astro:assets';
+import { formatDate } from '../lib/articles';
 import { getIllustration, illustrationSrc } from '../lib/illustrations';
 
 interface Props {
@@ -16,9 +17,12 @@ interface Props {
       the whole list, by ArticleList. */
   image?: string;
   imageAlt?: string;
+  /** Printed after the byline where the date matters (section fronts). */
+  date?: Date;
 }
 
-const { href, title, dek, author, sectionName, image, imageAlt } = Astro.props;
+const { href, title, dek, author, sectionName, image, imageAlt, date } = Astro.props;
+const when = date && formatDate(date);
 const picture = image ? getIllustration(image) : undefined;
 ---
 
@@ -43,7 +47,17 @@ const picture = image ? getIllustration(image) : undefined;
   {sectionName && <p class="label label--accent article-card__section">{sectionName}</p>}
   <h3 class="article-card__title"><a href={href}>{title}</a></h3>
   <p class="article-card__dek">{dek}</p>
-  <p class="label article-card__byline">By {author}</p>
+  <p class="label article-card__byline">
+    By {author}
+    {
+      when && (
+        <>
+          {' '}
+          <span aria-hidden="true">&middot;</span> <time datetime={when.iso}>{when.short}</time>
+        </>
+      )
+    }
+  </p>
 </article>
 
 <style>
