@@ -59,7 +59,7 @@ Ask before adding any dependency not listed here.
 | `/` | Homepage: full masthead, lead story (2/3) beside latest headlines (1/3), a band per section, comic slot, recurring features (`src/data/features.ts`), newsletter box (`newsletterAction` in `src/data/site.ts`). The full masthead (hat, name, slogan) is the same on every page. |
 | `/[section]` and `/[section]/page/[n]` | Section front (`SectionFront.astro`): the section's lead story beside headlines from the rest of the paper, then cards with dates, then older pages (12 cards a page). The Comic front shows strips large in frames instead. |
 | `/[section]/[slug]` | Article |
-| `/contributors` and `/contributors/[slug]` | Portfolio, bio, published work, commission form |
+| `/contributors` and `/contributors/[slug]` | The staff list, and a page for each contributor: bio, links, commission form (their own Tally form, shown when `commissionsOpen`), portfolio of pictures they drew, and articles they wrote. Helpers in `src/lib/contributors.ts`. Bylines on articles link here. |
 | `/store` | Prints and commissions |
 | `/submit` | Write for Us / Draw for Us / Create for Us |
 | `/about`, `/support` | Mission, staff, donations |
@@ -137,7 +137,7 @@ No dark mode at launch: the paper is the identity.
    - 4f Caption contest (Tally submissions, editor-picked winners)
    - 4g The Mayor (Reigns-style swipe-decision game: original art, cards, and look; meters are Treasury, Public, Council, Press)
 5. Section fronts (done)
-6. Contributors and portfolio pages
+6. Contributors and portfolio pages (done)
 7. Store and commissions
 8. Submit, About, Support, newsletter
 9. Polish, 404, SEO and Open Graph images, favicon

@@ -9,15 +9,18 @@ interface Props {
   title: string;
   dek: string;
   author: string;
+  /** The author's page, /contributors/their-file-name. */
+  authorHref?: string;
   /** Leave out when the illustration comes from the archives. */
   illustrator?: string;
+  illustratorHref?: string;
   date: Date;
   /** The headline's tag. "h1" on an article; the styleguide passes "p"
       because that page already has its own h1. */
   as?: 'h1' | 'p';
 }
 
-const { section, title, dek, author, illustrator, date, as: Headline = 'h1' } = Astro.props;
+const { section, title, dek, author, authorHref, illustrator, illustratorHref, date, as: Headline = 'h1' } = Astro.props;
 const sectionName = sections.find((s) => s.slug === section)?.name ?? section;
 const { label, iso } = formatDate(date);
 ---
@@ -31,9 +34,15 @@ const { label, iso } = formatDate(date);
 
   <div class="article-header__meta label">
     <p class="article-header__byline">
-      <span>By {author}</span>
+      <span>By {authorHref ? <a href={authorHref}>{author}</a> : author}</span>
       <span class="article-header__dot" aria-hidden="true">&middot;</span>
-      <span>{illustrator ? `Illustrated by ${illustrator}` : 'Illustration from the Archives'}</span>
+      <span>
+        {illustrator ? (
+          <>Illustrated by {illustratorHref ? <a href={illustratorHref}>{illustrator}</a> : illustrator}</>
+        ) : (
+          'Illustration from the Archives'
+        )}
+      </span>
     </p>
     <p class="article-header__date"><time datetime={iso}>{label}</time></p>
   </div>
@@ -87,6 +96,12 @@ const { label, iso } = formatDate(date);
 
   .article-header__meta p {
     margin: 0;
+  }
+
+  .article-header__byline a {
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
   }
 
   /* On a phone the byline's two halves stack and the dot is dropped. */

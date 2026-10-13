@@ -1,0 +1,258 @@
+---
+// A contributor's own page, at /contributors/their-file-name: who they
+// are, where else to find them, how to commission them (if they take
+// commissions), the pictures they have drawn for the paper, and the
+// articles they have written.
+import { render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import Portrait from '../../components/Portrait.astro';
+import TallyForm from '../../components/TallyForm.astro';
+import { articlePath, summarize, type Article } from '../../lib/articles';
+import { getContributors, roleLabel, type Contributor } from '../../lib/contributors';
+import { getIllustration, illustrationSrc } from '../../lib/illustrations';
+
+export async function getStaticPaths() {
+  return (await getContributors()).map(({ person, written, illustrated }) => ({
+    params: { slug: person.id },
+    props: { person, written, illustrated },
+  }));
+}
+
+interface Props {
+  person: Contributor;
+  written: Article[];
+  illustrated: Article[];
+}
+
+const { person, written, illustrated } = Astro.props;
+const { data } = person;
+
+// The bio is the Markdown body of the contributor's file.
+const { Content } = await render(person);
+
+// Articles they wrote, as cards that show the section and the date.
+const reports = (await Promise.all(written.map(summarize))).map(({ sectionHref, ...card }) => card);
+
+// Pictures they drew: the lead illustration of each article that names
+// them as illustrator. Shown whole, not cropped; it is their portfolio.
+const portfolio = illustrated.map((article) => ({
+  href: articlePath(article),
+  title: article.data.title,
+  picture: getIllustration(article.data.image),
+  alt: article.data.imageAlt,
+  credit: article.data.imageCredit,
+}));
+
+const firstName = data.name.split(' ')[0];
+---
+
+<BaseLayout title={data.name} description={`${data.name}, ${roleLabel(data.role).toLowerCase()} for The Municipal Absurdist.`}>
+  <article class="person">
+    <header class="person__header">
+      <Portrait name={data.name} portrait={data.portrait} size="large" />
+      <div>
+        <p class="label label--accent"><a href="/contributors">Contributors</a></p>
+        <h1 class="person__name">{data.name}</h1>
+        <p class="label person__role">{roleLabel(data.role)}</p>
+        <div class="person__bio"><Content /></div>
+        {
+          data.links.length > 0 && (
+            <ul class="person__links">
+              {data.links.map((link) => (
+                <li>
+                  <a href={link.url} rel="me noopener">{link.label}</a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+    </header>
+
+    {
+      data.commissionsOpen && (
+        <section class="person__section" aria-labelledby="person-commissions">
+          <h2 id="person-commissions" class="person__heading">Commissions</h2>
+          <p class="person__note">
+            {data.name} is accepting commissions. State what is wanted, by when, and for whom. Terms and a price
+            are agreed directly before any work begins.
+          </p>
+          <div class="person__form">
+            <TallyForm url={data.tallyFormUrl ?? ''} title={`Commission ${data.name}`} height="48rem">
+              {firstName}’s order book is open, but the form has not yet been nailed to the door. It is expected
+              shortly.
+            </TallyForm>
+          </div>
+        </section>
+      )
+    }
+
+    {
+      portfolio.length > 0 && (
+        <section class="person__section" aria-labelledby="person-portfolio">
+          <h2 id="person-portfolio" class="person__heading">Portfolio</h2>
+          <ul class="portfolio">
+            {portfolio.map((work) => (
+              <li>
+                <figure class="portfolio__work">
+                  <a href={work.href}>
+                    <Image
+                      src={illustrationSrc(work.picture.file)}
+                      alt={work.alt ?? work.picture.alt}
+                      width={work.picture.width}
+                      height={work.picture.height}
+                      loading="lazy"
+                    />
+                  </a>
+                  <figcaption class="portfolio__caption">
+                    Drawn for <a href={work.href}>{work.title}</a>
+                    <span class="fine-print portfolio__credit">{work.credit ?? work.picture.credit}</span>
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="person__section" aria-labelledby="person-work">
+      <h2 id="person-work" class="person__heading">Published in This Newspaper</h2>
+      {
+        reports.length > 0 ? (
+          <ArticleList items={reports} />
+        ) : portfolio.length > 0 ? (
+          <p class="person__note">{data.name} draws for the paper and has, so far, declined to write for it.</p>
+        ) : (
+          <p class="person__note">
+            Nothing has yet appeared under this name. The editors are assured that something is in hand.
+          </p>
+        )
+      }
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  /* Portrait above the words on a phone, beside them on a desk. */
+  .person__header {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: center;
+    text-align: center;
+  }
+
+  @media (min-width: 40rem) {
+    .person__header {
+      grid-template-columns: auto minmax(0, 1fr);
+      justify-items: start;
+      align-items: start;
+      gap: var(--space-6);
+      text-align: left;
+    }
+  }
+
+  .person__header a {
+    text-decoration: none;
+  }
+
+  .person__name {
+    margin-bottom: var(--space-1);
+  }
+
+  .person__role {
+    margin-bottom: var(--space-4);
+  }
+
+  .person__bio {
+    max-width: var(--measure-article);
+    font-size: var(--text-lg);
+  }
+
+  /* Links elsewhere, in a row divided by hairlines. */
+  .person__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: inherit;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-label);
+    letter-spacing: 0.06em;
+  }
+
+  .person__links a {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+
+  .person__section {
+    margin-top: var(--space-7);
+  }
+
+  /* A ruled label, like the section bands on the front page. */
+  .person__heading {
+    margin: 0 0 var(--space-5);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  .person__note {
+    max-width: var(--measure-article);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .person__form {
+    max-width: 40rem;
+  }
+
+  /* The portfolio: pictures at their own proportions, two across on a
+     phone and three on a desk, each with the article it was drawn for. */
+  .portfolio {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-4);
+    align-items: end;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .portfolio {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+
+  .portfolio__work {
+    margin: 0;
+  }
+
+  .portfolio__work img {
+    width: 100%;
+    border: var(--rule-hair) solid var(--rule);
+  }
+
+  .portfolio__credit {
+    display: block;
+    margin-top: var(--space-1);
+  }
+
+  .portfolio__caption {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+</style>

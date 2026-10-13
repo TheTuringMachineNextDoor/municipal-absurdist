@@ -14,6 +14,7 @@ import LikeButton from '../../components/LikeButton.astro';
 import Comments from '../../components/Comments.astro';
 import { sections } from '../../data/sections';
 import { articlePath, getPublishedArticles, type Article } from '../../lib/articles';
+import { contributorPath } from '../../lib/contributors';
 
 export async function getStaticPaths() {
   const articles = await getPublishedArticles();
@@ -60,7 +61,9 @@ const moreItems = await Promise.all(
       title={data.title}
       dek={data.dek}
       author={author.data.name}
+      authorHref={contributorPath(author)}
       illustrator={illustrator?.data.name}
+      illustratorHref={illustrator && contributorPath(illustrator)}
       date={data.date}
     />
 

@@ -1,0 +1,139 @@
+---
+// The staff list, at /contributors: everyone who writes or draws for the
+// paper, each with a line about them and a link to their own page.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Portrait from '../../components/Portrait.astro';
+import { contributorPath, firstSentence, getContributors, roleLabel } from '../../lib/contributors';
+
+const contributors = await getContributors();
+
+/** "3 pieces", "1 illustration"; nothing at all for zero. */
+const count = (n: number, one: string, many: string) => (n === 0 ? '' : `${n} ${n === 1 ? one : many}`);
+---
+
+<BaseLayout
+  title="Contributors"
+  description="The writers, illustrators and cartoonists of The Municipal Absurdist."
+>
+  <header class="staff-header">
+    <p class="label label--accent">The Staff</p>
+    <h1>Contributors</h1>
+    <p class="dek staff-header__dek">
+      The persons responsible. Each has been informed that their name appears here and several have asked why.
+    </p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <ul class="staff">
+    {
+      contributors.map(({ person, written, illustrated }) => {
+        const tally = [
+          count(written.length, 'piece', 'pieces'),
+          count(illustrated.length, 'illustration', 'illustrations'),
+        ].filter(Boolean);
+        return (
+          <li class="staff__item">
+            <Portrait name={person.data.name} portrait={person.data.portrait} />
+            <div>
+              <h2 class="staff__name">
+                <a href={contributorPath(person)}>{person.data.name}</a>
+              </h2>
+              <p class="label staff__role">
+                {roleLabel(person.data.role)}
+                {tally.length > 0 && <span> · {tally.join(', ')}</span>}
+              </p>
+              {/* The bio's opening sentence, as a taste of the rest. */}
+              <p class="staff__line">{firstSentence(person.body ?? '')}</p>
+              {person.data.commissionsOpen && (
+                <p class="label label--accent staff__commissions">Accepting commissions</p>
+              )}
+            </div>
+          </li>
+        );
+      })
+    }
+  </ul>
+
+  <p class="staff-join">
+    <span class="ornament" aria-hidden="true">&#x261E;&#xFE0E;</span>
+    The paper is always in want of writers, illustrators and cartoonists. The door for submissions is being
+    hung and will open shortly.
+  </p>
+</BaseLayout>
+
+<style>
+  .staff-header {
+    text-align: center;
+  }
+
+  .staff-header__dek {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  /* One column on a phone; two on a desk, with a hairline between rows. */
+  .staff {
+    display: grid;
+    gap: 0 var(--space-7);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 52rem) {
+    .staff {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .staff__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    padding-block: var(--space-5);
+    border-bottom: var(--rule-hair) solid var(--rule);
+  }
+
+  .staff__name {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-h4);
+  }
+
+  .staff__name a {
+    text-decoration: none;
+  }
+
+  .staff__name a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+
+  .staff__role {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .staff__line {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+
+  .staff__commissions {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-xs);
+  }
+
+  .staff-join {
+    max-width: var(--measure);
+    margin: var(--space-6) auto 0;
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+</style>

@@ -1,0 +1,69 @@
+---
+// A contributor's portrait in a ruled frame. A contributor with no
+// portrait on file gets their initial instead, set large, so the staff list never has a hole in it.
+import { Image } from 'astro:assets';
+import { getIllustration, illustrationSrc } from '../lib/illustrations';
+import { initialOf } from '../lib/contributors';
+
+interface Props {
+  name: string;
+  /** A file from public/illustrations, if there is a portrait. */
+  portrait?: string;
+  size?: 'small' | 'large';
+}
+
+const { name, portrait, size = 'small' } = Astro.props;
+const picture = portrait ? getIllustration(portrait) : undefined;
+---
+
+<div class:list={['portrait', `portrait--${size}`]}>
+  {
+    picture ? (
+      <Image
+        src={illustrationSrc(picture.file)}
+        alt={`Portrait of ${name}`}
+        width={picture.width}
+        height={picture.height}
+      />
+    ) : (
+      // Decorative: the name is printed in words beside it.
+      <span class="portrait__initial" aria-hidden="true">{initialOf(name)}</span>
+    )
+  }
+</div>
+
+<style>
+  .portrait {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 5;
+    border: var(--rule-thick) double var(--rule);
+    background: color-mix(in srgb, var(--accent) 22%, var(--paper));
+    overflow: hidden;
+  }
+
+  .portrait--small {
+    width: 5.5rem;
+  }
+
+  .portrait--large {
+    width: 10rem;
+  }
+
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .portrait__initial {
+    font-family: var(--font-headline);
+    font-size: 3.5rem;
+    font-weight: var(--weight-headline);
+    line-height: 1;
+  }
+
+  .portrait--large .portrait__initial {
+    font-size: 6rem;
+  }
+</style>
