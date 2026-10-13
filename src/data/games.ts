@@ -41,7 +41,7 @@ export const games: Game[] = [
     name: 'Authors & Faces',
     blurb: 'Match the great writer to the portrait. All are long dead and unable to object.',
     image: 'pantagruel-03.webp',
-    live: false,
+    live: true,
   },
   {
     slug: 'crossword',
