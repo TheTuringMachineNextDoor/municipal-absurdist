@@ -74,9 +74,9 @@ Ask before adding any dependency not listed here.
 
 **Type** (Google Fonts):
 - Masthead: `UnifrakturMaguntia`
-- Headlines: `Libre Caslon Display`
-- Body: `Libre Caslon Text`
-- Labels, section names, bylines, datelines: `IM Fell English SC` (small caps)
+- Headlines: `Alegreya` (medium, 500)
+- Body: `Alegreya`
+- Labels, section names, bylines, datelines: `Alegreya SC` (small caps)
 
 **Color tokens** (`src/styles/tokens.css`):
 ```css

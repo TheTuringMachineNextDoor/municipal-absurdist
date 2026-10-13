@@ -17,15 +17,19 @@
   /* Type families. Each has a fallback stack for the moment before the
      Google Font arrives, and for readers whose network blocks it. */
   --font-masthead: 'UnifrakturMaguntia', 'Old English Text MT', 'Palatino Linotype', serif;
-  --font-headline: 'Libre Caslon Display', 'Big Caslon', 'Book Antiqua', Georgia, serif;
-  --font-body: 'Libre Caslon Text', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --font-label: 'IM Fell English SC', 'Libre Caslon Text', Georgia, serif;
+  --font-headline: 'Alegreya', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-body: 'Alegreya', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-label: 'Alegreya SC', 'Alegreya', Georgia, serif;
+
+  /* Headlines and body share one family, so weight does the work a
+     separate display face used to do. */
+  --weight-headline: 500;
 
   /* Type scale. clamp(min, fluid, max) grows with the window between two
      limits, so headlines are large on a desk and sensible on a telephone. */
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
-  --text-base: 1.0625rem;
+  --text-base: 1.125rem;   /* Alegreya is small on the body; 18px reads like 17px Caslon */
   --text-lg: 1.25rem;
   --text-h4: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
   --text-h3: clamp(1.5rem, 1.25rem + 1.1vw, 2rem);

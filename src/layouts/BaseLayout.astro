@@ -25,14 +25,14 @@ const {
 
 const pageTitle = title ? `${title} | ${siteName}` : siteName;
 
-// One request for all four families. `display=swap` shows the fallback
+// One request for all three families (Alegreya, its small caps, and the
+// blackletter). Only the weights listed are downloaded. `display=swap` shows the fallback
 // font immediately and swaps the real one in when it arrives, so text is
 // never invisible while fonts load.
 const fontsUrl =
   'https://fonts.googleapis.com/css2' +
-  '?family=IM+Fell+English+SC' +
-  '&family=Libre+Caslon+Display' +
-  '&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400' +
+  '?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400;1,500' +
+  '&family=Alegreya+SC:wght@400;500' +
   '&family=UnifrakturMaguntia' +
   '&display=swap';
 ---

@@ -27,7 +27,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-body);
-  /* Old-style figures and ligatures suit a Caslon. */
+  /* Old-style figures and ligatures suit a book face like Alegreya. */
   font-variant-numeric: oldstyle-nums;
   font-feature-settings: 'liga', 'kern';
   text-rendering: optimizeLegibility;
@@ -80,7 +80,7 @@ h3,
 h4 {
   margin: 0 0 var(--space-3);
   font-family: var(--font-headline);
-  font-weight: 400; /* Libre Caslon Display ships one weight; faking bold smears it */
+  font-weight: var(--weight-headline);
   line-height: var(--leading-tight);
   text-wrap: balance;
 }
@@ -225,7 +225,7 @@ hr,
 /* ---------- Ornaments ---------- */
 
 /* Printer's ornaments are text characters, not pictures. The symbol
-   fonts are named first because the Caslons do not carry these glyphs,
+   fonts are named first because Alegreya does not carry these glyphs,
    and font-variant-emoji keeps phones from swapping in a colour emoji. */
 .ornament {
   font-family: 'Apple Symbols', 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'DejaVu Sans', serif;
@@ -268,6 +268,7 @@ hr,
   float: left;
   margin: 0.05em 0.08em 0 0;
   font-family: var(--font-headline);
+  font-weight: var(--weight-headline);
   font-size: 5.4em;
   line-height: 0.8;
   color: var(--ink);
@@ -276,6 +277,7 @@ hr,
 /* The blackletter variant, for features and the front page. */
 .drop-cap--blackletter::first-letter {
   font-family: var(--font-masthead);
+  font-weight: 400;
   font-size: 4.9em;
   line-height: 0.88;
 }

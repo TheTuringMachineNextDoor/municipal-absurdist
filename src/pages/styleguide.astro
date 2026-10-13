@@ -19,19 +19,19 @@ const fonts = [
   {
     name: 'UnifrakturMaguntia',
     token: '--font-masthead',
-    use: 'Masthead only',
+    use: 'Masthead and the blackletter drop cap only',
     sample: 'The Municipal Absurdist',
     size: 'clamp(2rem, 1.2rem + 4vw, 3.5rem)',
   },
   {
-    name: 'Libre Caslon Display',
+    name: 'Alegreya, medium',
     token: '--font-headline',
     use: 'Headlines',
     sample: 'Council Votes to Study Feasibility of Further Studies',
     size: 'var(--text-h2)',
   },
   {
-    name: 'Libre Caslon Text',
+    name: 'Alegreya',
     token: '--font-body',
     use: 'Body copy',
     sample:
@@ -39,7 +39,7 @@ const fonts = [
     size: 'var(--text-base)',
   },
   {
-    name: 'IM Fell English SC',
+    name: 'Alegreya SC',
     token: '--font-label',
     use: 'Labels, section names, bylines, datelines',
     sample: 'By Our Correspondent at City Hall',
@@ -380,6 +380,7 @@ const hat = credits.find((c) => c.file === 'placeholder-top-hat.svg');
   .sg-h {
     margin: 0 0 var(--space-3);
     font-family: var(--font-headline);
+    font-weight: var(--weight-headline);
     line-height: var(--leading-tight);
     text-wrap: balance;
   }
@@ -392,6 +393,7 @@ const hat = credits.find((c) => c.file === 'placeholder-top-hat.svg');
   .sg-h5,
   .sg-h6 {
     font-family: var(--font-label);
+    font-weight: 400;
     letter-spacing: 0.08em;
     line-height: var(--leading-snug);
   }
