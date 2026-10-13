@@ -10,6 +10,8 @@ import ArticleHeader from '../../components/ArticleHeader.astro';
 import ArticleBody from '../../components/ArticleBody.astro';
 import Illustration from '../../components/Illustration.astro';
 import MoreFromSection from '../../components/MoreFromSection.astro';
+import LikeButton from '../../components/LikeButton.astro';
+import Comments from '../../components/Comments.astro';
 import { sections } from '../../data/sections';
 import { articlePath, getPublishedArticles, type Article } from '../../lib/articles';
 
@@ -62,6 +64,8 @@ const moreItems = await Promise.all(
       date={data.date}
     />
 
+    <p class="article__like"><LikeButton id={article.id} /></p>
+
     <Illustration file={data.image} alt={data.imageAlt} credit={data.imageCredit} variant="lead" />
 
     <ArticleBody html={article.rendered?.html ?? ''} />
@@ -70,14 +74,27 @@ const moreItems = await Promise.all(
     <div class="rule-ornament article__end" role="separator">
       <span class="ornament">&#x2767;&#xFE0E;</span>
     </div>
+
+    <p class="article__like article__like--end"><LikeButton id={article.id} /></p>
   </article>
+
+  <Comments />
 
   <MoreFromSection sectionName={section.name} sectionHref={`/${section.slug}`} items={moreItems} />
 </BaseLayout>
 
 <style>
+  .article__like {
+    margin: var(--space-4) 0 0;
+    text-align: center;
+  }
+
+  .article__like--end {
+    margin-top: var(--space-5);
+  }
+
   .article__end {
-    max-width: var(--measure);
+    max-width: var(--measure-article);
     margin: var(--space-6) auto 0;
   }
 </style>

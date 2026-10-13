@@ -3,6 +3,7 @@
 // a phone, three on a desk. Used on the front page, the section fronts,
 // and the "More from" strip under an article.
 import ArticleCard from './ArticleCard.astro';
+import { getIllustration } from '../lib/illustrations';
 
 export interface ArticleListItem {
   href: string;
@@ -11,6 +12,11 @@ export interface ArticleListItem {
   author: string;
   /** Shown above the headline where sections are mixed (the front page). */
   sectionName?: string;
+  /** A file from public/illustrations, shown small above the headline. */
+  image?: string;
+  imageAlt?: string;
+  /** Overrides the credit on record for that image. */
+  imageCredit?: string;
 }
 
 interface Props {
@@ -18,19 +24,41 @@ interface Props {
 }
 
 const { items } = Astro.props;
+
+// Every illustration must be credited on the page. A credit under each
+// small picture would crowd the cards, so the credits are gathered,
+// duplicates dropped, and printed once beneath the list.
+const credits = [
+  ...new Set(items.filter((i) => i.image).map((i) => i.imageCredit ?? getIllustration(i.image!).credit)),
+];
 ---
 
 <ul class="article-list">
   {
     items.map((item) => (
       <li class="article-list__item">
-        <ArticleCard {...item} />
+        <ArticleCard
+          href={item.href}
+          title={item.title}
+          dek={item.dek}
+          author={item.author}
+          sectionName={item.sectionName}
+          image={item.image}
+          imageAlt={item.imageAlt}
+        />
       </li>
     ))
   }
 </ul>
+{credits.length > 0 && <p class="fine-print article-list__credits">Illustrations: {credits.join(' ')}</p>}
 
 <style>
+  .article-list__credits {
+    margin: var(--space-5) 0 0;
+    font-style: italic;
+    text-align: center;
+  }
+
   .article-list {
     display: grid;
     margin: 0;

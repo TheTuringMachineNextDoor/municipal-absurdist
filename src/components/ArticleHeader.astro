@@ -41,7 +41,7 @@ const { label, iso } = formatDate(date);
 
 <style>
   .article-header {
-    max-width: 46rem;
+    max-width: 64rem;
     margin-inline: auto;
     text-align: center;
   }
@@ -70,14 +70,15 @@ const { label, iso } = formatDate(date);
   }
 
   .article-header__dek {
-    max-width: 36rem;
+    max-width: 48rem;
     margin-inline: auto;
   }
 
   /* Byline and dateline sit between two hairlines, like the dateline bar
      under the masthead. */
   .article-header__meta {
-    margin-top: var(--space-5);
+    max-width: var(--measure-article);
+    margin: var(--space-5) auto 0;
     padding-block: var(--space-2);
     border-block: var(--rule-hair) solid var(--rule);
     color: var(--ink);

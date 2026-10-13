@@ -1,0 +1,87 @@
+---
+// The comments section at the foot of an article.
+//
+// NOT YET WORKING, on purpose. Comments need somewhere to be stored and
+// someone to be signed in as, and both arrive with accounts (Phase 9,
+// Supabase). Until then the form is shown but switched off, with a
+// notice saying so, so no reader types a letter that goes nowhere.
+---
+
+<section class="comments" aria-labelledby="comments-heading">
+  <hr class="rule--double" />
+  <h2 id="comments-heading" class="comments__heading">Letters to the Editor</h2>
+
+  <p class="comments__notice">
+    The Letters desk is not yet open. Readers wishing to object may do so aloud, where
+    their remarks will receive the same consideration.
+  </p>
+
+  <!-- `disabled` on a fieldset switches off everything inside it. -->
+  <form class="comments__form">
+    <fieldset disabled>
+      <legend class="visually-hidden">Write a letter (not yet open)</legend>
+      <label class="label" for="comment-text">Your letter</label>
+      <textarea id="comment-text" rows="4" placeholder="Sir or Madam: I write in the strongest possible terms."></textarea>
+      <button type="submit">Post Letter</button>
+    </fieldset>
+  </form>
+</section>
+
+<style>
+  .comments {
+    max-width: var(--measure-article);
+    margin: var(--space-7) auto 0;
+  }
+
+  .comments__heading {
+    margin: var(--space-4) 0 var(--space-3);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
+
+  .comments__notice {
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  .comments__form fieldset {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .comments__form textarea {
+    width: 100%;
+    padding: var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    resize: vertical;
+  }
+
+  .comments__form button {
+    justify-self: end;
+    padding: var(--space-2) var(--space-4);
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: none;
+    color: var(--ink);
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+  }
+
+  /* Switched off: faded, and the cursor says so. */
+  .comments__form fieldset:disabled {
+    opacity: 0.55;
+  }
+
+  .comments__form fieldset:disabled * {
+    cursor: not-allowed;
+  }
+</style>

@@ -1,11 +1,10 @@
 ---
-// A section front, at /politics, /culture and so on: the section's name,
-// its newest article as the lead, and the rest beneath in columns.
+// A section front, at /politics, /culture and so on: the section's name
+// and its articles as small illustrated cards, three to a row.
 //
 // One page is built for every section in sections.ts, whether or not
 // anything has been filed under it yet.
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import LeadStory from '../../components/LeadStory.astro';
 import ArticleList from '../../components/ArticleList.astro';
 import { sections } from '../../data/sections';
 import { getPublishedArticles, summarize } from '../../lib/articles';
@@ -20,12 +19,9 @@ interface Props {
 
 const { section } = Astro.props;
 
-// Newest first, so the first one is the lead.
+// Newest first. On the section's own page the cards need no section label.
 const filed = (await getPublishedArticles()).filter((a) => a.data.section === section.slug);
-const [lead, ...rest] = await Promise.all(filed.map(summarize));
-
-// On the section's own page the cards need no section label.
-const restItems = rest.map(({ href, title, dek, author }) => ({ href, title, dek, author }));
+const items = (await Promise.all(filed.map(summarize))).map(({ sectionName, sectionHref, date, ...card }) => card);
 ---
 
 <BaseLayout title={section.name} description={section.blurb}>
@@ -38,19 +34,8 @@ const restItems = rest.map(({ href, title, dek, author }) => ({ href, title, dek
   <hr class="rule--thick-thin" />
 
   {
-    lead ? (
-      <>
-        <LeadStory {...lead} sectionName={undefined} sectionHref={undefined} />
-        {restItems.length > 0 && (
-          <section class="front-rest" aria-labelledby="front-rest-heading">
-            <div class="rule-ornament" role="separator">
-              <span class="ornament">&#x2767;&#xFE0E;</span>
-            </div>
-            <h2 id="front-rest-heading" class="front-rest__heading">Also in {section.name}</h2>
-            <ArticleList items={restItems} />
-          </section>
-        )}
-      </>
+    items.length > 0 ? (
+      <ArticleList items={items} />
     ) : (
       <p class="front-empty">
         Nothing has yet been filed under {section.name}. The desk has been staffed, the
@@ -68,14 +53,6 @@ const restItems = rest.map(({ href, title, dek, author }) => ({ href, title, dek
   .front-header__blurb {
     max-width: 36rem;
     margin-inline: auto;
-  }
-
-  .front-rest__heading {
-    margin-bottom: var(--space-5);
-    font-family: var(--font-label);
-    font-size: var(--text-lg);
-    letter-spacing: 0.12em;
-    text-align: center;
   }
 
   .front-empty {

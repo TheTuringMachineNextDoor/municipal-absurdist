@@ -1,0 +1,111 @@
+---
+// A button to like an article. An article page has two, top and bottom;
+// pressing either marks both.
+//
+// FOR NOW the like is remembered only in the reader's own browser
+// (localStorage), so there is no count and it does not follow them to
+// another device. When accounts arrive (Phase 9, Supabase), only the two
+// functions marked in the script below need to change.
+interface Props {
+  /** What is being liked: the article's slug. */
+  id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<button class="like" type="button" data-like={id} aria-pressed="false">
+  <svg class="like__heart" viewBox="0 0 24 22" width="18" height="16" aria-hidden="true" focusable="false">
+    <path d="M12 20.5 C5 15 1.5 11.2 1.5 7 C1.5 3.8 3.9 1.5 6.8 1.5 C8.9 1.5 10.9 2.7 12 4.6 C13.1 2.7 15.1 1.5 17.2 1.5 C20.1 1.5 22.5 3.8 22.5 7 C22.5 11.2 19 15 12 20.5 Z" />
+  </svg>
+  <span data-like-label>Like this article</span>
+</button>
+
+<!-- Astro bundles this once however many buttons are on the page. -->
+<script>
+  const KEY = 'absurdist:likes';
+
+  // --- Storage. Replace these two when likes move to a database. ---
+  function readLikes(): string[] {
+    try {
+      return JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    } catch {
+      return []; // private windows and blocked storage land here
+    }
+  }
+
+  function writeLikes(likes: string[]) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(likes));
+    } catch {
+      // Nothing to do: the button still toggles for this visit.
+    }
+  }
+  // -----------------------------------------------------------------
+
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-like]')];
+
+  // Show one article's state on every button for it.
+  function show(id: string, liked: boolean) {
+    for (const button of buttons) {
+      if (button.dataset.like !== id) continue;
+      button.setAttribute('aria-pressed', String(liked));
+      const label = button.querySelector('[data-like-label]');
+      if (label) label.textContent = liked ? 'Liked' : 'Like this article';
+    }
+  }
+
+  const liked = new Set(readLikes());
+  for (const button of buttons) {
+    const id = button.dataset.like!;
+    show(id, liked.has(id));
+    button.addEventListener('click', () => {
+      if (liked.has(id)) liked.delete(id);
+      else liked.add(id);
+      writeLikes([...liked]);
+      show(id, liked.has(id));
+    });
+  }
+</script>
+
+<style>
+  /* A quiet, square button in small caps, like the ones in the dateline. */
+  .like {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: none;
+    color: var(--ink);
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 150ms, border-color 150ms;
+  }
+
+  .like:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .like__heart {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    transition: fill 150ms, transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Liked: the heart fills with green and gives a small jump. */
+  .like[aria-pressed='true'] {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .like[aria-pressed='true'] .like__heart {
+    fill: var(--accent);
+    transform: scale(1.15);
+  }
+</style>

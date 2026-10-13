@@ -54,7 +54,8 @@
   /* Layout. */
   --page-max: 90rem;                              /* widest the sheet gets: 1440px, a full laptop screen */
   --gutter: clamp(1rem, 0.4rem + 2.6vw, 2.5rem);  /* side margin; 16px at 375px */
-  --measure: 34rem;                               /* comfortable line length for body copy */
+  --measure: 34rem;                               /* comfortable line length for short copy */
+  --measure-article: 46rem;                       /* the wider column an article is set in */
 
   /* Rules (the printed lines between things). */
   --rule-hair: 1px;

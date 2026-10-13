@@ -21,7 +21,7 @@ const body = renderArticleBody(Astro.props.html);
      Every rule starts with .article-body, so nothing leaks out. -->
 <style is:global>
   .article-body {
-    max-width: var(--measure);
+    max-width: var(--measure-article);
     margin-inline: auto;
     font-size: var(--text-lg);
     line-height: var(--leading-body);

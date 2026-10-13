@@ -13,7 +13,7 @@ const articles = await getPublishedArticles();
 const leadArticle = articles.find((a) => a.data.featured) ?? articles[0];
 const lead = leadArticle && (await summarize(leadArticle));
 const rest = await Promise.all(articles.filter((a) => a !== leadArticle).map(summarize));
-const restItems = rest.map(({ href, title, dek, author, sectionName }) => ({ href, title, dek, author, sectionName }));
+const restItems = rest.map(({ sectionHref, date, ...card }) => card);
 ---
 
 <BaseLayout mastheadAs="h1">
