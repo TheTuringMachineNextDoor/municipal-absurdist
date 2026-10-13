@@ -15,9 +15,14 @@ interface Props {
   fields?: Record<string, string>;
   /** Height of the frame, as CSS. A longer form needs more. */
   height?: string;
+  /** "embed" shows the form in the page. "link" shows a button that
+      opens it instead: lighter, for a page with several forms. */
+  mode?: 'embed' | 'link';
+  /** The words on the button, in "link" mode. */
+  linkText?: string;
 }
 
-const { url, title, fields = {}, height = '56rem' } = Astro.props;
+const { url, title, fields = {}, height = '56rem', mode = 'embed', linkText = 'Open the form' } = Astro.props;
 
 // The same form can be shown inside another page at /embed/ID.
 const formId = url.match(/tally\.so\/(?:r|embed|forms)\/([A-Za-z0-9]+)/)?.[1];
@@ -29,7 +34,9 @@ const frame = formId
 ---
 
 {
-  frame && link ? (
+  frame && link && mode === 'link' ? (
+    <a class="tally-link" href={link} rel="noopener">{linkText}</a>
+  ) : frame && link ? (
     <>
       <iframe class="tally" src={frame} title={title} loading="lazy" style={`height: ${height}`} />
       <p class="fine-print">
@@ -49,6 +56,24 @@ const frame = formId
     display: block;
     width: 100%;
     border: var(--rule-hair) solid var(--rule);
+  }
+
+  /* The button to a form: a square block of ink. */
+  .tally-link {
+    display: inline-block;
+    padding: var(--space-2) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
+  .tally-link:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
   }
 
   .tally-closed {

@@ -1,0 +1,174 @@
+---
+// The Support page: how to give the paper money, and what else helps.
+//
+// Donations go through Stripe Payment Links set in src/data/site.ts
+// (donationLinks). The site only links to Stripe; it never handles a
+// card. A link left blank is shown as a notice instead of a button.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NewsletterBox from '../components/NewsletterBox.astro';
+import { site } from '../data/site';
+
+const plates = [
+  {
+    title: 'A Single Contribution',
+    text: 'Any sum, once. You choose the amount on the next page.',
+    link: site.donationLinks.once,
+    button: 'Give once',
+  },
+  {
+    title: 'A Standing Contribution',
+    text: 'A sum each month, until you tell Stripe to stop. The paper will notice, and be grateful, in that order.',
+    link: site.donationLinks.monthly,
+    button: 'Give monthly',
+  },
+];
+---
+
+<BaseLayout
+  title="Support the Paper"
+  description="How to support The Municipal Absurdist and the writers and artists who make it."
+>
+  <header class="support-header">
+    <p class="label label--accent">Support</p>
+    <h1>Keep the Presses Warm</h1>
+    <p class="dek support-header__dek">
+      This newspaper has no owner, no advertisers, and no plan to acquire either. It is paid for by its
+      readers, when it is paid for at all.
+    </p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <div class="support prose">
+    <h2>Where the Money Goes</h2>
+    <p>
+      To the people who make the paper first: the writers, illustrators and cartoonists whose names are on the
+      work. Then to the cost of keeping it on the internet, which is small. Nothing is spent on offices, there
+      being none.
+    </p>
+  </div>
+
+  <ul class="plates">
+    {
+      plates.map((plate) => (
+        <li class="plate">
+          <h2 class="plate__title">{plate.title}</h2>
+          <p class="plate__text">{plate.text}</p>
+          {plate.link ? (
+            <a class="plate__button" href={plate.link} rel="noopener">{plate.button}</a>
+          ) : (
+            // Not a link: there is nowhere to send the reader yet.
+            <p class="label plate__closed">The collection plate is being polished</p>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+  <p class="fine-print support__stripe">
+    Payment is taken by Stripe, on Stripe’s own page. This newspaper never sees your card. Contributions are
+    not tax-deductible; the paper is a newspaper, not a charity, though the difference is narrowing.
+  </p>
+
+  <div class="support prose">
+    <h2>Other Ways to Help</h2>
+    <ul class="list-ornament">
+      <li><a href="/store">Buy something from the Store.</a> The artist is paid, and you get an object.</li>
+      <li>Take the newsletter, below. It costs nothing and tells the editors someone is there.</li>
+      <li>Send an article to one person who will be annoyed by it. This is how newspapers have always spread.</li>
+      <li><a href="/submit">Write or draw for the paper.</a> It is short of both.</li>
+    </ul>
+  </div>
+
+  <div class="support__newsletter">
+    <NewsletterBox />
+  </div>
+</BaseLayout>
+
+<style>
+  .support-header {
+    text-align: center;
+  }
+
+  .support-header__dek {
+    max-width: 38rem;
+    margin-inline: auto;
+  }
+
+  .support {
+    max-width: var(--measure-article);
+    margin-inline: auto;
+  }
+
+  .support h2 {
+    font-size: var(--text-h3);
+  }
+
+  /* The two ways to give, side by side when there is room. */
+  .plates {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--measure-article);
+    margin: var(--space-5) auto var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40rem) {
+    .plates {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .plate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-5) var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  .plate__title {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-h4);
+  }
+
+  .plate__text {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .plate__button {
+    margin-top: auto;
+    padding: var(--space-2) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
+  .plate__button:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .plate__closed {
+    margin: auto 0 0;
+    color: var(--accent-text);
+  }
+
+  .support__stripe {
+    max-width: var(--measure-article);
+    margin: 0 auto var(--space-7);
+    font-style: italic;
+    text-align: center;
+  }
+
+  .support__newsletter {
+    max-width: var(--measure-article);
+    margin: var(--space-7) auto 0;
+  }
+</style>

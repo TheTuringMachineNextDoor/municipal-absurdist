@@ -61,9 +61,10 @@ Ask before adding any dependency not listed here.
 | `/[section]/[slug]` | Article |
 | `/contributors/[slug]` | A page for each contributor: bio, links, commission form (their own Tally form, shown when `commissionsOpen`), portfolio of pictures they drew, and articles they wrote. Helpers in `src/lib/contributors.ts`. Bylines on articles link here. There is no list page: the staff are listed on `/about`, and `/contributors` redirects there. |
 | `/store` and `/store/[slug]` | The Store: Art & Prints, Merchandise, and Commissions (contributors with `commissionsOpen`, linking to the form on their page). Each product has its own page with a Purchase button to its Stripe Payment Link; with no link it shows "Not Yet on Sale", and with `available: false`, "Sold Out". Helpers in `src/lib/store.ts`. |
-| `/submit` | Write for Us / Draw for Us / Create for Us |
+| `/submit` | Write for Us / Draw for Us / Create for Us: what each desk wants, how work is credited, and a button to each desk's Tally form (`submissionForms` in `src/data/site.ts`) |
 | `/about` | What the paper is, what it stands for, why it is different and why it matters; then the staff: main writers and main artists with portraits, then occasional writers and artists as smaller lists. A contributor's `standing` (auto / main / occasional) decides which; auto means main after `MAIN_AFTER` pieces. |
-| `/support` | Donations |
+| `/support` | Donations by Stripe Payment Link (`donationLinks` in `src/data/site.ts`), plus other ways to help |
+| `/newsletter` | The newsletter's own page, with the signup box |
 | `/games` and `/games/[game]` | Games hub (list in `src/data/games.ts`) and each game. Games share `GameLayout`, `ResultsCard` and the helpers in `src/lib/games/` (daily puzzle in America/Chicago time, stats in localStorage, share text). |
 | `/games/crossword/submit` | How to send in a crossword, with the Tally form (`crosswordSubmissionForm` in `src/data/site.ts`). Puzzles live in `src/data/crosswords.ts`; the build checks each one. |
 | `/games/caption-contest` | Caption contest. Contests and results in `src/data/caption-contests.ts` (the last entry is the open one); entries via Tally (`captionContestForm` in `src/data/site.ts`). `TallyForm.astro` embeds any Tally form. |
@@ -140,6 +141,6 @@ No dark mode at launch: the paper is the identity.
 5. Section fronts (done)
 6. Contributors and portfolio pages (done)
 7. Store and commissions (done)
-8. Submit, About, Support, newsletter
+8. Submit, About, Support, newsletter (built; waiting on the Tally, Stripe and Buttondown addresses in `src/data/site.ts`)
 9. Polish, 404, SEO and Open Graph images, favicon
 10. (Later) Accounts, comments, likes via Supabase

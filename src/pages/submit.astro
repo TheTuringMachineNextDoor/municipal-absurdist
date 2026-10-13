@@ -1,0 +1,246 @@
+---
+// The Submit page: three doors into the paper.
+//
+//   Write for Us    articles, essays, stories, verse
+//   Draw for Us     cartoons, caricatures, strips, illustration
+//   Create for Us   everything else: photographs, games, puzzles
+//
+// Each door has its own Tally form, set in src/data/site.ts
+// (submissionForms). The forms open on Tally's own page from a button,
+// not inside this page: three embedded forms would make it slow.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TallyForm from '../components/TallyForm.astro';
+import { site } from '../data/site';
+
+const doors = [
+  {
+    id: 'write',
+    title: 'Write for Us',
+    form: site.submissionForms.write,
+    intro: 'Satirical reports, essays, humorous opinion, short stories, verse, scripts and reviews.',
+    wants: [
+      'A report of 400 to 800 words, with a headline and a one-sentence summary beneath it. Shorter is welcome. Longer needs a reason.',
+      'A clear target. Say in one line, for the editors only, who or what the piece is aiming at.',
+      'The straight face. Write it as news. If a sentence winks at the reader, cut the sentence.',
+      'True facts around the invention. Real names, dates and figures must be right, so that the joke is plainly the only thing made up.',
+    ],
+    button: 'Submit writing',
+  },
+  {
+    id: 'draw',
+    title: 'Draw for Us',
+    form: site.submissionForms.draw,
+    intro: 'Editorial cartoons, caricatures, comic strips, illustrations and visual jokes.',
+    wants: [
+      'Finished work, or a rough with a note on how you would finish it. Either is read with the same attention.',
+      'Line that survives being printed small. The paper is black ink on white, with one yellow; work in that spirit prints best.',
+      'A file the editors can open: PNG, JPEG or PDF, at least 2,000 pixels on the long side.',
+      'A caption or title, if the drawing wants one, and the name you sign with.',
+    ],
+    button: 'Submit a drawing',
+  },
+  {
+    id: 'create',
+    title: 'Create for Us',
+    form: site.submissionForms.create,
+    intro: 'The open door: photographs, games, puzzles, interactive pieces, and things the editors have not thought of.',
+    wants: [
+      'A description of the thing in two or three sentences, and the thing itself or a link to it.',
+      'Some idea of how it would sit in a newspaper. The editors are flexible about what a newspaper is.',
+      'For a crossword or a caption, use the paper’s own windows, linked below.',
+    ],
+    button: 'Submit something else',
+  },
+];
+---
+
+<BaseLayout
+  title="Submit"
+  description="How to write, draw or make something for The Municipal Absurdist."
+>
+  <header class="submit-header">
+    <p class="label label--accent">Submissions</p>
+    <h1>Write, Draw or Create for Us</h1>
+    <p class="dek submit-header__dek">
+      The paper is made by its contributors and is always short of them. Three doors are provided. Use
+      whichever fits; the editors will redirect you if you have guessed wrong.
+    </p>
+    <nav class="submit-header__nav label" aria-label="The three doors">
+      {
+        doors.map((door, index) => (
+          <>
+            {index > 0 && <span aria-hidden="true">&middot;</span>}
+            <a href={`#${door.id}`}>{door.title}</a>
+          </>
+        ))
+      }
+    </nav>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <div class="doors">
+    {
+      doors.map((door) => (
+        <section class="door" id={door.id} aria-labelledby={`${door.id}-heading`}>
+          <h2 id={`${door.id}-heading`} class="door__title">{door.title}</h2>
+          <p class="door__intro">{door.intro}</p>
+          <h3 class="label door__label">What the desk wants</h3>
+          <ul class="list-ornament door__wants">
+            {door.wants.map((want) => <li>{want}</li>)}
+          </ul>
+          {door.id === 'create' && (
+            <p class="door__also">
+              <a href="/games/crossword/submit">Set a crossword</a>
+              <span aria-hidden="true"> &middot; </span>
+              <a href="/games/caption-contest">Enter the caption contest</a>
+            </p>
+          )}
+          <div class="door__form">
+            <TallyForm url={door.form} title={door.title} mode="link" linkText={door.button}>
+              This door is shut while the Bureau locates the key. It is expected to open shortly. Keep your work
+              somewhere dry.
+            </TallyForm>
+          </div>
+        </section>
+      ))
+    }
+  </div>
+
+  <section class="terms prose" aria-labelledby="terms-heading">
+    <h2 id="terms-heading">What Happens to Your Work</h2>
+    <ul class="list-ornament">
+      <li>
+        <strong>It is read.</strong> Every submission is read by an editor. The paper cannot promise a reply to
+        each, and will not pretend otherwise.
+      </li>
+      <li>
+        <strong>It may be edited.</strong> Accepted work is edited for length, clarity and house style, and the
+        edit is shown to you before anything is printed.
+      </li>
+      <li>
+        <strong>It is credited.</strong> Published work carries your name, and you receive a page of your own
+        on this site listing everything of yours the paper has run.
+      </li>
+      <li>
+        <strong>It stays yours.</strong> You keep the rights to your work. The paper asks only for permission
+        to publish it here and in its newsletter.
+      </li>
+      <li>
+        <strong>Payment.</strong> Where the paper is able to pay for a piece, the sum is agreed with you before
+        publication. Artists may also sell prints and take commissions through <a href="/store">the Store</a>.
+      </li>
+      <li>
+        <strong>It must be your own.</strong> Send only work you made, not published elsewhere, and not
+        produced by a machine on your behalf.
+      </li>
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .submit-header {
+    text-align: center;
+  }
+
+  .submit-header__dek {
+    max-width: 38rem;
+    margin-inline: auto;
+  }
+
+  .submit-header__nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+  }
+
+  /* One door to a row on a phone; three columns divided by hairlines on
+     a desk, like columns of a newspaper. */
+  .doors {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .door {
+    min-width: 0;
+    scroll-margin-top: var(--space-4);
+  }
+
+  .door + .door {
+    padding-top: var(--space-6);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  @media (min-width: 60rem) {
+    .doors {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+    }
+
+    .door {
+      display: flex;
+      flex-direction: column;
+      padding-inline: var(--space-5);
+    }
+
+    .door:first-child {
+      padding-left: 0;
+    }
+
+    .door:last-child {
+      padding-right: 0;
+    }
+
+    .door + .door {
+      padding-top: 0;
+      border-top: 0;
+      border-left: var(--rule-hair) solid var(--rule);
+    }
+
+    /* Push each form to the foot of its column so the three line up. */
+    .door__form {
+      margin-top: auto;
+    }
+  }
+
+  .door__title {
+    font-size: var(--text-h3);
+  }
+
+  .door__intro {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .door__label {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  .door__wants {
+    margin-bottom: var(--space-4);
+    font-size: var(--text-sm);
+  }
+
+  .door__also {
+    font-size: var(--text-sm);
+  }
+
+  .door__form {
+    padding-top: var(--space-2);
+  }
+
+  .terms {
+    max-width: var(--measure-article);
+    margin: var(--space-8) auto 0;
+    padding-top: var(--space-5);
+    border-top: var(--rule-thick) double var(--rule);
+  }
+
+  .terms h2 {
+    font-size: var(--text-h3);
+    text-align: center;
+  }
+</style>

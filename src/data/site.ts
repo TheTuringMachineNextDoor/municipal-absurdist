@@ -20,4 +20,23 @@ export const site = {
   // as a hidden field called "contest", so add a hidden field of that
   // name to the form in Tally to see which drawing each caption is for.
   captionContestForm: '',
+
+  // The Tally forms on the Submit page (/submit), one for each door:
+  // writing, drawing, and everything else. Share links, as above. A door
+  // with no link is shown shut.
+  submissionForms: {
+    write: '',
+    draw: '',
+    create: '',
+  },
+
+  // Stripe Payment Links for donations, on the Support page (/support).
+  // In Stripe, make one Payment Link where the customer chooses the
+  // amount, and (if wanted) one that is a monthly subscription. They
+  // look like https://donate.stripe.com/abc123. A blank one is shown as
+  // "The collection plate is being polished."
+  donationLinks: {
+    once: '',
+    monthly: '',
+  },
 };

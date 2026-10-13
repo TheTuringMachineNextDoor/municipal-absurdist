@@ -1,0 +1,69 @@
+---
+// The newsletter's own page: what it is, and the box to sign up. The
+// same box appears at the foot of the front page and the section fronts;
+// this page gives it an address that can be linked to.
+//
+// The form sends to Buttondown. Its address is `newsletterAction` in
+// src/data/site.ts; until that is set the box is shown switched off.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NewsletterBox from '../components/NewsletterBox.astro';
+---
+
+<BaseLayout
+  title="The Newsletter"
+  description="The best of The Municipal Absurdist, sent by email at reasonable intervals."
+>
+  <header class="post-header">
+    <p class="label label--accent">The Newsletter</p>
+    <h1>The Absurdist, by Post</h1>
+    <p class="dek post-header__dek">
+      The paper, folded small and pushed through your electronic letterbox.
+    </p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <div class="post prose">
+    <h2>What You Will Receive</h2>
+    <ul class="list-ornament">
+      <li>The best new reports, chosen by editors who have read all of them and wish you to be spared that.</li>
+      <li>The week’s cartoon, and notice of the crossword and the caption contest.</li>
+      <li>Nothing else. No offers, no partners, and no surveys about how the newsletter is going.</li>
+    </ul>
+    <h2>What It Costs</h2>
+    <p>
+      Nothing. Your address is used to send you the newsletter and for no other purpose. It is not sold, lent,
+      or left on a train. Every issue carries a line at the foot by which you may leave, and the paper will
+      not ask why.
+    </p>
+  </div>
+
+  <div class="post__box">
+    <NewsletterBox />
+  </div>
+</BaseLayout>
+
+<style>
+  .post-header {
+    text-align: center;
+  }
+
+  .post-header__dek {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  .post,
+  .post__box {
+    max-width: var(--measure-article);
+    margin-inline: auto;
+  }
+
+  .post h2 {
+    font-size: var(--text-h3);
+  }
+
+  .post__box {
+    margin-top: var(--space-6);
+  }
+</style>
