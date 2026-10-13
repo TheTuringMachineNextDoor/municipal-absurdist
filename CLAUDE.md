@@ -68,6 +68,9 @@ Ask before adding any dependency not listed here.
 | `/games` and `/games/[game]` | Games hub (list in `src/data/games.ts`) and each game. Games share `GameLayout`, `ResultsCard` and the helpers in `src/lib/games/` (daily puzzle in America/Chicago time, stats in localStorage, share text). |
 | `/games/crossword/submit` | How to send in a crossword, with the Tally form (`crosswordSubmissionForm` in `src/data/site.ts`). Puzzles live in `src/data/crosswords.ts`; the build checks each one. |
 | `/games/caption-contest` | Caption contest. Contests and results in `src/data/caption-contests.ts` (the last entry is the open one); entries via Tally (`captionContestForm` in `src/data/site.ts`). `TallyForm.astro` embeds any Tally form. |
+| `/archive`, `/contact` | Every article by month; a Tally contact form (`contactForm` in `src/data/site.ts`) |
+| `/login`, `/signup` | Holding pages until accounts arrive in Phase 10 |
+| `/rss.xml`, `/sitemap.xml`, `/robots.txt` | The feed, the list of pages for search engines, and the note to their crawlers. Written by hand in `src/pages/` (no plugin). The site's address comes from `SITE_URL` or Vercel; see `astro.config.mjs`. |
 | `/styleguide` | Living reference of every design element (dev only) |
 
 ---
@@ -142,5 +145,5 @@ No dark mode at launch: the paper is the identity.
 6. Contributors and portfolio pages (done)
 7. Store and commissions (done)
 8. Submit, About, Support, newsletter (built; waiting on the Tally, Stripe and Buttondown addresses in `src/data/site.ts`)
-9. Polish, 404, SEO and Open Graph images, favicon
+9. Polish, 404, SEO and Open Graph images, favicon (done)
 10. (Later) Accounts, comments, likes via Supabase

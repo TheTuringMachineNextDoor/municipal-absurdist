@@ -30,6 +30,9 @@ export const site = {
     create: '',
   },
 
+  // The Tally form on the Contact page (/contact). A share link, as above.
+  contactForm: '',
+
   // Stripe Payment Links for donations, on the Support page (/support).
   // In Stripe, make one Payment Link where the customer chooses the
   // amount, and (if wanted) one that is a monthly subscription. They

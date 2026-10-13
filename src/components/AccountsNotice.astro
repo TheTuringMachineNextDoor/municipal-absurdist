@@ -1,0 +1,35 @@
+---
+// The holding notice shown at /login and /signup until reader accounts
+// are built (Phase 10). It says plainly that there is nothing to sign
+// in to yet, and what readers can do meanwhile.
+interface Props {
+  heading: string;
+}
+
+const { heading } = Astro.props;
+---
+
+<article class="accounts">
+  <p class="label label--accent">The Readers’ Register</p>
+  <h1>{heading}</h1>
+  <p class="dek">
+    The register is not yet open. The clerk has the book, the pen, and a firm intention to begin.
+  </p>
+  <hr class="rule--short" />
+  <p>
+    Accounts for readers are being built. When they open you will be able to keep a list of articles, mark the
+    ones you approve of, and write letters beneath them. Until then nothing on this site requires your name.
+  </p>
+  <p>
+    <a href="/newsletter">Take the newsletter</a> to be told when the register opens, or
+    <a href="/">return to the front page</a>.
+  </p>
+</article>
+
+<style>
+  .accounts {
+    max-width: var(--measure);
+    margin-inline: auto;
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,63 @@
+---
+// The Contact page: where each kind of message should go, and a form
+// for the rest. The form is a Tally form set in src/data/site.ts
+// (contactForm); until it is set the page says the window is shut.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TallyForm from '../components/TallyForm.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout title="Contact" description="How to reach the editors of The Municipal Absurdist.">
+  <header class="contact-header">
+    <p class="label label--accent">Contact</p>
+    <h1>Letters to the Editor</h1>
+    <p class="dek contact-header__dek">
+      The editors read everything addressed to them, including the portions written in capitals.
+    </p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <div class="contact prose">
+    <h2>Before You Write</h2>
+    <ul class="list-ornament">
+      <li>To send the paper an article, a drawing or anything else you have made, use <a href="/submit">the Submit page</a>.</li>
+      <li>To hire an artist or writer, see <a href="/store#commissions">Commissions</a> in the Store.</li>
+      <li>
+        To report an error, say which article and which sentence. Corrections are issued promptly upon the
+        third request, and sooner when the error is real.
+      </li>
+      <li>
+        If you are a person named in an article and wish to object, write to us. This is a newspaper of satire
+        and nothing in it is a statement of fact, but the editors would rather hear it from you than from
+        someone you have hired.
+      </li>
+    </ul>
+
+    <h2>The Form</h2>
+    <TallyForm url={site.contactForm} title="Contact the editors" height="44rem">
+      The letterbox is being fitted. It is expected to open shortly. Compose your letter in the meantime, and
+      consider removing the second paragraph.
+    </TallyForm>
+  </div>
+</BaseLayout>
+
+<style>
+  .contact-header {
+    text-align: center;
+  }
+
+  .contact-header__dek {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+
+  .contact {
+    max-width: var(--measure-article);
+    margin-inline: auto;
+  }
+
+  .contact h2 {
+    font-size: var(--text-h3);
+  }
+</style>

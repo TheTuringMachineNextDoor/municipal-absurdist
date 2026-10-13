@@ -1,0 +1,136 @@
+---
+// The Archive, at /archive: every published article, newest first,
+// grouped by month. Text only, like the index of a bound volume.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { articlePath, formatDate, getPublishedArticles, summarize } from '../lib/articles';
+
+const articles = await getPublishedArticles();
+const rows = await Promise.all(
+  articles.map(async (article) => ({ ...(await summarize(article)), href: articlePath(article) })),
+);
+
+// Group into months: "October 2026" and the rows filed in it.
+const months: { name: string; rows: typeof rows }[] = [];
+for (const row of rows) {
+  const name = row.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const last = months[months.length - 1];
+  if (last?.name === name) last.rows.push(row);
+  else months.push({ name, rows: [row] });
+}
+---
+
+<BaseLayout title="The Archive" description="Every report printed by The Municipal Absurdist, by date.">
+  <header class="archive-header">
+    <p class="label label--accent">The Archive</p>
+    <h1>Back Numbers</h1>
+    <p class="dek archive-header__dek">
+      Everything this newspaper has printed, in the order it was regretted.
+    </p>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <div class="archive">
+    {
+      months.length === 0 && (
+        <p class="archive__empty">The archive is empty. The archivist reports that this makes it very easy to keep tidy.</p>
+      )
+    }
+    {
+      months.map((month) => (
+        <section aria-label={month.name}>
+          <h2 class="archive__month">{month.name}</h2>
+          <ol class="archive__rows">
+            {month.rows.map((row) => {
+              const when = formatDate(row.date);
+              return (
+                <li class="archive__row">
+                  <time class="label archive__date" datetime={when.iso}>
+                    {row.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
+                  </time>
+                  <div>
+                    <a class="archive__title" href={row.href}>{row.title}</a>
+                    <p class="label archive__meta">
+                      <a href={row.sectionHref}>{row.sectionName}</a> <span aria-hidden="true">&middot;</span> {row.author}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .archive-header {
+    text-align: center;
+  }
+
+  .archive {
+    max-width: var(--measure-article);
+    margin-inline: auto;
+  }
+
+  .archive__month {
+    margin: var(--space-6) 0 0;
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  .archive__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The date in a narrow column, the headline beside it. */
+  .archive__row {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-block: var(--space-3);
+    border-bottom: var(--rule-hair) solid var(--rule);
+  }
+
+  .archive__date {
+    padding-top: 0.2em;
+    font-size: var(--text-sm);
+    font-variant-numeric: lining-nums;
+  }
+
+  .archive__title {
+    font-family: var(--font-headline);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-headline);
+    line-height: var(--leading-snug);
+    text-decoration: none;
+  }
+
+  .archive__title:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+
+  .archive__meta {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-xs);
+  }
+
+  .archive__meta a {
+    text-decoration: none;
+  }
+
+  .archive__empty {
+    margin-top: var(--space-6);
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+</style>

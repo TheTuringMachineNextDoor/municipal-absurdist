@@ -1,22 +1,53 @@
 ---
 // Astro builds this to /404.html, which Vercel serves for any address
-// that has no page. A fuller version is planned for Phase 9.
+// that has no page. It apologises, then offers the reader somewhere to
+// go: the newest reports and every section.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { sections } from '../data/sections';
+import { articlePath, getPublishedArticles } from '../lib/articles';
+
+const latest = (await getPublishedArticles()).slice(0, 3);
 ---
 
 <BaseLayout title="Page Misplaced" noindex>
   <article class="lost">
     <p class="label label--accent">Error No. 404</p>
     <h1>This Page Has Been Misplaced by the Department of Pages</h1>
-    <p class="dek">
-      A search has been ordered. The Department asks that readers not assist.
-    </p>
+    <p class="dek">A search has been ordered. The Department asks that readers not assist.</p>
     <hr class="rule--short" />
     <p>
-      It is possible the page has not yet been printed. Several sections of this
-      newspaper remain under construction, a condition the city knows well.
+      The page may have been moved, renamed, or never printed. It is also possible that the address was typed
+      by hand, a practice the Department discourages.
     </p>
-    <p><a href="/">Return to the front page</a></p>
+
+    {
+      latest.length > 0 && (
+        <>
+          <h2 class="label lost__label">Pages that have not been misplaced</h2>
+          <ul class="lost__list">
+            {latest.map((article) => (
+              <li>
+                <a href={articlePath(article)}>{article.data.title}</a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
+
+    <nav class="lost__sections label" aria-label="Sections">
+      <a href="/">Front page</a>
+      {
+        sections.map((section) => (
+          <>
+            <span aria-hidden="true">&middot;</span>
+            <a href={`/${section.slug}`}>{section.name}</a>
+          </>
+        ))
+      }
+      <span aria-hidden="true">&middot;</span>
+      <a href="/archive">Archive</a>
+    </nav>
   </article>
 </BaseLayout>
 
@@ -25,5 +56,32 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     max-width: var(--measure);
     margin-inline: auto;
     text-align: center;
+  }
+
+  .lost__label {
+    margin: var(--space-6) 0 var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  .lost__list {
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-headline);
+    font-size: var(--text-lg);
+    line-height: var(--leading-snug);
+  }
+
+  .lost__list li + li {
+    margin-top: var(--space-2);
+  }
+
+  .lost__sections {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1) var(--space-2);
+    padding-top: var(--space-3);
+    border-top: var(--rule-hair) solid var(--rule);
   }
 </style>

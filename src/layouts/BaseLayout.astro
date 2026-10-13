@@ -13,6 +13,16 @@ interface Props {
   mastheadAs?: 'h1' | 'p';
   /** Keep a page out of search engines (the styleguide, the 404). */
   noindex?: boolean;
+  /** The picture shown when the page is shared: a path such as
+      "/illustrations/great-wave.jpeg". Defaults to the masthead card. */
+  image?: { src: string; alt: string; width?: number; height?: number };
+  /** "article" for an article page; everything else is a "website". */
+  type?: 'website' | 'article';
+  /** Extra facts about an article, for sharing previews. */
+  article?: { published: Date; author: string; section: string };
+  /** Structured data: a description of the page in the vocabulary
+      search engines read (schema.org). */
+  jsonLd?: Record<string, unknown>;
 }
 
 const siteName = 'The Municipal Absurdist';
@@ -21,7 +31,19 @@ const {
   description = 'An independent newspaper of satire. The public is advised to remain calm.',
   mastheadAs = 'p',
   noindex = false,
+  image = { src: '/og-default.png', alt: 'The Municipal Absurdist: the world, as it unfortunately is.', width: 1200, height: 630 },
+  type = 'website',
+  article,
+  jsonLd,
 } = Astro.props;
+
+// Sharing previews and search engines want full addresses
+// (https://...), not paths. Astro.site is the site's address from
+// astro.config.mjs; Astro.url is this page's.
+// The trailing slash is dropped (except on the front page) so a page has
+// one address everywhere: here, in the sitemap, and in the feed.
+const canonical = new URL(Astro.url.pathname.replace(/(.)\/$/, '$1'), Astro.site).href;
+const imageUrl = new URL(image.src, Astro.site).href;
 
 const pageTitle = title ? `${title} | ${siteName}` : siteName;
 
@@ -47,7 +69,42 @@ const fontsUrl =
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content="#FCFBF8" />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Icons: the SVG for browsers, PNGs for phones' home screens. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+
+    <!-- Open Graph: what Facebook, LinkedIn, iMessage, Slack and others
+         show when a link to this page is shared. -->
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title ?? siteName} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:alt" content={image.alt} />
+    {image.width && <meta property="og:image:width" content={String(image.width)} />}
+    {image.height && <meta property="og:image:height" content={String(image.height)} />}
+    {
+      article && (
+        <>
+          <meta property="article:published_time" content={article.published.toISOString()} />
+          <meta property="article:author" content={article.author} />
+          <meta property="article:section" content={article.section} />
+        </>
+      )
+    }
+    <!-- The same for X (Twitter), which reads its own tags. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title ?? siteName} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl} />
+    <meta name="twitter:image:alt" content={image.alt} />
+
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
     <!-- preconnect opens the connection to Google's font servers early,
          before the browser has discovered it needs them. -->

@@ -15,6 +15,7 @@ import Comments from '../../components/Comments.astro';
 import { sections } from '../../data/sections';
 import { articlePath, getPublishedArticles, type Article } from '../../lib/articles';
 import { contributorPath } from '../../lib/contributors';
+import { getIllustration, illustrationSrc } from '../../lib/illustrations';
 
 export async function getStaticPaths() {
   const articles = await getPublishedArticles();
@@ -43,6 +44,7 @@ const { data } = article;
 const author = await getEntry(data.author);
 const illustrator = data.illustrator ? await getEntry(data.illustrator) : undefined;
 const section = sections.find((s) => s.slug === data.section)!;
+const picture = getIllustration(data.image);
 
 const moreItems = await Promise.all(
   more.map(async (other) => ({
@@ -54,7 +56,25 @@ const moreItems = await Promise.all(
 );
 ---
 
-<BaseLayout title={data.title} description={data.dek}>
+<BaseLayout
+  title={data.title}
+  description={data.dek}
+  type="article"
+  image={{ src: illustrationSrc(data.image), alt: data.imageAlt ?? picture.alt, width: picture.width, height: picture.height }}
+  article={{ published: data.date, author: author.data.name, section: section.name }}
+  jsonLd={{
+    '@context': 'https://schema.org',
+    // schema.org has a type for exactly this: an article that is satire.
+    '@type': 'SatiricalArticle',
+    headline: data.title,
+    description: data.dek,
+    datePublished: data.date.toISOString(),
+    articleSection: section.name,
+    image: new URL(illustrationSrc(data.image), Astro.site).href,
+    author: { '@type': 'Person', name: author.data.name },
+    publisher: { '@type': 'Organization', name: 'The Municipal Absurdist' },
+  }}
+>
   <article class="article">
     <ArticleHeader
       section={data.section}
