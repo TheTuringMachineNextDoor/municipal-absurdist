@@ -98,6 +98,19 @@ const articles = Object.fromEntries(
             <ul class="account__list" data-account-list="letters" />
           </section>
 
+          {/* Administrators only; the script reveals it. The editing desk
+              has its own lock: it asks for a GitHub sign-in, and only
+              accounts allowed to write to the repository get in. */}
+          <section class="account__section account__desk" aria-labelledby="account-editing" data-account-editing hidden>
+            <h2 id="account-editing" class="account__heading">The Editor’s Desk</h2>
+            <p class="account__note">
+              Write, edit and publish from here: articles, contributors, and the Store. The desk asks you to sign
+              in with GitHub. Each save is published to the site about a minute later, and every change is kept
+              and can be undone.
+            </p>
+            <p><a class="account__desk-link" href="/keystatic">Open the Editor’s Desk</a></p>
+          </section>
+
           {/* Administrators only; the script reveals it. The database
               enforces this too: for anyone else these requests return
               nothing they are not already allowed to see. */}
@@ -286,6 +299,7 @@ const articles = Object.fromEntries(
     else list('letters').replaceChildren(...(mine as Letter[]).map((letter) => letterItem(letter, false)));
 
     if (profile.is_admin) {
+      find('editing').hidden = false;
       find('desk').hidden = false;
       const { data: all } = await supabase
         .from('comments')
@@ -372,6 +386,23 @@ const articles = Object.fromEntries(
 
   .account__name button:hover,
   .account__signout:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .account__desk-link {
+    display: inline-block;
+    padding: var(--space-2) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
+  .account__desk-link:hover {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--ink);

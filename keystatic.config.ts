@@ -1,9 +1,15 @@
 // Keystatic: the admin panel. This file describes the editing forms; the
 // matching validation lives in src/content.config.ts.
 //
-// `storage: local` means the panel reads and writes the Markdown files
-// in this folder directly. Nothing is published until you commit and
-// push, exactly as if you had edited the files by hand.
+// Where the panel saves depends on where it is running:
+//   - On your own machine (`npm run dev`), `local`: it reads and writes
+//     the files in this folder directly. Nothing is published until you
+//     commit and push, exactly as if you had edited them by hand.
+//   - On the live site, `github`: you sign in with GitHub, and each save
+//     is a commit to the repository named below, which Vercel then
+//     publishes (about a minute). Only GitHub accounts allowed to write
+//     to that repository can sign in, so that is what decides who is an
+//     editor.
 import { collection, config, fields } from '@keystatic/core';
 import { sections } from './src/data/sections';
 import credits from './public/illustrations/credits.json';
@@ -13,8 +19,15 @@ import credits from './public/illustrations/credits.json';
 // entry in credits.json.
 const illustrationOptions = credits.map((c) => ({ label: `${c.title} (${c.file})`, value: c.file }));
 
+// GitHub on the live site; local files while developing. The one
+// exception is the first-time setup: running
+//   PUBLIC_KEYSTATIC_FORCE_GITHUB=true npm run dev
+// makes the panel on your own machine behave as the live one does, so
+// that it can walk you through connecting it to GitHub.
+const useGitHub = !import.meta.env.DEV || import.meta.env.PUBLIC_KEYSTATIC_FORCE_GITHUB === 'true';
+
 export default config({
-  storage: { kind: 'local' },
+  storage: useGitHub ? { kind: 'github', repo: 'TheTuringMachineNextDoor/municipal-absurdist' } : { kind: 'local' },
   ui: {
     brand: { name: 'The Municipal Absurdist' },
   },

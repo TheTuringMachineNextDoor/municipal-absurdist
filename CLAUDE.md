@@ -22,7 +22,7 @@ The full brief lives in `docs/brief.md`. Read it before any major feature work.
 ## Stack
 
 - **Astro**: framework, static-first. Use content collections for articles, artists, and products.
-- **Keystatic**: git-based CMS for editing content. Local mode, dev only: run `npm run dev` and open `http://127.0.0.1:4321/keystatic`. It is left out of the production build, so the deployed site stays static. It needs React (`@astrojs/react`, `react`, `react-dom`), used by the admin panel only.
+- **Keystatic**: git-based CMS for editing content, at `/keystatic`. On your own machine (`npm run dev`, `http://127.0.0.1:4321/keystatic`) it edits the files directly. On the live site it signs in with GitHub and saves each change as a commit, which Vercel publishes; only GitHub accounts with write access to the repo get in. That needs `@astrojs/vercel` (so `/keystatic` and `/api/keystatic` can run as server code; every other page is still static) and four environment variables in Vercel (`KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET`, `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`). First-time setup: `PUBLIC_KEYSTATIC_FORCE_GITHUB=true npm run dev`, then follow the panel. It needs React (`@astrojs/react`, `react`, `react-dom`), used by the panel only.
 - **TypeScript**, plain CSS with custom properties. **No Tailwind, no UI kits.**
 - **Hosting**: Vercel (auto-deploy from `main`).
 - **Newsletter**: Buttondown embed form.
@@ -147,4 +147,4 @@ No dark mode at launch: the paper is the identity.
 7. Store and commissions (done)
 8. Submit, About, Support, newsletter (built; waiting on the Tally, Stripe and Buttondown addresses in `src/data/site.ts`)
 9. Polish, 404, SEO and Open Graph images, favicon (done)
-10. Accounts, comments, likes via Supabase (reader accounts built, waiting on a Supabase project; the online editing desk for the administrator is not built yet)
+10. Accounts, comments, likes via Supabase (reader accounts are live on Supabase, with password or emailed-link sign-in; the online editing desk is built and waits on the GitHub App setup)

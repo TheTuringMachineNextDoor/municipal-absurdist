@@ -2,13 +2,17 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import keystatic from '@keystatic/astro';
+import vercel from '@astrojs/vercel';
 
-// Keystatic (the admin panel at /keystatic) is only switched on while
-// running `npm run dev`. It needs a live server to save files, and the
-// published site is plain static HTML with no server at all. Leaving it
-// out of `npm run build` keeps the deployed site static, with no admin
-// page for strangers to find and no React shipped to readers.
-const isDev = process.argv.includes('dev');
+// Keystatic is the editing desk at /keystatic.
+//
+// On your own machine (`npm run dev`) it reads and writes the files in
+// this folder directly. On the live site it signs you in with GitHub
+// and saves each change as a commit, which Vercel then publishes. That
+// needs a small piece of server code to talk to GitHub, and the Vercel
+// adapter below is what lets a few addresses (/keystatic and
+// /api/keystatic) run as server code. Every other page is still built
+// once as plain HTML, exactly as before.
 
 // The site's public address, needed to write full links in the page
 // head, the sitemap and the feed. In order of preference:
@@ -26,7 +30,9 @@ const site =
 // https://astro.build/config
 export default defineConfig({
   site,
-  integrations: isDev ? [react(), keystatic()] : [],
+  adapter: vercel(),
+  // React is used by the editing desk only; no other page loads it.
+  integrations: [react(), keystatic()],
   // The staff are listed on the About page. Anyone who goes looking for
   // /contributors is sent there. (Each person's own page is still at
   // /contributors/their-name.)
