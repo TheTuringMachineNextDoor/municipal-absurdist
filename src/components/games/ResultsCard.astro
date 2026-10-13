@@ -1,0 +1,160 @@
+---
+// The card shown when a game ends: score, rank, a line about the rank,
+// the text result with a Share button, and the reader's statistics.
+// Shared by every game.
+//
+// It starts hidden and empty. The game's script fills it and reveals it
+// with showResults() from src/lib/games/results.ts. Pass `demo` to show
+// it filled in (the styleguide does).
+interface Props {
+  demo?: { score: string; rank: string; blurb: string; shareText: string };
+}
+
+const { demo } = Astro.props;
+---
+
+<!-- tabindex="-1" lets the script move focus here when the result
+     appears, so keyboard and screen-reader users land on it. -->
+<section class="results" data-results hidden={!demo} tabindex="-1" aria-labelledby="results-heading">
+  <h2 id="results-heading" class="results__heading">Official Result</h2>
+  <p class="results__score" data-results-score>{demo?.score}</p>
+  <p class="results__rank" data-results-rank>{demo?.rank}</p>
+  <p class="results__blurb" data-results-blurb>{demo?.blurb}</p>
+
+  <pre class="results__text" data-results-text>{demo?.shareText}</pre>
+  <button class="results__share" type="button" data-results-share>Share</button>
+  <!-- role="status" has screen readers announce "Copied" when it appears. -->
+  <p class="fine-print results__status" role="status" data-results-status></p>
+
+  <dl class="results__stats">
+    <div><dt>Played</dt><dd data-results-played>{demo ? '12' : '0'}</dd></div>
+    <div><dt>Best</dt><dd data-results-best>{demo ? '9' : '0'}</dd></div>
+    <div><dt>Streak</dt><dd data-results-streak>{demo ? '4' : '0'}</dd></div>
+  </dl>
+
+  <p class="results__note" data-results-note></p>
+  <slot />
+</section>
+
+<style>
+  .results {
+    margin-top: var(--space-5);
+    padding: var(--space-5) var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  /* An element with a `display` rule ignores the hidden attribute
+     unless told otherwise. */
+  .results[hidden] {
+    display: none;
+  }
+
+  .results:focus {
+    outline: none; /* focus is moved here by script, not by the reader */
+  }
+
+  .results__heading {
+    margin-bottom: var(--space-3);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+  }
+
+  .results__score {
+    margin: 0;
+    font-family: var(--font-headline);
+    font-size: var(--text-h1);
+    font-weight: var(--weight-headline);
+    font-variant-numeric: lining-nums;
+    line-height: 1;
+  }
+
+  .results__rank {
+    margin: var(--space-3) 0 var(--space-1);
+    font-family: var(--font-label);
+    font-size: var(--text-h4);
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+  }
+
+  .results__blurb {
+    max-width: 28rem;
+    margin-inline: auto;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* The text result, set like a telegram. */
+  .results__text {
+    display: inline-block;
+    max-width: 100%;
+    margin: var(--space-3) 0;
+    padding: var(--space-3) var(--space-4);
+    border: var(--rule-hair) solid var(--rule);
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: var(--text-xs);
+    font-variant-numeric: normal;
+    line-height: 1.6;
+    text-align: left;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .results__share {
+    display: block;
+    margin-inline: auto;
+    padding: var(--space-2) var(--space-6);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.12em;
+    cursor: pointer;
+  }
+
+  .results__share:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .results__status {
+    min-height: 1.5em;
+    margin: var(--space-2) 0 0;
+  }
+
+  .results__stats {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-6);
+    margin: var(--space-3) 0 0;
+    padding-top: var(--space-3);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  .results__stats dt {
+    font-family: var(--font-label);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+
+  .results__stats dd {
+    margin: 0;
+    font-size: var(--text-h4);
+    font-variant-numeric: lining-nums;
+  }
+
+  .results__note {
+    margin: var(--space-3) 0 0;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .results__note:empty {
+    display: none;
+  }
+</style>

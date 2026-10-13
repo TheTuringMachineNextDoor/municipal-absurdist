@@ -10,7 +10,10 @@ import { sections } from '../../data/sections';
 import { getPublishedArticles, summarize } from '../../lib/articles';
 
 export function getStaticPaths() {
-  return sections.map((section) => ({ params: { section: section.slug }, props: { section } }));
+  // Games has its own page, the hub at src/pages/games/index.astro.
+  return sections
+    .filter((section) => section.slug !== 'games')
+    .map((section) => ({ params: { section: section.slug }, props: { section } }));
 }
 
 interface Props {

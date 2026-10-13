@@ -63,6 +63,7 @@ Ask before adding any dependency not listed here.
 | `/store` | Prints and commissions |
 | `/submit` | Write for Us / Draw for Us / Create for Us |
 | `/about`, `/support` | Mission, staff, donations |
+| `/games` and `/games/[game]` | Games hub (list in `src/data/games.ts`) and each game. Games share `GameLayout`, `ResultsCard` and the helpers in `src/lib/games/` (daily puzzle in America/Chicago time, stats in localStorage, share text). |
 | `/styleguide` | Living reference of every design element (dev only) |
 
 ---

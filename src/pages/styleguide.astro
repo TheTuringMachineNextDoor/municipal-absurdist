@@ -12,6 +12,8 @@ import SectionBand from '../components/SectionBand.astro';
 import ComicSlot from '../components/ComicSlot.astro';
 import FeaturesStrip from '../components/FeaturesStrip.astro';
 import NewsletterBox from '../components/NewsletterBox.astro';
+import GameNotice from '../components/games/GameNotice.astro';
+import ResultsCard from '../components/games/ResultsCard.astro';
 // Credits are read from the same file that documents the images, so the
 // page and the record cannot disagree.
 import credits from '../../public/illustrations/credits.json';
@@ -497,8 +499,59 @@ const sampleMore = [
 
   <hr />
 
+  <section class="sg-section" aria-labelledby="sg-games">
+    <h2 id="sg-games" class="sg-heading">XIII. Games</h2>
+    <div class="sg-pair">
+      <div class="sg-specimen">
+        <p class="sg-meta">
+          <span class="label">Game notice, open</span>
+          <code>&lt;GameNotice href&gt;</code>
+        </p>
+        <GameNotice
+          name="Real or Absurdist"
+          blurb="Ten headlines. Some were printed by reputable newspapers. The rest were printed by us."
+          image="pantagruel-08.webp"
+          href="/games/real-or-absurdist"
+        />
+      </div>
+      <div class="sg-specimen">
+        <p class="sg-meta">
+          <span class="label">Game notice, not yet built</span>
+          <code>&lt;GameNotice&gt;</code>
+        </p>
+        <GameNotice
+          name="The Mayor"
+          blurb="Govern a city one decision at a time. Mind the Treasury, the Public, the Council, and the Press."
+          image="pantagruel-12.webp"
+        />
+      </div>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Results card</span>
+        <code>&lt;ResultsCard&gt;</code>
+        <span class="fine-print">
+          Shared by every game, with <code>GameLayout</code> and the helpers in src/lib/games. The squares are printer's
+          marks, not emoji.
+        </span>
+      </p>
+      <div class="prose">
+        <ResultsCard
+          demo={{
+            score: '7 out of 10',
+            rank: 'Reasonable Doubter',
+            blurb: 'You can usually tell the news from the nonsense, which is more than the news can.',
+            shareText: 'Real or Absurdist, 13 October 2026\n7/10 \u00B7 Reasonable Doubter\n\u25A0\u25A0\u25A1\u25A0\u25A0\u25A0\u25A1\u25A0\u25A0\u25A1',
+          }}
+        />
+      </div>
+    </div>
+  </section>
+
+  <hr />
+
   <section class="sg-section" aria-labelledby="sg-space">
-    <h2 id="sg-space" class="sg-heading">XIII. Spacing</h2>
+    <h2 id="sg-space" class="sg-heading">XIV. Spacing</h2>
     <ul class="sg-spaces">
       {
         spaces.map((s) => (

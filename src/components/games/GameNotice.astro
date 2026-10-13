@@ -1,0 +1,125 @@
+---
+// A game on the hub, set like a public notice: a ruled frame, a
+// grotesque, the game's name, and a line about it. A game that is not
+// built yet has no link and says so.
+import { Image } from 'astro:assets';
+import { getIllustration, illustrationSrc } from '../../lib/illustrations';
+
+interface Props {
+  name: string;
+  blurb: string;
+  image: string;
+  /** Leave out for a game that is not built yet. */
+  href?: string;
+}
+
+const { name, blurb, image, href } = Astro.props;
+const picture = getIllustration(image);
+---
+
+<article class:list={['notice', { 'notice--closed': !href }]}>
+  <Image
+    class="notice__figure"
+    src={illustrationSrc(picture.file)}
+    alt=""
+    width={picture.width}
+    height={picture.height}
+    loading="lazy"
+  />
+  <p class="label notice__kicker">{href ? 'Notice of Amusement' : 'Notice of Delay'}</p>
+  <h2 class="notice__name">{href ? <a href={href}>{name}</a> : name}</h2>
+  <p class="notice__blurb">{blurb}</p>
+  {
+    href ? (
+      <p class="notice__action"><a href={href}>Commence</a></p>
+    ) : (
+      <p class="label notice__closed">Under Construction by the Bureau of Amusement</p>
+    )
+  }
+</article>
+
+<style>
+  .notice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    padding: var(--space-5) var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  /* The woodcuts are black on white; multiply lets the paper through.
+     The picture is decoration here (alt=""), since the name says it all. */
+  .notice__figure {
+    width: auto;
+    height: 8rem;
+    margin-bottom: var(--space-3);
+    mix-blend-mode: multiply;
+  }
+
+  .notice__kicker {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .notice__name {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-h3);
+  }
+
+  .notice__name a {
+    text-decoration: none;
+  }
+
+  .notice__name a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+
+  .notice__blurb {
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+
+  /* margin-top: auto pushes the last line to the bottom of the card, so
+     the cards in a row line up whatever the length of their blurbs. */
+  .notice__action,
+  .notice__closed {
+    margin: auto 0 0;
+    padding-top: var(--space-3);
+  }
+
+  .notice__action a {
+    display: inline-block;
+    padding: var(--space-2) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.12em;
+    text-decoration: none;
+  }
+
+  .notice__action a:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .notice__closed {
+    font-size: var(--text-xs);
+    color: var(--accent-text);
+  }
+
+  /* Not built yet: the frame goes to a dashed hairline and the woodcut fades. */
+  .notice--closed {
+    border: var(--rule-hair) dashed var(--ink-soft);
+  }
+
+  .notice--closed .notice__figure {
+    opacity: 0.45;
+  }
+</style>

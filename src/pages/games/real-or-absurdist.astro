@@ -1,0 +1,563 @@
+---
+// Real or Absurdist: ten headlines, one at a time. The reader says
+// whether each was really printed by a newspaper or made up by us.
+//
+// The page below is only the furniture: an empty card, the buttons, and
+// an empty results card. The <script> at the bottom deals the cards.
+// It runs in the reader's browser, because the round depends on today's
+// date and a static page is built only once.
+import GameLayout from '../../layouts/GameLayout.astro';
+import ResultsCard from '../../components/games/ResultsCard.astro';
+import { realOrAbsurdistReady, REAL_HEADLINES_NEEDED, ROUND_LENGTH } from '../../data/real-or-absurdist';
+
+const developing = import.meta.env.DEV;
+// Open to the public only once enough real headlines are filed. Always
+// open while developing, so it can be tested.
+const open = realOrAbsurdistReady || developing;
+---
+
+<GameLayout
+  title="Real or Absurdist"
+  standfirst="Ten headlines. Some were printed by reputable newspapers. The rest were printed by us."
+>
+  <Fragment slot="rules">
+    <ul class="list-ornament">
+      <li>You are shown {ROUND_LENGTH} headlines, one at a time.</li>
+      <li>
+        Decide whether each is <strong>Real</strong> (a newspaper actually printed it) or
+        <strong>Absurdist</strong> (we made it up).
+      </li>
+      <li>
+        Swipe the card right for Real and left for Absurdist. Or press the right and left
+        arrow keys, or use the two buttons.
+      </li>
+      <li>After each answer the verdict is stamped. Real headlines come with their source.</li>
+      <li>There is one round a day, the same for every reader. A new one is printed at midnight, Central time.</li>
+    </ul>
+  </Fragment>
+
+  {
+    open ? (
+      <>
+        {developing && !realOrAbsurdistReady && (
+          <p class="roa-devnote fine-print">
+            Development only: fewer than {REAL_HEADLINES_NEEDED} real headlines are filed in
+            src/data/real-or-absurdist.ts, so every answer is "Absurdist" and the public sees this
+            game as under construction.
+          </p>
+        )}
+
+        <div class="roa" data-roa>
+          <p class="label roa__progress" data-roa-progress>Card 1 of {ROUND_LENGTH}</p>
+
+          <div class="roa__table">
+            {/* tabindex="-1": the script moves focus here when a new card is dealt. */}
+            <div class="roa__card" data-roa-card tabindex="-1">
+              <span class="roa__hint roa__hint--left" aria-hidden="true">Absurdist</span>
+              <span class="roa__hint roa__hint--right" aria-hidden="true">Real</span>
+              <p class="label roa__kicker">Headline</p>
+              <p class="roa__headline" data-roa-headline />
+            </div>
+
+            <div class="roa__verdict" data-roa-verdict hidden>
+              <p class="roa__stamp" data-roa-stamp />
+              <p class="roa__outcome" data-roa-outcome />
+              <p class="roa__quoted" data-roa-quoted />
+              <p class="roa__source" data-roa-source hidden>
+                Source: <a data-roa-link target="_blank" rel="noopener noreferrer" />
+              </p>
+            </div>
+          </div>
+
+          <div class="roa__controls" data-roa-controls>
+            <button type="button" class="roa__button" data-roa-answer="absurdist">
+              <span aria-hidden="true">&larr;</span> Absurdist
+            </button>
+            <button type="button" class="roa__button" data-roa-answer="real">
+              Real <span aria-hidden="true">&rarr;</span>
+            </button>
+          </div>
+          <button type="button" class="roa__button roa__next" data-roa-next hidden>Next headline</button>
+
+          <p class="fine-print roa__keys">Swipe the card, press the arrow keys, or use the buttons.</p>
+
+          {/* Read aloud by screen readers whenever its text changes. */}
+          <p class="visually-hidden" role="status" data-roa-live />
+        </div>
+
+        <ResultsCard>
+          {developing && (
+            <button type="button" class="roa__replay" data-roa-replay>
+              Play again (development only)
+            </button>
+          )}
+        </ResultsCard>
+      </>
+    ) : (
+      <p class="roa-closed">
+        Under Construction by the Bureau of Amusement. The Bureau is presently gathering real
+        headlines and reports that the supply is, if anything, excessive.
+      </p>
+    )
+  }
+</GameLayout>
+
+<script>
+  import { ourHeadlines, realHeadlines, ROUND_LENGTH, type Headline } from '../../data/real-or-absurdist';
+  import { chicagoDateKey, dayNumber, formatDateKey, seededShuffle } from '../../lib/games/daily';
+  import { readStats, recordResult } from '../../lib/games/stats';
+  import { showResults } from '../../lib/games/results';
+
+  const GAME_ID = 'real-or-absurdist';
+  const SWIPE_DISTANCE = 90; // pixels the card must travel to count as an answer
+  const FLY_TIME = 320; // milliseconds; matches the transition below
+
+  // Ranks, from the bottom. `from` is the lowest score that earns it.
+  const RANKS = [
+    { from: 0, name: 'Credulous Citizen', blurb: 'You believe what you read. The Bureau has a bridge it would like to discuss with you.' },
+    { from: 4, name: 'Reader of Headlines Only', blurb: 'A coin would have done about as well, and a coin does not have opinions.' },
+    { from: 6, name: 'Reasonable Doubter', blurb: 'You can usually tell the news from the nonsense, which is more than the news can.' },
+    { from: 8, name: 'Deputy Skeptic', blurb: 'Very little gets past you. What does was probably true, which is the worrying part.' },
+    { from: 10, name: 'Licensed Skeptic', blurb: 'A perfect round. Your licence is in the post, though you are right to doubt it.' },
+  ];
+
+  const rankFor = (score: number, outOf: number) => {
+    // Scale to ten so the ladder still works if a round is shorter.
+    const scaled = outOf > 0 ? (score / outOf) * 10 : 0;
+    return [...RANKS].reverse().find((rank) => scaled >= rank.from) ?? RANKS[0];
+  };
+
+  // Today's round: up to five real headlines, the rest ours, shuffled.
+  // The shuffles are seeded with the date, so every reader gets the
+  // same ten cards in the same order.
+  function buildRound(dateKey: string): Headline[] {
+    const seed = dayNumber(dateKey);
+    const real = seededShuffle(realHeadlines, seed).slice(0, Math.min(5, realHeadlines.length));
+    const ours = seededShuffle(ourHeadlines, seed + 1).slice(0, ROUND_LENGTH - real.length);
+    return seededShuffle([...real, ...ours], seed + 2);
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-roa]');
+  const resultsCard = document.querySelector<HTMLElement>('[data-results]');
+  if (root && resultsCard) play(root, resultsCard);
+
+  function play(root: HTMLElement, resultsCard: HTMLElement) {
+    const find = <T extends HTMLElement>(hook: string) => root.querySelector<T>(`[data-roa-${hook}]`)!;
+    const card = find('card');
+    const headlineEl = find('headline');
+    const progress = find('progress');
+    const verdict = find('verdict');
+    const stamp = find('stamp');
+    const outcome = find('outcome');
+    const quoted = find('quoted');
+    const source = find('source');
+    const link = find<HTMLAnchorElement>('link');
+    const controls = find('controls');
+    const nextButton = find<HTMLButtonElement>('next');
+    const live = find('live');
+    const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const today = chicagoDateKey();
+    const yesterday = chicagoDateKey(new Date(Date.now() - 86_400_000));
+    const round = buildRound(today);
+
+    let index = 0;
+    let marks: boolean[] = []; // true for each card answered correctly
+    let phase: 'answering' | 'verdict' | 'done' = 'answering';
+
+    function reveal(stats = readStats(GAME_ID), result = { score: 0, marks: [] as boolean[] }) {
+      const outOf = result.marks.length;
+      const rank = rankFor(result.score, outOf);
+      const shareText = [
+        `Real or Absurdist, ${formatDateKey(today)}`,
+        `${result.score}/${outOf} · ${rank.name}`,
+        // Printer's squares, not emoji: a filled one for each right answer.
+        result.marks.map((right) => (right ? '■' : '□')).join(''),
+        `${location.origin}${location.pathname}`,
+      ].join('\n');
+
+      root.hidden = true;
+      showResults(resultsCard, {
+        score: `${result.score} out of ${outOf}`,
+        rank: rank.name,
+        blurb: rank.blurb,
+        shareText,
+        stats,
+        note: 'A fresh round is printed at midnight, Central time.',
+      });
+    }
+
+    function deal() {
+      const headline = round[index];
+      phase = 'answering';
+      headlineEl.textContent = headline.text;
+      progress.textContent = `Card ${index + 1} of ${round.length}`;
+
+      // Put the card back in the middle with no animation.
+      card.style.transition = 'none';
+      card.style.transform = '';
+      card.style.opacity = '';
+      card.style.setProperty('--hint-left', '0');
+      card.style.setProperty('--hint-right', '0');
+
+      verdict.hidden = true;
+      nextButton.hidden = true;
+      card.hidden = false;
+      controls.hidden = false;
+
+      live.textContent = `Card ${index + 1} of ${round.length}. ${headline.text}`;
+      if (index > 0) card.focus({ preventScroll: true });
+    }
+
+    function answer(saidReal: boolean) {
+      if (phase !== 'answering') return;
+      phase = 'verdict';
+      const headline = round[index];
+      const right = saidReal === headline.isReal;
+      marks.push(right);
+
+      // The card tilts and flies off the side it was sent to.
+      const direction = saidReal ? 1 : -1;
+      if (stillness.matches) {
+        stampVerdict(headline, right);
+      } else {
+        card.style.transition = `transform ${FLY_TIME}ms ease-in, opacity ${FLY_TIME}ms ease-in`;
+        card.style.transform = `translateX(${direction * 130}%) rotate(${direction * 18}deg)`;
+        card.style.opacity = '0';
+        setTimeout(() => stampVerdict(headline, right), FLY_TIME);
+      }
+    }
+
+    function stampVerdict(headline: Headline, right: boolean) {
+      card.hidden = true;
+      controls.hidden = true;
+
+      stamp.textContent = headline.isReal ? 'Real' : 'Absurdist';
+      stamp.dataset.kind = headline.isReal ? 'real' : 'ours';
+      const truth = headline.isReal ? `It was printed by ${headline.sourceName}.` : 'It is one of ours.';
+      outcome.textContent = `${right ? 'Correct.' : 'Incorrect.'} ${truth}`;
+      quoted.textContent = headline.text;
+
+      source.hidden = !headline.isReal;
+      if (headline.isReal) {
+        link.href = headline.sourceUrl;
+        link.textContent = headline.sourceName;
+      }
+
+      const last = index === round.length - 1;
+      nextButton.textContent = last ? 'See the result' : 'Next headline';
+      verdict.hidden = false;
+      nextButton.hidden = false;
+      nextButton.focus({ preventScroll: true });
+      live.textContent = `${right ? 'Correct.' : 'Incorrect.'} ${headline.isReal ? 'Real.' : 'Absurdist.'} ${truth}`;
+    }
+
+    function next() {
+      if (phase !== 'verdict') return;
+      index += 1;
+      if (index < round.length) {
+        deal();
+        return;
+      }
+      phase = 'done';
+      const result = { score: marks.filter(Boolean).length, marks };
+      reveal(recordResult(GAME_ID, today, yesterday, result), result);
+    }
+
+    // ----- Buttons and keys -----
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-roa-answer]')) {
+      button.addEventListener('click', () => answer(button.dataset.roaAnswer === 'real'));
+    }
+    nextButton.addEventListener('click', next);
+
+    document.addEventListener('keydown', (event) => {
+      if (phase !== 'answering' || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === 'ArrowRight') { event.preventDefault(); answer(true); }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); answer(false); }
+    });
+
+    // ----- Swiping (touch, pen or mouse drag) -----
+    let dragStart: number | null = null;
+
+    const settle = () => {
+      card.style.transition = 'transform 200ms ease-out';
+      card.style.transform = '';
+      card.style.setProperty('--hint-left', '0');
+      card.style.setProperty('--hint-right', '0');
+    };
+
+    card.addEventListener('pointerdown', (event) => {
+      if (phase !== 'answering') return;
+      dragStart = event.clientX;
+      card.setPointerCapture(event.pointerId); // keep receiving moves outside the card
+      card.style.transition = 'none';
+    });
+
+    card.addEventListener('pointermove', (event) => {
+      if (dragStart === null) return;
+      const moved = event.clientX - dragStart;
+      card.style.transform = `translateX(${moved}px) rotate(${moved / 18}deg)`;
+      // The word for the side being dragged toward fades in.
+      const strength = String(Math.min(Math.abs(moved) / SWIPE_DISTANCE, 1));
+      card.style.setProperty('--hint-right', moved > 0 ? strength : '0');
+      card.style.setProperty('--hint-left', moved < 0 ? strength : '0');
+    });
+
+    card.addEventListener('pointerup', (event) => {
+      if (dragStart === null) return;
+      const moved = event.clientX - dragStart;
+      dragStart = null;
+      if (Math.abs(moved) >= SWIPE_DISTANCE) answer(moved > 0);
+      else settle();
+    });
+
+    card.addEventListener('pointercancel', () => {
+      dragStart = null;
+      settle();
+    });
+
+    // ----- Development only: play again without waiting for midnight -----
+    resultsCard.querySelector('[data-roa-replay]')?.addEventListener('click', () => {
+      index = 0;
+      marks = [];
+      resultsCard.hidden = true;
+      root.hidden = false;
+      deal();
+    });
+
+    // ----- Begin -----
+    const saved = readStats(GAME_ID);
+    if (saved.lastPlayed === today && saved.lastResult) {
+      // Already played today: show that result again.
+      phase = 'done';
+      reveal(saved, saved.lastResult);
+    } else {
+      deal();
+    }
+  }
+</script>
+
+<style>
+  .roa {
+    /* A card flying off must not widen the page; clip it at the edges. */
+    overflow-x: clip;
+    padding-inline: var(--space-2);
+    text-align: center;
+
+    /* Stamp inks. */
+    --stamp-real: #1e5b3c;
+    --stamp-ours: #a8321f;
+  }
+
+  .roa[hidden] {
+    display: none;
+  }
+
+  .roa__progress {
+    margin-bottom: var(--space-3);
+  }
+
+  /* The table the stack sits on. The two pseudo-elements are the cards
+     underneath: empty outlines, slightly askew. */
+  .roa__table {
+    position: relative;
+    min-height: 17rem;
+    margin: 0 auto var(--space-5);
+    max-width: 30rem;
+  }
+
+  .roa__table::before,
+  .roa__table::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--rule-hair) solid var(--rule);
+    background: var(--paper);
+  }
+
+  .roa__table::before { transform: rotate(-2.5deg); }
+  .roa__table::after { transform: rotate(1.5deg); }
+
+  .roa__card,
+  .roa__verdict {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 17rem;
+    padding: var(--space-5) var(--space-4);
+    border: var(--rule-hair) solid var(--rule);
+    background: var(--paper);
+  }
+
+  .roa__card[hidden],
+  .roa__verdict[hidden],
+  .roa__controls[hidden],
+  .roa__next[hidden] {
+    display: none;
+  }
+
+  .roa__card {
+    cursor: grab;
+    /* Let the finger scroll the page up and down, but keep sideways
+       movement for the swipe; and do not select text while dragging. */
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .roa__card:active {
+    cursor: grabbing;
+  }
+
+  .roa__card:focus {
+    outline: none; /* focus is moved here by script, to be read aloud */
+  }
+
+  .roa__kicker {
+    margin-bottom: var(--space-3);
+  }
+
+  .roa__headline {
+    margin: 0;
+    font-family: var(--font-headline);
+    font-size: var(--text-h3);
+    font-weight: var(--weight-headline);
+    line-height: var(--leading-snug);
+    text-wrap: balance;
+  }
+
+  /* The words that fade in at the top corners while dragging. Their
+     opacity is set from the script through two custom properties. */
+  .roa__hint {
+    position: absolute;
+    top: var(--space-3);
+    padding: 0.1em 0.5em;
+    border: 2px solid currentColor;
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    letter-spacing: 0.12em;
+  }
+
+  .roa__hint--left {
+    right: var(--space-3);
+    color: var(--stamp-ours);
+    opacity: var(--hint-left, 0);
+  }
+
+  .roa__hint--right {
+    left: var(--space-3);
+    color: var(--stamp-real);
+    opacity: var(--hint-right, 0);
+  }
+
+  /* The verdict: a rubber stamp, a line saying whether the reader was
+     right (so colour is never the only signal), and the headline again. */
+  .roa__stamp {
+    align-self: center;
+    margin: 0 0 var(--space-4);
+    padding: 0.15em 0.6em;
+    border: 4px double currentColor;
+    font-family: var(--font-label);
+    font-size: var(--text-h2);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    transform: rotate(-7deg);
+    animation: roa-stamp 220ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  .roa__stamp[data-kind='real'] { color: var(--stamp-real); }
+  .roa__stamp[data-kind='ours'] { color: var(--stamp-ours); }
+
+  @keyframes roa-stamp {
+    from { opacity: 0; transform: rotate(-7deg) scale(1.7); }
+    to { opacity: 1; transform: rotate(-7deg) scale(1); }
+  }
+
+  .roa__outcome {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-lg);
+  }
+
+  .roa__quoted {
+    margin-bottom: var(--space-2);
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+
+  .roa__source {
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+
+  .roa__controls {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  .roa__button {
+    flex: 1 1 0;
+    max-width: 14rem;
+    min-height: 2.75rem; /* a comfortable target for a thumb */
+    padding: var(--space-2) var(--space-3);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .roa__button:hover {
+    background: var(--accent);
+  }
+
+  .roa__next {
+    display: block;
+    width: 100%;
+    margin-inline: auto;
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .roa__next:hover {
+    color: var(--ink);
+  }
+
+  .roa__keys {
+    margin: var(--space-3) 0 0;
+  }
+
+  .roa__replay {
+    margin-top: var(--space-3);
+    padding: var(--space-1) var(--space-3);
+    border: var(--rule-hair) dashed var(--ink-soft);
+    background: none;
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
+  .roa-devnote {
+    margin: 0 0 var(--space-4);
+    padding: var(--space-2) var(--space-3);
+    border: var(--rule-hair) dashed var(--ink-soft);
+    text-align: center;
+  }
+
+  .roa-closed {
+    max-width: var(--measure);
+    margin: var(--space-6) auto;
+    font-size: var(--text-lg);
+    font-style: italic;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+</style>

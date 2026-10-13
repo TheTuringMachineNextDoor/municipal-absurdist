@@ -1,0 +1,87 @@
+---
+// The page every game sits in: the paper's usual masthead and footer, a
+// way back to the games hub, the game's title, a line about it, and the
+// rules behind a "Rules" link. The game itself goes in the default slot;
+// the rules go in <Fragment slot="rules">.
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  /** One line under the title, in house voice. */
+  standfirst: string;
+  /** For search engines and link previews. Defaults to the standfirst. */
+  description?: string;
+}
+
+const { title, standfirst, description = standfirst } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="game">
+    <header class="game__header">
+      <p class="label label--accent"><a href="/games">Games</a></p>
+      <h1 class="game__title">{title}</h1>
+      <p class="dek game__standfirst">{standfirst}</p>
+
+      <!-- <details> shows and hides its contents with no script. -->
+      <details class="game__rules">
+        <summary class="label">Rules</summary>
+        <div class="game__rules-body"><slot name="rules" /></div>
+      </details>
+    </header>
+
+    <slot />
+  </div>
+</BaseLayout>
+
+<style>
+  .game {
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .game__header {
+    text-align: center;
+  }
+
+  .game__header a {
+    text-decoration: none;
+  }
+
+  .game__title {
+    font-size: var(--text-h2);
+  }
+
+  .game__rules {
+    margin: var(--space-3) 0 var(--space-5);
+  }
+
+  .game__rules summary {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .game__rules summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .game__rules summary:hover,
+  .game__rules[open] summary {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+
+  .game__rules-body {
+    margin-top: var(--space-3);
+    padding: var(--space-4);
+    border: var(--rule-hair) solid var(--rule);
+    text-align: left;
+  }
+
+  .game__rules-body :global(> :last-child) {
+    margin-bottom: 0;
+  }
+</style>
