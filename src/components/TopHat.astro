@@ -6,6 +6,8 @@
 ---
 
 <svg class="top-hat" viewBox="60 42 280 208" aria-hidden="true" focusable="false">
+  <!-- the band, filled in the accent green -->
+  <path class="top-hat__band" d="M137 168 C160 180 240 180 263 168 L262 190 C240 203 160 203 138 190 Z" />
   <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
     <!-- crown -->
     <path d="M138 196 C134 150 132 104 136 62" />
@@ -17,10 +19,9 @@
     <!-- brim -->
     <path d="M138 196 C104 196 66 204 66 216 C66 234 134 244 200 244 C266 244 334 234 334 216 C334 204 296 196 262 196" />
   </g>
-  <!-- hatching: shade on the right of the crown, and the band -->
+  <!-- hatching: shade on the right of the crown -->
   <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
     <path d="M250 84 V160 M240 86 V164 M230 88 V166 M220 89 V167" />
-    <path d="M148 172 l8 14 M164 177 l8 14 M180 179 l8 14 M196 180 l8 14 M212 179 l8 14 M228 177 l8 14 M244 173 l8 14" />
   </g>
 </svg>
 
@@ -30,5 +31,9 @@
     width: 100%;
     height: auto;
     color: var(--ink);
+  }
+
+  .top-hat__band {
+    fill: var(--accent);
   }
 </style>

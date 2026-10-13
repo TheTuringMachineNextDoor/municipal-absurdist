@@ -141,6 +141,7 @@ small,
 a {
   color: inherit;
   text-decoration-line: underline;
+  text-decoration-color: var(--accent); /* ink text, green underline */
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
 }
@@ -155,8 +156,9 @@ a:hover {
   outline-offset: 3px;
 }
 
+/* Text highlighted with the cursor. */
 ::selection {
-  background: var(--ink);
+  background: var(--accent);
   color: var(--paper);
 }
 
@@ -233,6 +235,7 @@ hr,
   font-variant-emoji: text;
   font-size: 1.25em;
   line-height: 1;
+  color: var(--accent);
 }
 
 /* A list whose bullets are manicules. */
@@ -257,6 +260,7 @@ hr,
   font-variant-emoji: text;
   font-size: 1.2em;
   line-height: 1.3;
+  color: var(--accent);
 }
 
 /* ---------- Drop cap ---------- */
