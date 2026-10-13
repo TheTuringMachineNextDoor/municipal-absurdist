@@ -10,14 +10,26 @@ const current = Astro.url.pathname.split('/').filter(Boolean)[0];
 <nav class="section-nav sheet" aria-label="Sections">
   <ul class="section-nav__list">
     {
-      sections.map((section) => (
+      sections.map((section, index) => (
         <li>
           <a
             class="section-nav__link"
             href={`/${section.slug}`}
             aria-current={current === section.slug ? 'page' : undefined}
+            style={`--stroke: ${section.ink}`}
           >
             {section.name}
+            {/* The stroke: a hand-drawn line, hidden until hover. Every
+                other one is flipped so they do not all look alike. */}
+            <svg
+              class:list={['section-nav__stroke', { 'section-nav__stroke--flipped': index % 2 === 1 }]}
+              viewBox="0 0 100 12"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M1.5 7.2 C0.4 6.4 0.8 5 2.6 4.6 C14 2.9 27 3.6 40 3.1 C56 2.5 73 2.2 97.5 3.4 C99.6 3.6 99.8 5.4 98.2 6.1 C96.4 6.9 94 6.3 91 6.4 C72 6.9 54 7.4 36 7.9 C25 8.2 13 9.4 4 8.9 C2.8 8.8 2 8 1.5 7.2 Z" />
+            </svg>
           </a>
         </li>
       ))
@@ -47,12 +59,47 @@ const current = Astro.url.pathname.split('/').filter(Boolean)[0];
     text-decoration: none;
   }
 
-  .section-nav__link:hover,
-  .section-nav__link[aria-current='page'] {
-    color: var(--accent);
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.3em;
+  /* The gliding stroke, after the menu on paulmccartney.com. The line
+     lies across the middle of the word. `clip-path: inset(0 100% 0 0)`
+     hides all of it by cutting in from the right edge; on hover the cut
+     animates back to zero, so the line appears to be drawn from left to
+     right. Moving the pointer away plays it backwards.
+
+     `multiply` lets the letters show through the colour, like a marker
+     over print. Each link sets its own --stroke colour (sections.ts). */
+  .section-nav__link {
+    position: relative;
+  }
+
+  .section-nav__stroke {
+    position: absolute;
+    top: 50%;
+    left: -0.5em;
+    width: calc(100% + 1em);
+    height: 0.7em;
+    max-width: none;
+    transform: translateY(-50%);
+    fill: var(--stroke, var(--accent));
+    mix-blend-mode: multiply;
+    pointer-events: none; /* the click goes to the link underneath */
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 450ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .section-nav__stroke--flipped {
+    transform: translateY(-50%) scaleY(-1);
+  }
+
+  /* Hover for a mouse, focus-visible for the keyboard. The section you
+     are in keeps its line. */
+  .section-nav__link:hover .section-nav__stroke,
+  .section-nav__link:focus-visible .section-nav__stroke,
+  .section-nav__link[aria-current='page'] .section-nav__stroke {
+    clip-path: inset(0);
+  }
+
+  .section-nav__link:hover {
+    color: var(--ink);
   }
 
   @media (min-width: 40rem) {
