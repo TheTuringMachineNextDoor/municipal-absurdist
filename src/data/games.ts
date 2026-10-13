@@ -62,6 +62,6 @@ export const games: Game[] = [
     name: 'The Mayor',
     blurb: 'Govern a city one decision at a time. Mind the Treasury, the Public, the Council, and the Press.',
     image: 'pantagruel-12.webp',
-    live: false,
+    live: true,
   },
 ];

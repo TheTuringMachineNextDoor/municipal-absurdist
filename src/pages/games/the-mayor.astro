@@ -1,0 +1,662 @@
+---
+// The Mayor: govern a city one decision at a time. A card is dealt each
+// week; the Mayor answers left or right; four meters move. The term ends
+// when any meter empties or overflows.
+//
+// The cards, characters, endings and ranks are in src/data/the-mayor.ts.
+// The characters are drawn by src/lib/games/mayor-figures.ts. Unlike the
+// daily games, this one may be played as often as the reader likes, and
+// the deck is shuffled afresh each time.
+import GameLayout from '../../layouts/GameLayout.astro';
+import ResultsCard from '../../components/games/ResultsCard.astro';
+import { METERS, METER_NAMES, START } from '../../data/the-mayor';
+---
+
+<GameLayout
+  title="The Mayor"
+  standfirst="Govern a city one decision at a time. Mind the Treasury, the Public, the Council, and the Press."
+>
+  <Fragment slot="rules">
+    <ul class="list-ornament">
+      <li>Each week someone brings a matter to your desk. You have two answers and must give one.</li>
+      <li>
+        Swipe the card left or right, press the left or right arrow key, or use the two buttons beneath it.
+      </li>
+      <li>
+        Every answer moves some of the four meters. Before you decide, a mark appears over each meter an answer
+        will move: a large mark for a large move. It does not say which way.
+      </li>
+      <li>
+        Your term ends when any meter runs out, or runs over. A city can have too much of anything, including
+        money and affection.
+      </li>
+      <li>Your score is the number of weeks you remain in office.</li>
+    </ul>
+  </Fragment>
+
+  <div class="mayor" data-mayor>
+    <!-- The four meters. Each bar has a hidden sentence beside it
+         ("Treasury: 50 out of 100") for screen readers. -->
+    <ul class="mayor__meters">
+      {
+        METERS.map((meter) => (
+          <li class="mayor__meter" data-mayor-meter={meter}>
+            <span class="mayor__mark" aria-hidden="true" />
+            <span class="label mayor__meter-name">{METER_NAMES[meter]}</span>
+            <span class="mayor__bar" aria-hidden="true">
+              <span class="mayor__fill" style={`width: ${START}%`} />
+            </span>
+            <span class="visually-hidden" data-mayor-value>
+              {METER_NAMES[meter]}: {START} out of 100
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="label mayor__week" data-mayor-week>Week 1 in office</p>
+
+    <div class="mayor__table">
+      <!-- tabindex="-1": focus moves here when a new card is dealt. -->
+      <article class="mayor__card" data-mayor-card tabindex="-1">
+        <div class="mayor__portrait" data-mayor-portrait></div>
+        <p class="label label--accent mayor__who" data-mayor-who></p>
+        <p class="mayor__says" data-mayor-says></p>
+        <!-- The answer being swiped toward fades in over the card. -->
+        <span class="mayor__hint mayor__hint--left" aria-hidden="true" data-mayor-hint="left"></span>
+        <span class="mayor__hint mayor__hint--right" aria-hidden="true" data-mayor-hint="right"></span>
+      </article>
+    </div>
+
+    <div class="mayor__controls">
+      <button type="button" class="mayor__answer" data-mayor-answer="left">
+        <span aria-hidden="true">&larr;</span>
+        <span data-mayor-reply="left"></span>
+      </button>
+      <button type="button" class="mayor__answer" data-mayor-answer="right">
+        <span data-mayor-reply="right"></span>
+        <span aria-hidden="true">&rarr;</span>
+      </button>
+    </div>
+
+    <!-- role="status": a screen reader reads out what each answer did. -->
+    <p class="visually-hidden" role="status" data-mayor-live></p>
+  </div>
+
+  <ResultsCard>
+    <Fragment slot="top">
+      <p class="mayor__ending-title" data-mayor-ending-title></p>
+      <p class="mayor__ending-text" data-mayor-ending-text></p>
+    </Fragment>
+    <button type="button" class="mayor__again" data-mayor-again>Stand for office again</button>
+  </ResultsCard>
+
+  <p class="fine-print mayor__credit">Drawings made for The Municipal Absurdist.</p>
+</GameLayout>
+
+<script>
+  import {
+    cards,
+    characters,
+    endings,
+    ranks,
+    METERS,
+    METER_NAMES,
+    START,
+    type Answer,
+    type Card,
+    type Meter,
+  } from '../../data/the-mayor';
+  import { drawFigure } from '../../lib/games/mayor-figures';
+  import { chicagoDateKey } from '../../lib/games/daily';
+  import { readStats, type GameStats } from '../../lib/games/stats';
+  import { showResults } from '../../lib/games/results';
+
+  const GAME_ID = 'the-mayor';
+  const SWIPE_DISTANCE = 90; // pixels the card must travel to count
+  const FLY_TIME = 260; // milliseconds for the card to leave
+  const LARGE = 15; // a move this big or bigger gets the large mark
+
+  type Side = 'left' | 'right';
+
+  /** A shuffled copy. Math.random is fine here: unlike the daily games,
+      every term is meant to be different. */
+  function shuffle<T>(items: readonly T[]): T[] {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-mayor]');
+  const resultsCard = document.querySelector<HTMLElement>('[data-results]');
+  if (root && resultsCard) play(root, resultsCard);
+
+  function play(root: HTMLElement, resultsCard: HTMLElement) {
+    const find = <T extends HTMLElement>(hook: string) => root.querySelector<T>(`[data-mayor-${hook}]`)!;
+    const card = find('card');
+    const portrait = find('portrait');
+    const who = find('who');
+    const says = find('says');
+    const week = find('week');
+    const live = find('live');
+    const hints = { left: find('hint="left"'), right: find('hint="right"') };
+    const replies = { left: find('reply="left"'), right: find('reply="right"') };
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-mayor-answer]')];
+    const meterEls = Object.fromEntries(
+      METERS.map((meter) => [meter, root.querySelector<HTMLElement>(`[data-mayor-meter="${meter}"]`)!]),
+    ) as Record<Meter, HTMLElement>;
+    const stillness = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let levels: Record<Meter, number>;
+    let deck: Card[] = [];
+    let current: Card;
+    let weeks = 0;
+    let busy = false; // true while a card is flying off, and after the end
+
+    // ---- The meters ----
+    function drawMeters() {
+      for (const meter of METERS) {
+        const el = meterEls[meter];
+        const level = levels[meter];
+        el.querySelector<HTMLElement>('.mayor__fill')!.style.width = `${level}%`;
+        // Near either end the bar turns red and says so in words.
+        const state = level <= 20 ? 'low' : level >= 80 ? 'high' : '';
+        el.dataset.state = state;
+        el.querySelector('[data-mayor-value]')!.textContent =
+          `${METER_NAMES[meter]}: ${level} out of 100${state ? `, dangerously ${state}` : ''}`;
+      }
+    }
+
+    /** Show a mark over each meter an answer would move; clear with null. */
+    function preview(side: Side | null) {
+      for (const meter of METERS) {
+        const move = side ? Math.abs(current[side][meter] ?? 0) : 0;
+        meterEls[meter].dataset.mark = move === 0 ? '' : move >= LARGE ? 'large' : 'small';
+      }
+    }
+
+    // ---- Dealing ----
+    function deal() {
+      // When the deck runs out, shuffle it again, taking care that the
+      // card just played is not dealt twice running.
+      if (deck.length === 0) {
+        deck = shuffle(cards);
+        if (deck.length > 1 && deck[deck.length - 1] === current) deck.reverse();
+      }
+      current = deck.pop()!;
+      const person = characters[current.from];
+
+      week.textContent = `Week ${weeks + 1} in office`;
+      portrait.innerHTML = drawFigure(person.look);
+      who.textContent = person.name;
+      says.textContent = current.says;
+      for (const side of ['left', 'right'] as const) {
+        replies[side].textContent = current[side].reply;
+        hints[side].textContent = current[side].reply;
+      }
+      // For a screen reader: which meters each answer touches.
+      buttons.forEach((button) => {
+        const answer = current[button.dataset.mayorAnswer as Side];
+        const touched = METERS.filter((meter) => answer[meter]).map((meter) => METER_NAMES[meter]);
+        button.setAttribute('aria-label', `${answer.reply}. Affects ${touched.join(', ')}.`);
+      });
+
+      card.style.transition = 'none';
+      card.style.transform = '';
+      card.style.opacity = '1';
+      card.style.setProperty('--hint-left', '0');
+      card.style.setProperty('--hint-right', '0');
+      preview(null);
+      busy = false;
+    }
+
+    // ---- Answering ----
+    function answer(side: Side) {
+      if (busy) return;
+      busy = true;
+      const chosen: Answer = current[side];
+      const person = characters[current.from];
+
+      const changes: string[] = [];
+      for (const meter of METERS) {
+        const move = chosen[meter] ?? 0;
+        if (!move) continue;
+        levels[meter] = Math.max(0, Math.min(100, levels[meter] + move));
+        changes.push(`${METER_NAMES[meter]} ${move > 0 ? 'up' : 'down'}`);
+      }
+      weeks += 1;
+      preview(null);
+      drawMeters();
+      live.textContent = `${person.name}: “${chosen.reply}.” ${changes.join(', ')}.`;
+
+      // The card leaves in the direction of the answer.
+      const direction = side === 'right' ? 1 : -1;
+      const wait = stillness.matches ? 0 : FLY_TIME;
+      if (wait) {
+        card.style.transition = `transform ${FLY_TIME}ms ease-in, opacity ${FLY_TIME}ms ease-in`;
+        card.style.transform = `translateX(${direction * 130}%) rotate(${direction * 18}deg)`;
+        card.style.opacity = '0';
+      }
+
+      window.setTimeout(() => {
+        // Has any meter run out or run over? The first found ends the term.
+        const fallen = METERS.find((meter) => levels[meter] <= 0 || levels[meter] >= 100);
+        if (fallen) {
+          end(fallen, levels[fallen] <= 0 ? 'empty' : 'full');
+          return;
+        }
+        deal();
+        card.focus({ preventScroll: true });
+      }, wait);
+    }
+
+    // ---- The end of a term ----
+    function end(meter: Meter, how: 'empty' | 'full') {
+      const ending = endings[meter][how];
+      const rank = [...ranks].reverse().find((r) => weeks >= r.from) ?? ranks[0];
+      const stats = record(weeks);
+
+      root.hidden = true;
+      resultsCard.querySelector('[data-mayor-ending-title]')!.textContent = ending.title;
+      resultsCard.querySelector('[data-mayor-ending-text]')!.textContent = ending.text;
+      showResults(resultsCard, {
+        score: `${weeks} ${weeks === 1 ? 'week' : 'weeks'} in office`,
+        rank: rank.name,
+        blurb: rank.blurb,
+        shareText: [
+          'The Mayor, in The Municipal Absurdist',
+          `${weeks} ${weeks === 1 ? 'week' : 'weeks'} in office · ${rank.name}`,
+          `Removed by ${ending.by}`,
+          `${location.origin}${location.pathname}`,
+        ].join('\n'),
+        stats,
+        bestText: `${stats.best} wk`,
+      });
+    }
+
+    /** Count a finished term. The shared recordResult() counts one round
+        a day, which suits the daily games; this game may be played many
+        times a day, so it keeps its own count in the same place and shape.
+        "Streak" is still days in a row with at least one term. */
+    function record(score: number): GameStats {
+      const today = chicagoDateKey();
+      const yesterday = chicagoDateKey(new Date(Date.now() - 86_400_000));
+      const stats = readStats(GAME_ID);
+      const next: GameStats = {
+        played: stats.played + 1,
+        best: Math.max(stats.best, score),
+        streak: stats.lastPlayed === today ? stats.streak : stats.lastPlayed === yesterday ? stats.streak + 1 : 1,
+        lastPlayed: today,
+        lastResult: null,
+      };
+      try {
+        localStorage.setItem(`absurdist:game:${GAME_ID}`, JSON.stringify(next));
+      } catch {
+        // Not saved; the results card still shows this term.
+      }
+      return next;
+    }
+
+    function begin() {
+      levels = Object.fromEntries(METERS.map((meter) => [meter, START])) as Record<Meter, number>;
+      weeks = 0;
+      deck = [];
+      drawMeters();
+      deal();
+    }
+
+    // ---- Buttons and keys ----
+    for (const button of buttons) {
+      const side = button.dataset.mayorAnswer as Side;
+      button.addEventListener('click', () => answer(side));
+      // Pointing at an answer, or tabbing to it, shows what it would move.
+      button.addEventListener('pointerenter', () => !busy && preview(side));
+      button.addEventListener('focus', () => !busy && preview(side));
+      button.addEventListener('pointerleave', () => !busy && preview(null));
+      button.addEventListener('blur', () => !busy && preview(null));
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (root.hidden || busy || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === 'ArrowRight') { event.preventDefault(); answer('right'); }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); answer('left'); }
+    });
+
+    // ---- Swiping (touch, pen or mouse drag) ----
+    let dragStart: number | null = null;
+
+    const settle = () => {
+      card.style.transition = 'transform 200ms ease-out';
+      card.style.transform = '';
+      card.style.setProperty('--hint-left', '0');
+      card.style.setProperty('--hint-right', '0');
+      preview(null);
+    };
+
+    card.addEventListener('pointerdown', (event) => {
+      if (busy) return;
+      dragStart = event.clientX;
+      card.setPointerCapture(event.pointerId); // keep receiving moves outside the card
+      card.style.transition = 'none';
+    });
+
+    card.addEventListener('pointermove', (event) => {
+      if (dragStart === null) return;
+      const moved = event.clientX - dragStart;
+      card.style.transform = `translateX(${moved}px) rotate(${moved / 18}deg)`;
+      // The answer being dragged toward fades in, and its marks appear.
+      const strength = String(Math.min(Math.abs(moved) / SWIPE_DISTANCE, 1));
+      card.style.setProperty('--hint-right', moved > 0 ? strength : '0');
+      card.style.setProperty('--hint-left', moved < 0 ? strength : '0');
+      preview(Math.abs(moved) < 12 ? null : moved > 0 ? 'right' : 'left');
+    });
+
+    card.addEventListener('pointerup', (event) => {
+      if (dragStart === null) return;
+      const moved = event.clientX - dragStart;
+      dragStart = null;
+      if (Math.abs(moved) >= SWIPE_DISTANCE) answer(moved > 0 ? 'right' : 'left');
+      else settle();
+    });
+
+    card.addEventListener('pointercancel', () => {
+      dragStart = null;
+      settle();
+    });
+
+    resultsCard.querySelector('[data-mayor-again]')?.addEventListener('click', () => {
+      resultsCard.hidden = true;
+      root.hidden = false;
+      begin();
+      card.focus({ preventScroll: true });
+    });
+
+    begin();
+  }
+</script>
+
+<style>
+  .mayor[hidden] {
+    display: none;
+  }
+
+  .mayor {
+    --danger: #a8321f;
+  }
+
+  /* ---- Meters: four across, each a name over a bar ---- */
+  .mayor__meters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-2);
+    margin: 0 0 var(--space-3);
+    padding: 0 0 var(--space-3);
+    border-bottom: var(--rule-hair) solid var(--rule);
+    list-style: none;
+  }
+
+  .mayor__meter {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-1);
+  }
+
+  /* The mark that shows an answer would move this meter: a small square
+     for a small move, a larger one for a large move. Its box keeps its
+     height when empty, so nothing jumps when a mark appears. */
+  .mayor__mark {
+    display: grid;
+    place-items: center;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .mayor__mark::before {
+    content: '';
+    width: 0;
+    height: 0;
+    background: var(--ink);
+    transform: rotate(45deg);
+    transition: width 120ms, height 120ms;
+  }
+
+  .mayor__meter[data-mark='small'] .mayor__mark::before {
+    width: 0.4rem;
+    height: 0.4rem;
+  }
+
+  .mayor__meter[data-mark='large'] .mayor__mark::before {
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+
+  .mayor__meter-name {
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+  }
+
+  .mayor__bar {
+    display: block;
+    width: 100%;
+    height: 0.75rem;
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--paper);
+  }
+
+  .mayor__fill {
+    display: block;
+    height: 100%;
+    background: var(--ink);
+    transition: width 300ms ease-out;
+  }
+
+  .mayor__meter[data-state='low'] .mayor__fill,
+  .mayor__meter[data-state='high'] .mayor__fill {
+    background: var(--danger);
+  }
+
+  .mayor__meter[data-state='low'] .mayor__bar,
+  .mayor__meter[data-state='high'] .mayor__bar {
+    border-color: var(--danger);
+  }
+
+  /* Colour is not the only warning: the word appears under the bar. */
+  .mayor__meter::after {
+    content: '\00a0'; /* a space, so the row keeps its height */
+    font-family: var(--font-label);
+    font-size: var(--text-xs);
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: var(--danger);
+  }
+
+  .mayor__meter[data-state='low']::after { content: 'Low'; }
+  .mayor__meter[data-state='high']::after { content: 'High'; }
+
+  .mayor__week {
+    margin-bottom: var(--space-3);
+    text-align: center;
+  }
+
+  /* ---- The card, on a stack of two more (the outlines beneath) ---- */
+  .mayor__table {
+    position: relative;
+    max-width: 24rem;
+    margin: 0 auto var(--space-4);
+  }
+
+  .mayor__table::before,
+  .mayor__table::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--rule-hair) solid var(--rule);
+    background: var(--paper);
+  }
+
+  .mayor__table::before { transform: rotate(-2.5deg); }
+  .mayor__table::after { transform: rotate(1.5deg); }
+
+  .mayor__card {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 23rem;
+    padding: var(--space-4);
+    border: var(--rule-hair) solid var(--rule);
+    background: var(--paper);
+    text-align: center;
+    cursor: grab;
+    /* Let the finger scroll the page up and down, but keep sideways
+       movement for the swipe; and do not select text while dragging. */
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .mayor__card:active {
+    cursor: grabbing;
+  }
+
+  .mayor__card:focus {
+    outline: none; /* focus is moved here by script, to be read aloud */
+  }
+
+  /* The portrait, in a ruled frame with a yellow ground. */
+  .mayor__portrait {
+    width: 9rem;
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-2) 0;
+    border: var(--rule-thick) double var(--rule);
+    background: color-mix(in srgb, var(--accent) 22%, var(--paper));
+  }
+
+  /* :global because the drawing is put in by the script. */
+  .mayor__portrait :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .mayor__who {
+    margin-bottom: var(--space-2);
+  }
+
+  .mayor__says {
+    margin: 0;
+    font-family: var(--font-headline);
+    font-size: var(--text-lg);
+    line-height: var(--leading-snug);
+    text-wrap: pretty;
+  }
+
+  /* The answer being swiped toward, stamped across the top of the card.
+     --hint-left and --hint-right are set by the script, from 0 to 1. */
+  .mayor__hint {
+    position: absolute;
+    top: var(--space-3);
+    max-width: 60%;
+    padding: var(--space-1) var(--space-2);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    pointer-events: none;
+  }
+
+  .mayor__hint--left {
+    right: var(--space-3);
+    opacity: var(--hint-left, 0);
+  }
+
+  .mayor__hint--right {
+    left: var(--space-3);
+    opacity: var(--hint-right, 0);
+  }
+
+  /* ---- The two answers ---- */
+  .mayor__controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    max-width: 24rem;
+    margin-inline: auto;
+  }
+
+  .mayor__answer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 3.25rem;
+    padding: var(--space-2) var(--space-3);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-base);
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  .mayor__answer[data-mayor-answer='left'] {
+    text-align: left;
+  }
+
+  .mayor__answer[data-mayor-answer='right'] {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .mayor__answer:hover {
+    background: var(--accent);
+  }
+
+  /* ---- The result ---- */
+  .mayor__ending-title {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-headline);
+    font-size: var(--text-h3);
+    font-weight: var(--weight-headline);
+    line-height: var(--leading-tight);
+  }
+
+  .mayor__ending-text {
+    max-width: 30rem;
+    margin: 0 auto var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: var(--rule-hair) solid var(--rule);
+    font-style: italic;
+  }
+
+  .mayor__again {
+    margin-top: var(--space-4);
+    min-height: 2.75rem;
+    padding: var(--space-1) var(--space-4);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .mayor__again:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .mayor__credit {
+    margin: var(--space-5) 0 0;
+    font-style: italic;
+    text-align: center;
+  }
+</style>
