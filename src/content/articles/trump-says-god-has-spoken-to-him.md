@@ -7,6 +7,7 @@ date: 2026-10-12
 image: trump.jpeg
 featured: true
 draft: false
+sample: true
 ---
 President Trump informed reporters on Sunday that God had spoken to him directly, at length, and in what he characterized as the warmest possible terms.
 

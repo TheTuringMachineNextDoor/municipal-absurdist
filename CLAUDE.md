@@ -37,7 +37,7 @@ Ask before adding any dependency not listed here.
 ## Content model
 
 **Articles** (`src/content/articles/*.md`)
-- `title`, `dek` (subheadline), `section`, `author` (ref), `illustrator` (ref, optional), `date`, `image`, `imageAlt` (optional), `imageCredit` (optional), `featured` (bool), `draft` (bool)
+- `title`, `dek` (subheadline), `section`, `author` (ref), `illustrator` (ref, optional), `date`, `image`, `imageAlt` (optional), `imageCredit` (optional), `featured` (bool), `draft` (bool), `sample` (bool; placeholder articles to delete before launch)
 - `image` is a file name from `public/illustrations/` that has an entry in `credits.json`. `imageAlt` and `imageCredit` fall back to that entry when blank.
 - In the body, a `>` blockquote is a pull quote (a second paragraph inside it is the attribution), and `![description](/illustrations/file.webp)` on its own line is an inline illustration with its credit added automatically.
 - Schemas live in `src/content.config.ts` (validation) and `keystatic.config.ts` (the editing form). Change both together.
@@ -56,7 +56,7 @@ Ask before adding any dependency not listed here.
 
 | Route | Purpose |
 |---|---|
-| `/` | Homepage: masthead, lead story, recent articles, comic, recurring features, newsletter signup |
+| `/` | Homepage: full masthead, lead story (2/3) beside latest headlines (1/3), a band per section, comic slot, recurring features (`src/data/features.ts`), newsletter box (`newsletterAction` in `src/data/site.ts`). Inner pages use the compact masthead. |
 | `/[section]` | Section front |
 | `/[section]/[slug]` | Article |
 | `/contributors` and `/contributors/[slug]` | Portfolio, bio, published work, commission form |

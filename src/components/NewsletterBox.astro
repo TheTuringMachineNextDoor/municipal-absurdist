@@ -1,0 +1,100 @@
+---
+// The newsletter signup. The form's destination is one value,
+// `newsletterAction` in src/data/site.ts. While that is empty the form
+// is shown switched off and labelled "Subscriptions open shortly"; set
+// it (Phase 7, Buttondown) and the form starts working.
+import { site } from '../data/site';
+
+const action = site.newsletterAction;
+const open = action !== '';
+---
+
+<section class="newsletter" aria-labelledby="newsletter-heading">
+  <h2 id="newsletter-heading" class="newsletter__heading">The Absurdist, by Post</h2>
+  <p class="newsletter__pitch">
+    The best of this newspaper, delivered to your electronic letterbox at intervals we
+    consider reasonable. No charge is made, and no refunds are given.
+  </p>
+
+  <!-- Buttondown expects a POST with a field named "email". -->
+  <form class="newsletter__form" action={open ? action : undefined} method="post">
+    <fieldset disabled={!open}>
+      <legend class="visually-hidden">Subscribe to the newsletter</legend>
+      <label class="visually-hidden" for="newsletter-email">Your email address</label>
+      <input id="newsletter-email" type="email" name="email" placeholder="reader@example.com" required />
+      <button type="submit">Subscribe</button>
+    </fieldset>
+  </form>
+
+  {!open && <p class="label newsletter__status">Subscriptions open shortly</p>}
+</section>
+
+<style>
+  .newsletter {
+    padding: var(--space-5) var(--space-4);
+    border: var(--rule-thick) double var(--rule);
+    text-align: center;
+  }
+
+  .newsletter__heading {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-h3);
+  }
+
+  .newsletter__pitch {
+    max-width: 34rem;
+    margin: 0 auto var(--space-4);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .newsletter__form fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .newsletter__form input {
+    flex: 1 1 14rem;
+    max-width: 22rem;
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .newsletter__form button {
+    padding: var(--space-2) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .newsletter__form button:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  /* Switched off: faded, and the cursor says so. */
+  .newsletter__form fieldset:disabled {
+    opacity: 0.5;
+  }
+
+  .newsletter__form fieldset:disabled * {
+    cursor: not-allowed;
+  }
+
+  .newsletter__status {
+    margin: var(--space-3) 0 0;
+  }
+</style>

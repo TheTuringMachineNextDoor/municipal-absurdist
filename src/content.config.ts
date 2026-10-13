@@ -45,6 +45,10 @@ const articles = defineCollection({
     imageCredit: z.preprocess(blankToUndefined, z.string().optional()),
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),
+    // Marks placeholder articles written to fill the page during
+    // development. Search for "sample: true" to find and delete them
+    // all before launch.
+    sample: z.boolean().default(false),
   }),
 });
 

@@ -1,0 +1,79 @@
+---
+// The side column beside the lead story: a few recent headlines with
+// their deks, text only, separated by hairlines.
+interface Props {
+  items: { href: string; title: string; dek: string; sectionName: string }[];
+  heading?: string;
+}
+
+const { items, heading = 'Latest' } = Astro.props;
+---
+
+<section class="latest-list" aria-labelledby="latest-list-heading">
+  <h2 id="latest-list-heading" class="latest-list__heading">{heading}</h2>
+  <ol class="latest-list__items">
+    {
+      items.map((item) => (
+        <li class="latest-list__item">
+          <p class="label label--accent latest-list__section">{item.sectionName}</p>
+          <h3 class="latest-list__title"><a href={item.href}>{item.title}</a></h3>
+          <p class="latest-list__dek">{item.dek}</p>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<style>
+  .latest-list__heading {
+    margin: 0 0 var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  .latest-list__items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .latest-list__item {
+    padding-block: var(--space-4);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  .latest-list__item:first-child {
+    padding-top: var(--space-2);
+    border-top: 0;
+  }
+
+  .latest-list__section {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-xs);
+  }
+
+  .latest-list__title {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-lg);
+    line-height: var(--leading-snug);
+  }
+
+  .latest-list__title a {
+    text-decoration: none;
+  }
+
+  .latest-list__title a:hover {
+    text-decoration: underline;
+  }
+
+  .latest-list__dek {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+</style>

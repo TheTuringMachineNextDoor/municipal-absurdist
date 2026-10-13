@@ -70,11 +70,11 @@
     "focus": "50% 68%"
   },
   {
-    "file": "lighthouse-keeper.jpeg",
-    "title": "The Keeper",
-    "alt": "Black-and-white photograph of a bearded man in a keeper's cap and heavy coat, a lighthouse behind him.",
+    "file": "willem-dafoe-lighthouse-keeper.jpeg",
+    "title": "Willem Dafoe as the Keeper",
+    "alt": "Black-and-white still of Willem Dafoe as a bearded lighthouse keeper in a cap and heavy coat, the lighthouse behind him.",
     "creator": "Not recorded",
-    "source": "Appears to be a still from a film; if so, the rights belong to the studio.",
+    "source": "Still of Willem Dafoe as a lighthouse keeper (subject named by the editor). Film stills belong to the studio.",
     "sourceUrl": null,
     "license": "NOT CLEARED. Rights unknown; do not publish until confirmed.",
     "credit": "Placeholder image. Source and rights to be confirmed before publication.",
@@ -84,11 +84,11 @@
     "needsSource": true
   },
   {
-    "file": "man-at-microphones.jpeg",
-    "title": "A Man Addresses the Microphones",
-    "alt": "Photograph of a white-haired man in glasses and a dark suit pointing past a cluster of press microphones, a white portico behind him.",
+    "file": "bernie-sanders-at-microphones.jpeg",
+    "title": "Bernie Sanders at the Microphones",
+    "alt": "Bernie Sanders in a dark suit pointing past a cluster of press microphones, a white portico behind him.",
     "creator": "Not recorded",
-    "source": "News photograph; agency and photographer not recorded.",
+    "source": "News photograph of Bernie Sanders (subject named by the editor); agency and photographer not recorded.",
     "sourceUrl": null,
     "license": "NOT CLEARED. Rights unknown; do not publish until confirmed.",
     "credit": "Placeholder image. Source and rights to be confirmed before publication.",
@@ -112,11 +112,11 @@
     "needsSource": true
   },
   {
-    "file": "portrait-dark-suit.webp",
-    "title": "Portrait in a Dark Suit",
-    "alt": "Studio portrait of a man in a dark suit and dotted tie against a dark grey backdrop.",
+    "file": "sam-altman-portrait.webp",
+    "title": "Sam Altman",
+    "alt": "Studio portrait of Sam Altman in a dark suit and dotted tie against a dark grey backdrop.",
     "creator": "Not recorded",
-    "source": "The original file name indicates Getty Images / AFP, which licenses its photographs for a fee.",
+    "source": "Portrait of Sam Altman (subject named by the editor). The original file name indicates Getty Images / AFP, which licenses its photographs for a fee.",
     "sourceUrl": null,
     "license": "NOT CLEARED. Rights unknown; do not publish until confirmed.",
     "credit": "Placeholder image. Source and rights to be confirmed before publication.",
@@ -136,6 +136,34 @@
     "credit": "Placeholder image. Source and rights to be confirmed before publication.",
     "width": 495,
     "height": 619,
+    "placeholder": true,
+    "needsSource": true
+  },
+  {
+    "file": "warren-buffett-drinking-diet-coke.webp",
+    "title": "Warren Buffett, Refreshed",
+    "alt": "Warren Buffett in glasses and a dark suit drinking from a bottle of cola in a crowd.",
+    "creator": "Not recorded",
+    "source": "News photograph of Warren Buffett (subject named by the editor); agency and photographer not recorded.",
+    "sourceUrl": null,
+    "license": "NOT CLEARED. Rights unknown; do not publish until confirmed.",
+    "credit": "Placeholder image. Source and rights to be confirmed before publication.",
+    "width": 1200,
+    "height": 900,
+    "placeholder": true,
+    "needsSource": true
+  },
+  {
+    "file": "calvin-and-hobbes.jpeg",
+    "title": "Calvin and Hobbes: A Scheme to Get Us Some Money",
+    "alt": "Four-panel Calvin and Hobbes strip. In bed, Calvin tells Hobbes he has a scheme to get money: he has sneaked corn kernels off his dinner plate to put under his pillow, hoping the tooth fairy will not notice they are fakes.",
+    "creator": "Bill Watterson",
+    "source": "Calvin and Hobbes daily strip, 1987. Copyright Bill Watterson / Universal Press Syndicate. Not licensed; the strip is not available for licensing.",
+    "sourceUrl": null,
+    "license": "NOT CLEARED. Rights unknown; do not publish until confirmed.",
+    "credit": "Calvin and Hobbes by Bill Watterson, 1987. © Universal Press Syndicate. Placeholder only; not licensed for publication.",
+    "width": 399,
+    "height": 501,
     "placeholder": true,
     "needsSource": true
   }

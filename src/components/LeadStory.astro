@@ -1,9 +1,10 @@
 ---
-// The lead story of a page: illustration, section label, a large
-// headline that links to the article, the dek, and the byline. The
-// front page and each section front open with one.
+// The lead story of the front page: a big picture, then the section
+// label, a large headline that links to the article, the dek, and the
+// byline. It fills whatever column it is put in.
 import Illustration from './Illustration.astro';
 import { formatDate } from '../lib/articles';
+import { getIllustration, isPortrait } from '../lib/illustrations';
 
 interface Props {
   href: string;
@@ -24,9 +25,13 @@ interface Props {
 const { href, title, dek, author, date, image, imageAlt, imageCredit, sectionName, sectionHref, highlighted = false } =
   Astro.props;
 const { label, iso } = formatDate(date);
+
+// A landscape picture sits above the headline. An upright one would be
+// cropped to a forehead up there, so it stands beside the words instead.
+const upright = isPortrait(getIllustration(image));
 ---
 
-<article class="lead">
+<article class:list={['lead', { 'lead--upright': upright }]}>
   <div class="lead__picture">
     <Illustration file={image} alt={imageAlt} credit={imageCredit} variant="lead" />
   </div>
@@ -54,13 +59,37 @@ const { label, iso } = formatDate(date);
   .lead {
     display: grid;
     gap: var(--space-4);
-    text-align: center;
   }
 
-  /* The lead figure brings its own generous margins for an article
-     page; here the grid does the spacing. */
+  /* The lead figure brings its own margins and width limits for an
+     article page. Here it fills the column, and an upright picture is
+     cropped to a landscape frame so it does not push the headline off
+     the screen. */
   .lead__picture :global(.illustration) {
-    margin-block: 0;
+    margin: 0;
+    text-align: left;
+  }
+
+  .lead__picture :global(.illustration img) {
+    width: 100%;
+  }
+
+  /* Upright picture: beside the words once there is room for both. */
+  @media (min-width: 40rem) {
+    .lead--upright {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      align-items: center;
+      gap: var(--space-6);
+    }
+
+    .lead--upright .lead__title {
+      font-size: var(--text-h2);
+    }
+  }
+
+  .lead__picture :global(.illustration figcaption) {
+    max-width: none;
+    margin-inline: 0;
   }
 
   .lead__section a,
@@ -86,13 +115,12 @@ const { label, iso } = formatDate(date);
 
   /* Room between lines so one marker stroke does not run into the next. */
   .lead__title--highlighted {
-    font-size: var(--text-h2);
-    line-height: 1.45;
+    line-height: 1.4;
   }
 
   .lead__dek {
-    max-width: 36rem;
-    margin-inline: auto;
+    max-width: 44rem;
+    font-size: var(--text-h4);
   }
 
   .lead__byline {
@@ -102,21 +130,5 @@ const { label, iso } = formatDate(date);
   .lead__more {
     margin: 0;
     font-style: italic;
-  }
-
-  /* Side by side on a desk: the woodcut on the left, the words beside
-     it, both centred on the page. */
-  @media (min-width: 52rem) {
-    .lead {
-      grid-template-columns: minmax(0, 34rem) minmax(0, 36rem);
-      justify-content: center;
-      align-items: center;
-      gap: var(--space-7);
-      text-align: left;
-    }
-
-    .lead__dek {
-      margin-inline: 0;
-    }
   }
 </style>

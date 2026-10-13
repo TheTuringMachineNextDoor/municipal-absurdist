@@ -7,6 +7,7 @@ date: 2026-10-11
 image: censored-venus.webp
 featured: false
 draft: false
+sample: true
 ---
 A committee of parents from Millard Fillmore Elementary School has delivered a petition to the City Museum of Art demanding that all unclothed figures in its collection be covered, removed, or turned to face the wall before the spring field trips resume.
 

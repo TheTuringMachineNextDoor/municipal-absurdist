@@ -11,9 +11,12 @@ import Stroke from './Stroke.astro';
 
 interface Props {
   as?: 'h1' | 'p';
+  /** The inner-page version: the name alone on one line, smaller, with
+      no hat or slogan, so the article starts higher on the screen. */
+  compact?: boolean;
 }
 
-const { as: Tag = 'p' } = Astro.props;
+const { as: Tag = 'p', compact = false } = Astro.props;
 
 const dateOptions: Intl.DateTimeFormatOptions = {
   weekday: 'long',
@@ -29,8 +32,8 @@ const builtLabel = built.toLocaleDateString('en-US', dateOptions);
 const builtIso = built.toISOString().slice(0, 10);
 ---
 
-<header class="masthead sheet">
-  <div class="masthead__hat"><TopHat /></div>
+<header class:list={['masthead', 'sheet', { 'masthead--compact': compact }]}>
+  {!compact && <div class="masthead__hat"><TopHat /></div>}
   <Tag class="masthead__name">
     <!-- Plain text in a link: sighted readers and screen readers get
          the same thing, once. -->
@@ -38,7 +41,7 @@ const builtIso = built.toISOString().slice(0, 10);
          not kept after the click: the front page loads with it gone. -->
     <a class="masthead__link has-stroke" href="/">The Municipal Absurdist<Stroke /></a>
   </Tag>
-  <p class="masthead__slogan">The world, as it unfortunately is</p>
+  {!compact && <p class="masthead__slogan">The world, as it unfortunately is</p>}
 
   <div class="dateline label">
     <!-- Accounts arrive in Phase 9. Until then these lead to pages
@@ -89,6 +92,20 @@ const builtIso = built.toISOString().slice(0, 10);
   .masthead {
     padding-top: var(--space-7);
     text-align: center;
+  }
+
+  /* Compact: less room above, and the name at under half the size. */
+  .masthead--compact {
+    padding-top: var(--space-4);
+  }
+
+  .masthead--compact .masthead__link {
+    font-size: clamp(1.375rem, 5vw, 2.25rem);
+    --stroke-height: 0.5em;
+  }
+
+  .masthead--compact .dateline {
+    margin-top: var(--space-2);
   }
 
   /* The hat sits centred just above the name. */

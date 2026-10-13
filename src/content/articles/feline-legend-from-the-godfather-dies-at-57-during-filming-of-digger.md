@@ -7,6 +7,7 @@ date: 2026-10-10
 image: man-with-cat.webp
 featured: false
 draft: false
+sample: true
 ---
 The cat who appeared in the opening scene of *The Godfather*, and who is widely regarded as having given the more restrained of the two performances, died on Thursday on the set of the forthcoming picture *Digger*. He was fifty-seven, an age his veterinarian described as not possible and declined to discuss further.
 

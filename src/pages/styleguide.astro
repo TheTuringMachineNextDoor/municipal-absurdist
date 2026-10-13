@@ -7,6 +7,11 @@ import ArticleBody from '../components/ArticleBody.astro';
 import Illustration from '../components/Illustration.astro';
 import MoreFromSection from '../components/MoreFromSection.astro';
 import LeadStory from '../components/LeadStory.astro';
+import LatestList from '../components/LatestList.astro';
+import SectionBand from '../components/SectionBand.astro';
+import ComicSlot from '../components/ComicSlot.astro';
+import FeaturesStrip from '../components/FeaturesStrip.astro';
+import NewsletterBox from '../components/NewsletterBox.astro';
 // Credits are read from the same file that documents the images, so the
 // page and the record cannot disagree.
 import credits from '../../public/illustrations/credits.json';
@@ -451,8 +456,56 @@ const sampleMore = [
 
   <hr />
 
+  <section class="sg-section" aria-labelledby="sg-front">
+    <h2 id="sg-front" class="sg-heading">XII. Front Page Furniture</h2>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Compact masthead</span>
+        <code>&lt;Masthead compact&gt;</code>
+        <span class="fine-print">In use at the top of this page. The front page keeps the full one, with hat and slogan.</span>
+      </p>
+    </div>
+    <div class="sg-pair">
+      <div class="sg-specimen">
+        <p class="sg-meta"><span class="label">Side column</span><code>&lt;LatestList&gt;</code></p>
+        <LatestList items={sampleMore.map((item) => ({ ...item, sectionName: 'Politics' }))} />
+      </div>
+      <div class="sg-specimen">
+        <p class="sg-meta">
+          <span class="label">Recurring features</span>
+          <code>&lt;FeaturesStrip&gt;</code>
+          <span class="fine-print">Words from src/data/features.ts.</span>
+        </p>
+        <FeaturesStrip />
+      </div>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta"><span class="label">Section band</span><code>&lt;SectionBand&gt;</code></p>
+      <SectionBand name="Politics" href="/politics" items={sampleMore} />
+    </div>
+    <div class="sg-pair">
+      <div class="sg-specimen">
+        <p class="sg-meta">
+          <span class="label">Comic slot, awaiting a comic</span>
+          <code>&lt;ComicSlot&gt;</code>
+        </p>
+        <ComicSlot />
+      </div>
+      <div class="sg-specimen">
+        <p class="sg-meta">
+          <span class="label">Newsletter box</span>
+          <code>&lt;NewsletterBox&gt;</code>
+          <span class="fine-print">Switched off until newsletterAction is set in src/data/site.ts.</span>
+        </p>
+        <NewsletterBox />
+      </div>
+    </div>
+  </section>
+
+  <hr />
+
   <section class="sg-section" aria-labelledby="sg-space">
-    <h2 id="sg-space" class="sg-heading">XII. Spacing</h2>
+    <h2 id="sg-space" class="sg-heading">XIII. Spacing</h2>
     <ul class="sg-spaces">
       {
         spaces.map((s) => (

@@ -78,6 +78,10 @@ export default config({
           label: 'Draft',
           description: 'Drafts appear on your own machine but are left out of the published paper.',
         }),
+        sample: fields.checkbox({
+          label: 'Sample',
+          description: 'A placeholder article written to fill the page. Delete every sample before launch.',
+        }),
         // Plain .md files, so they stay readable outside the panel.
         // Pull quote: use the quote button; a second paragraph inside
         // the quote is its attribution.

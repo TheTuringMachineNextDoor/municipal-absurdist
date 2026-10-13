@@ -1,0 +1,51 @@
+---
+// A band on the front page: a thin rule carrying the section's name,
+// then up to three of its stories across in columns.
+import ArticleList, { type ArticleListItem } from './ArticleList.astro';
+
+interface Props {
+  name: string;
+  href: string;
+  items: ArticleListItem[];
+}
+
+const { name, href, items } = Astro.props;
+---
+
+<section class="band">
+  <!-- The name sits on the rule: a line either side, drawn by the
+       ::before and ::after of the heading. -->
+  <h2 class="band__heading"><a href={href}>{name}</a></h2>
+  <ArticleList items={items} showCredits={false} />
+</section>
+
+<style>
+  .band {
+    margin-top: var(--space-6);
+  }
+
+  .band__heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-5);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.14em;
+  }
+
+  .band__heading::before,
+  .band__heading::after {
+    content: '';
+    flex: 1;
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  .band__heading a {
+    text-decoration: none;
+  }
+
+  .band__heading a:hover {
+    color: var(--accent-text);
+  }
+</style>

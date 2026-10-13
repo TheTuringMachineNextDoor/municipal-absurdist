@@ -1,0 +1,69 @@
+---
+// The recurring features: a narrow strip of small boxed items (Weather,
+// Notices, Today's Number). The words live in src/data/features.ts.
+import { features } from '../data/features';
+---
+
+<section class="features" aria-label="Recurring features">
+  {
+    features.map((feature) => (
+      <article class="feature">
+        <h2 class="feature__title">{feature.title}</h2>
+        {feature.figure && <p class="feature__figure">{feature.figure}</p>}
+        {feature.text && <p class="feature__text">{feature.text}</p>}
+        {feature.items && (
+          <ul class="list-ornament feature__list">
+            {feature.items.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        )}
+      </article>
+    ))
+  }
+</section>
+
+<style>
+  .features {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  /* A small box: hairline all round, square corners. */
+  .feature {
+    padding: var(--space-4);
+    border: var(--rule-hair) solid var(--rule);
+  }
+
+  .feature__title {
+    margin: 0 0 var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-hair) solid var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
+
+  .feature__figure {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-headline);
+    font-size: var(--text-h1);
+    font-weight: var(--weight-headline);
+    font-variant-numeric: lining-nums;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .feature__text,
+  .feature__list {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-snug);
+  }
+
+  .feature__figure + .feature__text {
+    text-align: center;
+  }
+</style>

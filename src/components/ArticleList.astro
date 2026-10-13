@@ -21,9 +21,11 @@ export interface ArticleListItem {
 
 interface Props {
   items: ArticleListItem[];
+  /** Pass false when the page prints all its credits together itself. */
+  showCredits?: boolean;
 }
 
-const { items } = Astro.props;
+const { items, showCredits = true } = Astro.props;
 
 // Every illustration must be credited on the page. A credit under each
 // small picture would crowd the cards, so the credits are gathered,
@@ -50,7 +52,7 @@ const credits = [
     ))
   }
 </ul>
-{credits.length > 0 && <p class="fine-print article-list__credits">Illustrations: {credits.join(' ')}</p>}
+{showCredits && credits.length > 0 && <p class="fine-print article-list__credits">Illustrations: {credits.join(' ')}</p>}
 
 <style>
   .article-list__credits {
@@ -78,12 +80,16 @@ const credits = [
   }
 
   /* Three across when there is room; the hairline moves between the
-     columns. :nth-child(3n + 1) is the first card of each row, and
-     :nth-child(n + 4) is every card after the first row. */
+     columns. Every card gets the same padding either side so all three
+     are exactly the same width (and their pictures the same height);
+     the negative margin on the list lets the outer cards still line up
+     with the edge of the page. :nth-child(3n + 1) is the first card of
+     each row, and :nth-child(n + 4) is every card after the first row. */
   @media (min-width: 48rem) {
     .article-list {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       row-gap: var(--space-5);
+      margin-inline: calc(-1 * var(--space-5));
     }
 
     .article-list__item {
@@ -93,12 +99,7 @@ const credits = [
     }
 
     .article-list__item:nth-child(3n + 1) {
-      padding-left: 0;
       border-left: 0;
-    }
-
-    .article-list__item:nth-child(3n) {
-      padding-right: 0;
     }
 
     .article-list__item:nth-child(n + 4) {

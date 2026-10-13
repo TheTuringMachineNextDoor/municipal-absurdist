@@ -1,35 +1,114 @@
 ---
-// The front page: the lead story, then everything else, newest first.
-// The comic, recurring features and newsletter signup join it later.
+// The front page. Laid out like a newspaper's, not a blog feed:
+//
+//   lead story (two-thirds)      | latest headlines (one-third)
+//   a band for each section that has stories
+//   the comic (two-thirds)       | recurring features (one-third)
+//   the newsletter box
+//
+// The parts are written below in the order a phone shows them (lead,
+// latest, features, comic, sections, newsletter). On a wide screen CSS
+// grid moves them into the arrangement above; see the styles.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LeadStory from '../components/LeadStory.astro';
-import ArticleList from '../components/ArticleList.astro';
+import LatestList from '../components/LatestList.astro';
+import SectionBand from '../components/SectionBand.astro';
+import ComicSlot from '../components/ComicSlot.astro';
+import FeaturesStrip from '../components/FeaturesStrip.astro';
+import NewsletterBox from '../components/NewsletterBox.astro';
+import { sections } from '../data/sections';
+import { getIllustration } from '../lib/illustrations';
 import { getPublishedArticles, summarize } from '../lib/articles';
 
-const articles = await getPublishedArticles();
+const all = await getPublishedArticles(); // newest first
+
+// Comics have their own slot, so they stay out of the news columns.
+const comics = all.filter((a) => a.data.section === 'comic');
+const news = all.filter((a) => a.data.section !== 'comic');
 
 // The lead is the newest article marked "featured"; failing that, the
 // newest article of any kind.
-const leadArticle = articles.find((a) => a.data.featured) ?? articles[0];
+const leadArticle = news.find((a) => a.data.featured) ?? news[0];
 const lead = leadArticle && (await summarize(leadArticle));
-const rest = await Promise.all(articles.filter((a) => a !== leadArticle).map(summarize));
-const restItems = rest.map(({ sectionHref, date, ...card }) => card);
+const others = await Promise.all(news.filter((a) => a !== leadArticle).map(summarize));
+
+// The side column: the four newest after the lead.
+const latest = others.slice(0, 4);
+
+// A band for each section with anything in it (the lead aside), in
+// masthead order, three stories at most.
+const bands = sections
+  .filter((section) => section.slug !== 'comic')
+  .map((section) => ({
+    section,
+    items: others
+      .filter((o) => o.sectionHref === `/${section.slug}`)
+      .slice(0, 3)
+      .map(({ sectionName, sectionHref, date, ...card }) => card),
+  }))
+  .filter((band) => band.items.length > 0);
+
+const comicArticle = comics[0];
+const comic = comicArticle && (await summarize(comicArticle));
+
+// Every picture must be credited on the page. The lead and the comic
+// carry their own; the bands' credits are gathered here, duplicates
+// dropped, and printed once at the foot of the page.
+const bandCredits = [
+  ...new Set(
+    bands.flatMap((band) => band.items).map((item) => item.imageCredit ?? getIllustration(item.image).credit),
+  ),
+];
 ---
 
 <BaseLayout mastheadAs="h1">
   {
     lead ? (
-      <>
-        <LeadStory {...lead} highlighted />
+      <div class="front">
+        <div class="front__lead">
+          <LeadStory {...lead} highlighted />
+        </div>
 
-        {restItems.length > 0 && (
-          <section class="latest" aria-labelledby="latest-heading">
-            <hr class="rule--thick-thin" />
-            <h2 id="latest-heading" class="latest__heading">Also in This Edition</h2>
-            <ArticleList items={restItems} />
-          </section>
+        {latest.length > 0 && (
+          <div class="front__latest">
+            <LatestList items={latest} />
+          </div>
         )}
-      </>
+
+        <div class="front__features">
+          <FeaturesStrip />
+        </div>
+
+        <div class="front__comic">
+          <ComicSlot
+            comic={
+              comic && {
+                href: comic.href,
+                title: comic.title,
+                caption: comic.dek,
+                image: comic.image,
+                imageAlt: comic.imageAlt,
+                imageCredit: comic.imageCredit,
+              }
+            }
+          />
+        </div>
+
+        {bands.length > 0 && (
+          <div class="front__sections">
+            {bands.map((band) => (
+              <SectionBand name={band.section.name} href={`/${band.section.slug}`} items={band.items} />
+            ))}
+            {bandCredits.length > 0 && (
+              <p class="fine-print front__credits">Illustrations: {bandCredits.join(' ')}</p>
+            )}
+          </div>
+        )}
+
+        <div class="front__newsletter">
+          <NewsletterBox />
+        </div>
+      </div>
     ) : (
       <p class="edition-empty">
         The first edition is delayed by circumstances entirely within our control. The
@@ -40,16 +119,53 @@ const restItems = rest.map(({ sectionHref, date, ...card }) => card);
 </BaseLayout>
 
 <style>
-  .latest {
-    margin-top: var(--space-7);
+  /* A phone: one column, in the order the parts are written above. */
+  .front {
+    display: grid;
+    gap: var(--space-6);
   }
 
-  .latest__heading {
-    margin: var(--space-4) 0 var(--space-5);
-    font-family: var(--font-label);
-    font-size: var(--text-lg);
-    letter-spacing: 0.12em;
+  /* minmax(0, ...) on the columns and min-width: 0 here let a column
+     shrink below the width of its widest word or picture, which is what
+     stops a grid from pushing the page sideways. */
+  .front > * {
+    min-width: 0;
+  }
+
+  .front__credits {
+    margin: var(--space-5) 0 0;
+    font-style: italic;
     text-align: center;
+  }
+
+  /* A desk: two-thirds and one-third, with named areas. Each part is
+     assigned to its area whatever order it was written in. */
+  @media (min-width: 60rem) {
+    .front {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      grid-template-areas:
+        'lead     latest'
+        'sections sections'
+        'comic    features'
+        'news     news';
+      column-gap: var(--space-6);
+      row-gap: var(--space-7);
+    }
+
+    .front__lead { grid-area: lead; }
+    .front__sections { grid-area: sections; }
+    .front__comic { grid-area: comic; }
+    .front__newsletter { grid-area: news; }
+
+    /* The narrow column takes a hairline down its left side. */
+    .front__latest,
+    .front__features {
+      padding-left: var(--space-6);
+      border-left: var(--rule-hair) solid var(--rule);
+    }
+
+    .front__latest { grid-area: latest; }
+    .front__features { grid-area: features; }
   }
 
   .edition-empty {
