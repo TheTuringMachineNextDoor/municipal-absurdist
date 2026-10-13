@@ -1,0 +1,498 @@
+---
+// Policy Reversal: a five-letter word game in which the administration
+// changes its answer to stay out of reach. The rules live in
+// src/lib/games/policy-reversal.ts; this page is the board, the
+// keyboard, and the script that joins them.
+import GameLayout from '../../layouts/GameLayout.astro';
+import ResultsCard from '../../components/games/ResultsCard.astro';
+
+const developing = import.meta.env.DEV;
+const keyRows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+---
+
+<GameLayout
+  title="Policy Reversal"
+  standfirst="Guess the five-letter word. The administration reserves the right to change it whenever you get close."
+>
+  <Fragment slot="rules">
+    <ul class="list-ornament">
+      <li>Guess a five-letter word. Type it, or use the keys on the screen, then press Enter.</li>
+      <li>
+        A <strong>filled yellow</strong> tile is the right letter in the right place. A
+        <strong>thick outlined</strong> tile is the right letter in the wrong place. A
+        <strong>grey</strong> tile is not in the word.
+      </li>
+      <li>
+        The administration has not settled on a word. After every guess it adopts whichever
+        position leaves it the most room, without ever contradicting what it has already told you.
+      </li>
+      <li>There is no limit on guesses. You win by leaving it one word and naming it. Fewer guesses is better.</li>
+      <li>One round a day, the same for every reader. A new one is printed at midnight, Central time.</li>
+    </ul>
+  </Fragment>
+
+  <div class="pr" data-pr>
+    <p class="pr__statement" data-pr-statement>
+      The administration has a word in mind and is entirely committed to it.
+    </p>
+    <p class="label pr__remaining" data-pr-remaining></p>
+
+    <!-- Finished guesses are added here by the script, one <li> each. -->
+    <ol class="pr__grid" data-pr-grid aria-label="Your guesses"></ol>
+
+    <!-- The row being typed. Hidden from screen readers: typing is
+         announced through the status line below instead. -->
+    <div class="pr__row pr__row--current" data-pr-current aria-hidden="true">
+      {[0, 1, 2, 3, 4].map(() => <span class="pr__tile" />)}
+    </div>
+
+    <p class="pr__message" role="status" data-pr-message></p>
+
+    <div class="pr__keyboard" data-pr-keyboard>
+      {
+        keyRows.map((row, index) => (
+          <div class="pr__keys">
+            {index === 2 && (
+              <button type="button" class="pr__key pr__key--wide" data-pr-key="Enter">Enter</button>
+            )}
+            {[...row].map((letter) => (
+              <button type="button" class="pr__key" data-pr-key={letter}>{letter}</button>
+            ))}
+            {index === 2 && (
+              <button type="button" class="pr__key pr__key--wide" data-pr-key="Backspace" aria-label="Delete">Del</button>
+            )}
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Each finished guess is read aloud from here, letter by letter. -->
+    <p class="visually-hidden" role="status" data-pr-live></p>
+  </div>
+
+  <ResultsCard>
+    {
+      developing && (
+        <button type="button" class="pr__replay" data-pr-replay>Play again (development only)</button>
+      )
+    }
+  </ResultsCard>
+</GameLayout>
+
+<script>
+  import { ANSWERS, GUESSES } from '../../data/policy-reversal-words';
+  import { respond, SOLVED, type Pattern } from '../../lib/games/policy-reversal';
+  import { chicagoDateKey, dayNumber, formatDateKey, seededShuffle } from '../../lib/games/daily';
+  import { readStats, recordResult } from '../../lib/games/stats';
+  import { showResults } from '../../lib/games/results';
+
+  const GAME_ID = 'policy-reversal';
+  const PROGRESS_KEY = 'absurdist:game:policy-reversal:progress';
+  const POSITIONS_PER_DAY = 300;
+  const MARK_WORDS: Record<string, string> = { g: 'right place', y: 'wrong place', x: 'absent' };
+  const MARK_SQUARES: Record<string, string> = { g: '■', y: '▣', x: '□' };
+
+  // What the administration says after each guess, in turn.
+  const STATEMENTS = [
+    'The administration thanks you for your input and has revised its position accordingly.',
+    'A spokesman clarified that the earlier word was never the word.',
+    'The administration stands by its answer, which is a different one.',
+    'Officials say the word has not changed, only the letters in it.',
+    'The position has evolved. The administration rejects the term “reversal.”',
+    'A review has found that your last guess was correct at the time and is no longer.',
+    'The administration is confident in its word and would prefer not to say it.',
+    'Sources describe the word as final, pending further guesses.',
+  ];
+  const CORNERED = 'The administration has one position left and is said to be considering it carefully.';
+
+  // Ranks by number of guesses; fewer is better.
+  const RANKS = [
+    { upTo: 4, name: 'Chief of Staff', blurb: 'You knew the word before the administration did. This is, in fact, the job.' },
+    { upTo: 5, name: 'Lobbyist', blurb: 'You got the answer you wanted in very few meetings. Nobody will ask how.' },
+    { upTo: 7, name: 'Press Secretary', blurb: 'You pinned it down in the end and can now deny that it was ever in doubt.' },
+    { upTo: 9, name: 'Committee Member', blurb: 'Progress was made. A subcommittee has been formed to determine how.' },
+    { upTo: Infinity, name: 'Concerned Citizen', blurb: 'You asked a great many questions and were eventually given an answer, to get rid of you.' },
+  ];
+  const rankFor = (guesses: number) => RANKS.find((rank) => guesses <= rank.upTo)!;
+
+  const root = document.querySelector<HTMLElement>('[data-pr]');
+  const resultsCard = document.querySelector<HTMLElement>('[data-results]');
+  if (root && resultsCard) play(root, resultsCard);
+
+  function play(root: HTMLElement, resultsCard: HTMLElement) {
+    const find = <T extends HTMLElement>(hook: string) => root.querySelector<T>(`[data-pr-${hook}]`)!;
+    const grid = find('grid');
+    const currentRow = find('current');
+    const currentTiles = [...currentRow.querySelectorAll<HTMLElement>('.pr__tile')];
+    const statement = find('statement');
+    const remaining = find('remaining');
+    const message = find('message');
+    const live = find('live');
+    const keys = new Map(
+      [...root.querySelectorAll<HTMLButtonElement>('[data-pr-key]')].map((key) => [key.dataset.prKey!, key]),
+    );
+
+    // Every accepted guess, unpacked from one long string into a set.
+    const accepted = new Set<string>();
+    for (let i = 0; i < GUESSES.length; i += 5) accepted.add(GUESSES.slice(i, i + 5));
+
+    const today = chicagoDateKey();
+    const yesterday = chicagoDateKey(new Date(Date.now() - 86_400_000));
+    // Today's positions: a different 300 of the answers each day, the
+    // same 300 for every reader.
+    const startingPositions = seededShuffle(ANSWERS, dayNumber(today)).slice(0, POSITIONS_PER_DAY);
+
+    let positions = startingPositions;
+    let rows: { word: string; pattern: Pattern }[] = [];
+    let typed = '';
+    let done = false;
+
+    // ----- Saving a round in progress, so a refresh does not lose it -----
+    const saveProgress = () => {
+      try {
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify({ date: today, words: rows.map((r) => r.word) }));
+      } catch {
+        // Not saved; the round carries on regardless.
+      }
+    };
+    const savedWords = (): string[] => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? 'null');
+        return saved?.date === today && Array.isArray(saved.words) ? saved.words : [];
+      } catch {
+        return [];
+      }
+    };
+
+    // ----- Drawing -----
+    function drawTyped() {
+      currentTiles.forEach((tile, i) => {
+        tile.textContent = typed[i] ?? '';
+        tile.classList.toggle('pr__tile--typed', i < typed.length);
+      });
+    }
+
+    function drawRow(word: string, pattern: Pattern) {
+      const row = document.createElement('li');
+      row.className = 'pr__row';
+      // The whole row is described in words; the tiles are decoration.
+      row.setAttribute(
+        'aria-label',
+        `${word.toUpperCase()}: ${[...word].map((l, i) => `${l.toUpperCase()} ${MARK_WORDS[pattern[i]]}`).join(', ')}`,
+      );
+      [...word].forEach((letter, i) => {
+        const tile = document.createElement('span');
+        tile.className = `pr__tile pr__tile--${pattern[i]}`;
+        tile.setAttribute('aria-hidden', 'true');
+        tile.textContent = letter;
+        row.append(tile);
+      });
+      grid.append(row);
+
+      // Colour the keyboard. A key never goes back to a weaker mark.
+      const strength: Record<string, number> = { x: 1, y: 2, g: 3 };
+      [...word].forEach((letter, i) => {
+        const key = keys.get(letter);
+        if (!key) return;
+        const had = key.dataset.mark;
+        if (!had || strength[pattern[i]] > strength[had]) {
+          key.dataset.mark = pattern[i];
+          key.setAttribute('aria-label', `${letter}, ${MARK_WORDS[pattern[i]]}`);
+        }
+      });
+    }
+
+    function drawStatus() {
+      remaining.textContent = rows.length ? `Positions still open to the administration: ${positions.length}` : '';
+      if (rows.length) {
+        statement.textContent = positions.length === 1 ? CORNERED : STATEMENTS[(rows.length - 1) % STATEMENTS.length];
+      }
+    }
+
+    // ----- Playing -----
+    /** Apply one guess. `quiet` is used when replaying a saved round. */
+    function guess(word: string, quiet = false) {
+      const reply = respond(positions, word);
+      positions = reply.positions;
+      rows.push({ word, pattern: reply.pattern });
+      drawRow(word, reply.pattern);
+      drawStatus();
+      if (!quiet) {
+        live.textContent = `${grid.lastElementChild?.getAttribute('aria-label')}. ${remaining.textContent}.`;
+        saveProgress();
+      }
+      if (reply.pattern === SOLVED) finish(word);
+    }
+
+    function submit() {
+      if (done) return;
+      if (typed.length < 5) {
+        message.textContent = 'Five letters are required. The form is quite clear.';
+        return;
+      }
+      if (!accepted.has(typed)) {
+        message.textContent = 'The Bureau does not recognise that word.';
+        currentRow.classList.remove('pr__row--refused');
+        void currentRow.offsetWidth; // restart the shake animation
+        currentRow.classList.add('pr__row--refused');
+        return;
+      }
+      message.textContent = '';
+      const word = typed;
+      typed = '';
+      drawTyped();
+      guess(word);
+    }
+
+    function press(key: string) {
+      if (done) return;
+      if (key === 'Enter') submit();
+      else if (key === 'Backspace') { typed = typed.slice(0, -1); message.textContent = ''; drawTyped(); }
+      else if (/^[a-z]$/.test(key) && typed.length < 5) { typed += key; message.textContent = ''; drawTyped(); }
+    }
+
+    function reveal(guesses: number, shareGrid: string, word: string, stats = readStats(GAME_ID)) {
+      const rank = rankFor(guesses);
+      const shareText = [
+        `Policy Reversal, ${formatDateKey(today)}`,
+        `Cornered in ${guesses} · ${rank.name}`,
+        shareGrid,
+        `${location.origin}${location.pathname}`,
+      ].join('\n');
+
+      root.hidden = true;
+      showResults(resultsCard, {
+        score: `${guesses} ${guesses === 1 ? 'guess' : 'guesses'}`,
+        rank: rank.name,
+        blurb: rank.blurb,
+        shareText,
+        stats,
+        note: `The administration’s final position was “${word.toUpperCase()}.” A fresh round is printed at midnight, Central time.`,
+      });
+    }
+
+    function finish(word: string) {
+      done = true;
+      const shareGrid = rows.map((row) => [...row.pattern].map((mark) => MARK_SQUARES[mark]).join('')).join('\n');
+      const stats = recordResult(
+        GAME_ID,
+        today,
+        yesterday,
+        // The grid and the word are kept so the result can be shown again later today.
+        { score: rows.length, marks: [], detail: JSON.stringify({ shareGrid, word }) },
+        true, // fewer guesses is better
+      );
+      reveal(rows.length, shareGrid, word, stats);
+    }
+
+    // ----- Keys, on screen and off -----
+    for (const [name, button] of keys) button.addEventListener('click', () => press(name));
+
+    document.addEventListener('keydown', (event) => {
+      if (done || event.altKey || event.ctrlKey || event.metaKey) return;
+      // Someone tabbing through the on-screen keys presses Enter to
+      // press the key they are on; leave that to the button. (A key
+      // that was merely clicked with a mouse also has focus, but not
+      // the keyboard kind, so Enter still submits the word.)
+      const target = event.target;
+      if (
+        (event.key === 'Enter' || event.key === ' ') &&
+        target instanceof Element &&
+        target.matches('[data-pr-key]:focus-visible')
+      ) {
+        return;
+      }
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      if (key === 'Enter' || key === 'Backspace' || /^[a-z]$/.test(key)) {
+        event.preventDefault();
+        press(key);
+      }
+    });
+
+    // ----- Development only: play again without waiting for midnight -----
+    resultsCard.querySelector('[data-pr-replay]')?.addEventListener('click', () => {
+      positions = startingPositions;
+      rows = [];
+      typed = '';
+      done = false;
+      grid.replaceChildren();
+      for (const key of keys.values()) delete key.dataset.mark;
+      statement.textContent = 'The administration has a word in mind and is entirely committed to it.';
+      drawStatus();
+      drawTyped();
+      resultsCard.hidden = true;
+      root.hidden = false;
+    });
+
+    // ----- Begin -----
+    const saved = readStats(GAME_ID);
+    if (saved.lastPlayed === today && saved.lastResult?.detail) {
+      // Already finished today: show that result again.
+      done = true;
+      const { shareGrid, word } = JSON.parse(saved.lastResult.detail);
+      reveal(saved.lastResult.score, shareGrid, word, saved);
+    } else {
+      // Replay any guesses made earlier today. The administration's
+      // replies are worked out afresh and come out the same.
+      for (const word of savedWords()) if (!done && accepted.has(word)) guess(word, true);
+    }
+  }
+</script>
+
+<!-- `is:global` because the guess rows are made by the script, and
+     Astro's scoped styles only reach elements written in this file.
+     Every rule starts with .pr, so nothing leaks out. -->
+<style is:global>
+  .pr {
+    text-align: center;
+    --tile: clamp(2.6rem, 14vw, 3.5rem);
+    --absent: #dedbd3;
+  }
+
+  .pr[hidden] {
+    display: none;
+  }
+
+  .pr__statement {
+    min-height: 3.2em;
+    max-width: 30rem;
+    margin: 0 auto var(--space-2);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .pr__remaining {
+    min-height: 1.4em;
+    margin-bottom: var(--space-3);
+  }
+
+  .pr__grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pr__row {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-1);
+    margin-bottom: var(--space-1);
+  }
+
+  /* A tile. Empty: a hairline box. */
+  .pr__tile {
+    display: grid;
+    place-items: center;
+    width: var(--tile);
+    height: var(--tile);
+    border: var(--rule-hair) solid var(--ink-soft);
+    font-family: var(--font-headline);
+    font-size: calc(var(--tile) * 0.55);
+    font-weight: var(--weight-headline);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .pr__tile--typed {
+    border-color: var(--ink);
+  }
+
+  /* The three marks differ in shape as well as colour: filled yellow,
+     a thick outline, and a flat grey. */
+  .pr__tile--g {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .pr__tile--y {
+    border: 4px solid var(--ink);
+  }
+
+  .pr__tile--x {
+    border-color: var(--absent);
+    background: var(--absent);
+    color: var(--ink-soft);
+  }
+
+  /* A refused word: the row shakes its head. */
+  .pr__row--refused {
+    animation: pr-refuse 300ms;
+  }
+
+  @keyframes pr-refuse {
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-4px); }
+  }
+
+  .pr__message {
+    min-height: 1.6em;
+    margin: var(--space-2) 0;
+    color: var(--accent-text);
+  }
+
+  .pr__keyboard {
+    display: grid;
+    gap: var(--space-1);
+    max-width: 32rem;
+    margin-inline: auto;
+  }
+
+  .pr__keys {
+    display: flex;
+    justify-content: center;
+    gap: 0.2rem;
+  }
+
+  .pr__key {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 2.75rem;
+    height: 3rem;
+    padding: 0;
+    border: var(--rule-hair) solid var(--ink-soft);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .pr__key--wide {
+    flex: 1.6 1 0;
+    max-width: 4.5rem;
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+  }
+
+  .pr__key:hover {
+    border-color: var(--ink);
+  }
+
+  .pr__key[data-mark='g'] {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .pr__key[data-mark='y'] {
+    border: 3px solid var(--ink);
+  }
+
+  .pr__key[data-mark='x'] {
+    border-color: var(--absent);
+    background: var(--absent);
+    color: var(--ink-soft);
+  }
+
+  .pr__replay {
+    margin-top: var(--space-3);
+    padding: var(--space-1) var(--space-3);
+    border: var(--rule-hair) dashed var(--ink-soft);
+    background: none;
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+</style>

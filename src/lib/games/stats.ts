@@ -15,7 +15,16 @@ export interface GameStats {
   /** The date key ("2026-10-13") of the last finished round. */
   lastPlayed: string | null;
   /** What happened in that round, so it can be shown again on return. */
-  lastResult: { score: number; marks: boolean[] } | null;
+  lastResult: RoundResult | null;
+}
+
+export interface RoundResult {
+  score: number;
+  /** One entry per question, true if right. Games without questions
+      leave it empty. */
+  marks: boolean[];
+  /** Anything else a game wants back, as text (e.g. its share grid). */
+  detail?: string;
 }
 
 const empty: GameStats = { played: 0, best: 0, streak: 0, lastPlayed: null, lastResult: null };
@@ -36,14 +45,21 @@ export function recordResult(
   gameId: string,
   dateKey: string,
   yesterdayKey: string,
-  result: { score: number; marks: boolean[] },
+  result: RoundResult,
+  /** Pass true for games where a low score is the good one. */
+  lowerIsBetter = false,
 ): GameStats {
   const stats = readStats(gameId);
   if (stats.lastPlayed === dateKey) return stats; // today already counted
 
   const next: GameStats = {
     played: stats.played + 1,
-    best: Math.max(stats.best, result.score),
+    best:
+      stats.played === 0
+        ? result.score
+        : lowerIsBetter
+          ? Math.min(stats.best, result.score)
+          : Math.max(stats.best, result.score),
     streak: stats.lastPlayed === yesterdayKey ? stats.streak + 1 : 1,
     lastPlayed: dateKey,
     lastResult: result,

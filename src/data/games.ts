@@ -25,9 +25,9 @@ export const games: Game[] = [
   {
     slug: 'policy-reversal',
     name: 'Policy Reversal',
-    blurb: 'Guess the word in six tries. The administration reserves the right to change it after the fourth.',
+    blurb: 'Guess the five-letter word. The administration reserves the right to change it whenever you get close.',
     image: 'pantagruel-06.webp',
-    live: false,
+    live: true,
   },
   {
     slug: 'personality-quiz',
