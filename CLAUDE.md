@@ -71,12 +71,12 @@ Ask before adding any dependency not listed here.
 
 **The look:** an old newspaper crossed with an illustrated literary journal (*The Public Domain Review*). Authentic, collected, slightly eccentric, but clean, readable, and modern in usability.
 
-**Masthead:** "The Municipal Absurdist" on one line in a newspaper blackletter (`Manufacturing Consent`), no vignette. Beneath it the slogan in grey italic: *The world, as it unfortunately is*. Dateline bar below between thin rules.
+**Masthead:** "The Municipal Absurdist" on one line in `Iceberg` (for now), no vignette. Beneath it the slogan in grey italic: *The world, as it unfortunately is*. Dateline bar below between thin rules.
 
 **Small mark:** a side profile of a formally dressed, pipe-smoking gentleman seated on a Victorian high-tank toilet, using a laptop, drawn straight-faced in engraved line style. Needs a detailed version and a simplified silhouette for favicon and avatar sizes. Use a placeholder SVG until the artist delivers.
 
 **Type** (Google Fonts):
-- Nameplate (masthead and footer): `Manufacturing Consent`
+- Nameplate (masthead and footer): `Iceberg` (for now)
 - Blackletter drop cap: `UnifrakturMaguntia`
 - Headlines: `Alegreya` (medium, 500)
 - Body: `Alegreya`

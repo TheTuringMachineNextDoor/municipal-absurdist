@@ -1,5 +1,5 @@
 ---
-// The nameplate: "The Municipal Absurdist" in a newspaper blackletter,
+// The nameplate: "The Municipal Absurdist" in Iceberg (for now),
 // the slogan beneath it, and the dateline bar.
 //
 // `as` chooses the wrapping tag. The front page passes "h1" because there
@@ -73,11 +73,11 @@ const builtIso = built.toISOString().slice(0, 10);
   }
 
   /* The name is sized by the width of the window (vw) so that it stays
-     on one line: it is about 9 times its font-size wide, so 10vw just
+     on one line: it is about 10 times its font-size wide, so 8.6vw just
      fills a phone and the clamp stops it growing past 6rem on a desk. */
   .masthead__link {
     font-family: var(--font-masthead);
-    font-size: clamp(1.75rem, 10vw, 6rem);
+    font-size: clamp(1.5rem, 8.6vw, 6rem);
     color: var(--ink);
     text-decoration: none;
     white-space: nowrap;
