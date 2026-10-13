@@ -1,0 +1,19 @@
+---
+// A highlighter stroke: a band of marker drawn behind a short piece of
+// text, a little wider than the words and slightly tilted, with rough
+// ends where the pen was put down and lifted.
+//
+// Put it inside the element to be highlighted, and give that element
+// the class "has-marker". The colour is the --highlighter token. The
+// styles are in global.css under "Marker stroke".
+//
+// (The older .highlighter class is for long headlines that wrap onto
+// several lines. This one is for a single short label, and can be
+// animated because it is a real element rather than a background.)
+---
+
+<svg class="marker" viewBox="0 0 200 40" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <!-- An uneven band: the top and bottom edges wander, and the two
+       ends are ragged, as a chisel-tipped marker leaves them. -->
+  <path d="M4 9 C20 5 38 10 60 7 S104 4 128 8 S172 5 195 6 L198 12 L194 19 L199 25 L195 33 C170 37 150 32 124 35 S80 33 54 36 S22 33 6 36 L2 30 L6 23 L1 16 Z" />
+</svg>

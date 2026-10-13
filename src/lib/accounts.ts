@@ -53,7 +53,44 @@ export async function currentProfile(): Promise<{ id: string; display_name: stri
   if (!supabase || !user) return null;
   const { data } = await supabase.from('profiles').select('id, display_name, is_admin').eq('id', user.id).maybeSingle();
   // A profile is made automatically at sign-up; this covers the instant before.
-  return data ?? { id: user.id, display_name: 'A Reader', is_admin: false };
+  const profile = data ?? { id: user.id, display_name: 'A Reader', is_admin: false };
+  rememberRole(profile.is_admin);
+  return profile;
+}
+
+// Whether the signed-in reader is an administrator is remembered in the
+// browser, so the masthead can show "Editor-in-Chief" at once on every
+// page without asking the database each time. This is for show only:
+// changing it by hand changes a label and nothing else, because the
+// database decides what anyone may actually do.
+const ROLE_KEY = 'absurdist:role';
+
+function rememberRole(isAdmin: boolean) {
+  try {
+    localStorage.setItem(ROLE_KEY, isAdmin ? 'admin' : 'reader');
+  } catch {
+    // Not remembered; the masthead will ask again next time.
+  }
+}
+
+/** The role remembered from the last time the profile was read, or
+    null if it has not been read in this browser yet. */
+export function rememberedRole(): 'admin' | 'reader' | null {
+  try {
+    const role = localStorage.getItem(ROLE_KEY);
+    return role === 'admin' || role === 'reader' ? role : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Forget the role, on signing out. */
+export function forgetRole() {
+  try {
+    localStorage.removeItem(ROLE_KEY);
+  } catch {
+    // Nothing to forget.
+  }
 }
 
 /** "13 October 2026", for the date on a letter. */

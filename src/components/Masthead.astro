@@ -8,6 +8,7 @@
 
 import TopHat from './TopHat.astro';
 import Stroke from './Stroke.astro';
+import MarkerStroke from './MarkerStroke.astro';
 
 interface Props {
   as?: 'h1' | 'p';
@@ -47,6 +48,19 @@ const builtIso = built.toISOString().slice(0, 10);
       <a class="dateline__button" href="/login" data-account-out>Log In</a>
       <a class="dateline__button dateline__button--outlined" href="/signup" data-account-out>Sign Up</a>
       <a class="dateline__button dateline__button--outlined" href="/account" data-account-in hidden>My Account</a>
+      <!-- For an administrator. The aria-label is the link's whole name
+           for a screen reader, in place of the two pieces of text. -->
+      <a
+        class="dateline__button dateline__chief has-marker"
+        href="/account"
+        aria-label="Editor-in-Chief (admin account)"
+        data-account-chief
+        hidden
+      >
+        <MarkerStroke />
+        <span class="dateline__chief-text">Editor-in-Chief</span>
+        <span class="dateline__admin">Admin</span>
+      </a>
     </span>
     <time class="dateline__item" datetime={builtIso} data-dateline>{builtLabel}</time>
     <!-- The clock. The dashes show for an instant, or for good if the
@@ -90,12 +104,29 @@ const builtIso = built.toISOString().slice(0, 10);
      reads the browser's storage only; it does not download the accounts
      library, so it costs readers nothing. -->
 <script>
-  import { looksSignedIn } from '../lib/accounts';
+  import { currentProfile, looksSignedIn, rememberedRole } from '../lib/accounts';
 
   const links = document.querySelector<HTMLElement>('[data-account-links]');
   if (links && looksSignedIn()) {
-    for (const link of links.querySelectorAll<HTMLElement>('[data-account-out]')) link.hidden = true;
-    links.querySelector<HTMLElement>('[data-account-in]')!.hidden = false;
+    const show = (hook: 'in' | 'chief') => {
+      for (const link of links.querySelectorAll<HTMLElement>('a')) link.hidden = true;
+      links.querySelector<HTMLElement>(`[data-account-${hook}]`)!.hidden = false;
+    };
+
+    // An administrator is shown "Editor-in-Chief". The role is read from
+    // what the browser remembers, so this is instant. It is a label
+    // only: what an administrator may do is enforced by the database.
+    const role = rememberedRole();
+    show(role === 'admin' ? 'chief' : 'in');
+
+    // Not remembered yet in this browser (a first visit after signing
+    // in): ask the database once. This is the only time the masthead
+    // downloads the accounts library.
+    if (role === null) {
+      currentProfile().then((profile) => {
+        if (profile?.is_admin) show('chief');
+      });
+    }
   }
 </script>
 
@@ -164,6 +195,28 @@ const builtIso = built.toISOString().slice(0, 10);
 
   .dateline__button[hidden] {
     display: none;
+  }
+
+  /* The administrator's link: ink on the highlighter, with a small
+     "Admin" tag after the title. The marker stroke itself is styled in
+     global.css. The text sits above the stroke (z-index) so that it is
+     the stroke that is blended into the paper, not the letters. */
+  .dateline__chief {
+    color: var(--ink);
+  }
+
+  .dateline__chief-text,
+  .dateline__admin {
+    position: relative;
+  }
+
+  .dateline__admin {
+    margin-left: 0.4em;
+    padding: 0 0.35em;
+    border: var(--rule-hair) solid currentColor;
+    font-size: 0.72em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
   .dateline__account {

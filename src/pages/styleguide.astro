@@ -13,6 +13,7 @@ import ComicSlot from '../components/ComicSlot.astro';
 import FeaturesStrip from '../components/FeaturesStrip.astro';
 import NewsletterBox from '../components/NewsletterBox.astro';
 import GameNotice from '../components/games/GameNotice.astro';
+import MarkerStroke from '../components/MarkerStroke.astro';
 import Pagination from '../components/Pagination.astro';
 import ResultsCard from '../components/games/ResultsCard.astro';
 // Credits are read from the same file that documents the images, so the
@@ -204,6 +205,23 @@ const sampleMore = [
         <span class="fine-print">Ink over a yellow marker stroke. For the occasional headline, not every one.</span>
       </p>
       <p class="sg-h sg-h2 sg-highlighted"><span class="highlighter">Mayor Underlines Own Remarks for Emphasis</span></p>
+    </div>
+    <div class="sg-specimen">
+      <p class="sg-meta">
+        <span class="label">Marker stroke</span><code>&lt;MarkerStroke&gt; .has-marker</code>
+        <span class="fine-print">
+          A highlighter band behind one short label, in <code>--highlighter</code>. Drawn across when it appears. Used
+          in the masthead for the signed-in administrator, whose link reads as below; ordinary readers see “My
+          Account”.
+        </span>
+      </p>
+      <p class="label sg-marker">
+        <a class="has-marker sg-marker__link" href="/account" aria-label="Editor-in-Chief (admin account)">
+          <MarkerStroke />
+          <span class="sg-marker__text">Editor-in-Chief</span>
+          <span class="sg-marker__admin">Admin</span>
+        </a>
+      </p>
     </div>
     <div class="sg-specimen">
       <p class="sg-meta"><span class="label">Headline with label and dek</span><code>.label .dek</code></p>
@@ -726,5 +744,31 @@ const sampleMore = [
     display: block;
     height: 0.75rem;
     background: var(--ink);
+  }
+
+  /* The administrator's masthead link, as a specimen. The same few
+     rules as in Masthead.astro. */
+  .sg-marker {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .sg-marker__link {
+    padding: 0.1em 0.6em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .sg-marker__text,
+  .sg-marker__admin {
+    position: relative;
+  }
+
+  .sg-marker__admin {
+    margin-left: 0.4em;
+    padding: 0 0.35em;
+    border: var(--rule-hair) solid currentColor;
+    font-size: 0.72em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 </style>

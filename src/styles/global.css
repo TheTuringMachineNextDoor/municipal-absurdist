@@ -198,6 +198,45 @@ blockquote {
   color: var(--paper);
 }
 
+/* ---------- Marker stroke ---------- */
+
+/* A highlighter band behind a short label (MarkerStroke.astro). The
+   parent gets .has-marker; the band is stretched a little past the
+   text on every side and tilted a degree or so, like a quick pass with
+   a real pen.
+
+   `multiply` darkens what is beneath instead of covering it, so the
+   letters show through as ink does through highlighter, and the paper
+   takes the yellow. The slight transparency lets the paper's own tone
+   through as well. */
+.has-marker {
+  position: relative;
+  display: inline-block;
+}
+
+.marker {
+  position: absolute;
+  top: -0.15em;
+  left: -0.45em;
+  width: calc(100% + 0.9em);
+  height: calc(100% + 0.3em);
+  max-width: none;
+  fill: var(--highlighter);
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+  transform: rotate(-1.2deg);
+  pointer-events: none; /* clicks go to the link underneath */
+  /* Drawn across from left to right when it first appears. Readers who
+     ask for less motion get it already drawn (see the rule at the foot
+     of this file, which switches off all animation). */
+  animation: marker-draw 400ms cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes marker-draw {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
+
 /* ---------- Gliding stroke ---------- */
 
 /* After the menu on paulmccartney.com. The line (Stroke.astro) lies

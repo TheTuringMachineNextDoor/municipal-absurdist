@@ -17,6 +17,10 @@
      a colour for words or thin lines, this darker mustard is used. It
      passes WCAG AA on the paper (5.5 to 1). */
   --accent-text: #86600A;
+  /* Highlighter-pen yellow: brighter and greener than the accent, as a
+     real marker is. Only for the marker stroke (MarkerStroke.astro),
+     which lays it over text with `multiply` so the ink shows through. */
+  --highlighter: #FFE84D;
 
   /* Type families. Each has a fallback stack for the moment before the
      Google Font arrives, and for readers whose network blocks it. */

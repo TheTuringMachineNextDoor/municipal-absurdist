@@ -98,6 +98,7 @@ Ask before adding any dependency not listed here.
 --rule: #2B2622;
 --accent: #F2C12E;  /* Wes Anderson yellow: fills, strokes, underlines; use sparingly */
 --accent-text: #86600A; /* mustard: the accent wherever it is type or a thin line (AA on paper) */
+--highlighter: #FFE84D; /* highlighter-pen yellow: only for the marker stroke (MarkerStroke.astro) */
 ```
 No dark mode at launch: the paper is the identity.
 

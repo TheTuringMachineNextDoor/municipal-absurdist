@@ -98,7 +98,7 @@ const articles = Object.fromEntries(
 </BaseLayout>
 
 <script>
-  import { currentProfile, currentUser, formatLetterDate, getSupabase } from '../lib/accounts';
+  import { currentProfile, currentUser, forgetRole, formatLetterDate, getSupabase } from '../lib/accounts';
 
   const root = document.querySelector<HTMLElement>('[data-account]');
   if (root) run(root);
@@ -259,6 +259,7 @@ const articles = Object.fromEntries(
     // ---- Leaving ----
     find('signout').addEventListener('click', async () => {
       await supabase.auth.signOut();
+      forgetRole();
       location.assign('/');
     });
   }
