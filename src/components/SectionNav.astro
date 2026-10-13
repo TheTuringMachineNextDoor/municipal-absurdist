@@ -5,12 +5,23 @@ import { sections } from '../data/sections';
 // Astro.url.pathname is the page being built, e.g. "/politics/some-story".
 // Its first segment tells us which section to mark as current.
 const current = Astro.url.pathname.split('/').filter(Boolean)[0];
+
+// The Store sits after the sections in the nav but is not a section:
+// articles cannot be filed under it, so it stays out of sections.ts.
+const links = [...sections, { slug: 'store', name: 'Store', ink: '#8A4B2A' }]; // russet
+
+// The rest live behind the menu button.
+const morePages = [
+  { href: '/about', name: 'About' },
+  { href: '/contact', name: 'Contact' },
+  { href: '/archive', name: 'Archive' },
+];
 ---
 
-<nav class="section-nav sheet" aria-label="Sections">
+<nav class="section-nav sheet" aria-label="Main">
   <ul class="section-nav__list">
     {
-      sections.map((section, index) => (
+      links.map((section, index) => (
         <li>
           <a
             class="section-nav__link"
@@ -34,12 +45,60 @@ const current = Astro.url.pathname.split('/').filter(Boolean)[0];
         </li>
       ))
     }
+    <li class="section-nav__more">
+      <!-- <details> is the browser's own show/hide element: clicking the
+           <summary> opens it, with no script needed and with keyboard
+           and screen-reader support built in. -->
+      <details class="more-menu" data-more-menu>
+        <summary class="more-menu__button">
+          <span class="visually-hidden">More pages</span>
+          <svg viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" focusable="false">
+            <path d="M0 1 H20 M0 7 H20 M0 13 H20" stroke="currentColor" stroke-width="1.5" fill="none" />
+          </svg>
+        </summary>
+        <ul class="more-menu__list">
+          {
+            morePages.map((page) => (
+              <li>
+                <a
+                  class="more-menu__link"
+                  href={page.href}
+                  aria-current={`/${current}` === page.href ? 'page' : undefined}
+                >
+                  {page.name}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </details>
+    </li>
   </ul>
 </nav>
 
+<!-- <details> stays open until its button is clicked again. These lines
+     also close it on Escape or a click anywhere else, as a menu should. -->
+<script is:inline>
+  (function () {
+    var menu = document.querySelector('[data-more-menu]');
+    if (!menu) return;
+    document.addEventListener('click', function (event) {
+      if (menu.open && !menu.contains(event.target)) menu.open = false;
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && menu.open) {
+        menu.open = false;
+        menu.querySelector('summary').focus();
+      }
+    });
+  })();
+</script>
+
 <style>
   .section-nav__list {
+    position: relative; /* the menu panel is placed against this on a phone */
     display: flex;
+    align-items: center;
     flex-wrap: wrap; /* six sections do not fit one line on a phone; let them fall to two */
     justify-content: center;
     gap: 0 var(--space-5);
@@ -102,9 +161,70 @@ const current = Astro.url.pathname.split('/').filter(Boolean)[0];
     color: var(--ink);
   }
 
+  /* The menu button: three bars, with a thumb-sized target. */
+  .more-menu__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    cursor: pointer;
+    list-style: none; /* removes the default disclosure triangle */
+  }
+
+  .more-menu__button::-webkit-details-marker {
+    display: none;
+  }
+
+  .more-menu__button:hover,
+  .more-menu[open] .more-menu__button {
+    color: var(--accent);
+  }
+
+  /* The panel: paper, a hairline box, no shadow. On a phone it spans the
+     nav; on a wider screen it hangs from the button's right edge. */
+  .more-menu__list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    margin: 0;
+    padding: var(--space-2) 0;
+    list-style: none;
+    background: var(--paper);
+    border: var(--rule-hair) solid var(--rule);
+    text-align: center;
+  }
+
+  .more-menu__link {
+    display: block;
+    padding: var(--space-2) var(--space-5);
+    font-family: var(--font-label);
+    letter-spacing: 0.12em;
+    text-decoration: none;
+  }
+
+  .more-menu__link:hover,
+  .more-menu__link[aria-current='page'] {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+
   @media (min-width: 40rem) {
     .section-nav__list {
-      gap: 0 var(--space-7);
+      gap: 0 var(--space-6);
+    }
+
+    .section-nav__more {
+      position: relative;
+    }
+
+    .more-menu__list {
+      left: auto;
+      min-width: 11rem;
+      text-align: left;
     }
   }
 </style>

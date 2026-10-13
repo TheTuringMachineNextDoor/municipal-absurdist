@@ -38,9 +38,16 @@ const builtIso = built.toISOString().slice(0, 10);
   <p class="masthead__slogan">The world, as it unfortunately is</p>
 
   <div class="dateline label">
-    <span class="dateline__item dateline__item--start">Vol. I &middot; No. 1</span>
+    <!-- Accounts arrive in Phase 9. Until then these lead to pages
+         that do not exist yet. -->
+    <span class="dateline__item dateline__item--start dateline__account">
+      <a class="dateline__button" href="/login">Log In</a>
+      <a class="dateline__button dateline__button--outlined" href="/signup">Sign Up</a>
+    </span>
     <time class="dateline__item" datetime={builtIso} data-dateline>{builtLabel}</time>
-    <span class="dateline__item dateline__item--end">Price: Your Attention</span>
+    <!-- The clock. The dashes show for an instant, or for good if the
+         reader has scripts switched off. -->
+    <time class="dateline__item dateline__item--end dateline__clock" data-clock>--:--:--</time>
   </div>
 </header>
 
@@ -60,6 +67,18 @@ const builtIso = built.toISOString().slice(0, 10);
     });
     var pad = function (n) { return String(n).padStart(2, '0'); };
     el.setAttribute('datetime', now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()));
+
+    // The ticking clock: hours, minutes and seconds on the reader's own
+    // watch, redrawn once a second.
+    var clock = document.querySelector('[data-clock]');
+    if (!clock) return;
+    var tick = function () {
+      var t = new Date();
+      clock.textContent = t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+      clock.setAttribute('datetime', pad(t.getHours()) + ':' + pad(t.getMinutes()) + ':' + pad(t.getSeconds()));
+    };
+    tick();
+    setInterval(tick, 1000);
   })();
 </script>
 
@@ -107,6 +126,7 @@ const builtIso = built.toISOString().slice(0, 10);
   /* The dateline bar: small caps between two thin rules. */
   .dateline {
     display: grid;
+    align-items: center;
     grid-template-columns: 1fr;
     gap: 0 var(--space-4);
     margin-top: var(--space-3);
@@ -116,7 +136,41 @@ const builtIso = built.toISOString().slice(0, 10);
     font-size: var(--text-xs);
   }
 
+  /* Every digit the same width, so the clock does not shiver as it ticks. */
+  .dateline__clock {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  .dateline__account {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+  }
+
+  /* Quiet buttons: small caps, square, and for Sign Up a hairline box. */
+  .dateline__button {
+    padding: 0.1em 0.6em;
+    border: var(--rule-hair) solid transparent;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .dateline__button--outlined {
+    border-color: var(--ink-soft);
+  }
+
+  .dateline__button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
   @media (min-width: 40rem) {
+    .dateline__account {
+      justify-content: flex-start;
+      margin-bottom: 0;
+    }
+
     .dateline {
       grid-template-columns: 1fr auto 1fr;
       font-size: var(--text-sm);
