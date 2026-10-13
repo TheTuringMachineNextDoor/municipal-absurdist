@@ -39,8 +39,8 @@ export const site = {
   // says the register is not yet open, likes are kept in the reader's
   // own browser, and the Letters desk is shut.
   supabase: {
-    url: '',
-    anonKey: '',
+    url: 'https://tsstoddeztokjrfazdda.supabase.co',
+    anonKey: 'sb_publishable_9_KTDvhKPp9XJtl7NsMxwQ_AmVUlc-r',
   },
 
   // The Tally form on the Contact page (/contact). A share link, as above.
