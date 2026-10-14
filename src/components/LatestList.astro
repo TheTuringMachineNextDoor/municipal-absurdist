@@ -92,7 +92,7 @@ const credits = [
   }
 
   /* With a thumbnail: the words on the left, the picture on the right,
-     both starting at the top. */
+     centred top to bottom against the words beside it. */
   .latest-list__item--pictured {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 4.5rem;
@@ -104,8 +104,8 @@ const credits = [
      (where faces usually are), in a hairline frame. */
   .latest-list__thumb {
     display: block;
+    align-self: center;
     aspect-ratio: 1;
-    margin-top: 0.2rem;
     border: var(--rule-hair) solid var(--rule);
   }
 
