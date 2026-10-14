@@ -9,6 +9,7 @@
 import TopHat from './TopHat.astro';
 import Stroke from './Stroke.astro';
 import MarkerStroke from './MarkerStroke.astro';
+import Flourish from './Flourish.astro';
 
 interface Props {
   as?: 'h1' | 'p';
@@ -38,7 +39,12 @@ const builtIso = built.toISOString().slice(0, 10);
        first; CSS places them left and right. -->
   <div class="masthead__top">
   <div class="masthead__plate">
-  <div class="masthead__hat"><TopHat /></div>
+  <!-- The hat, with a curling sprig either side of it. -->
+  <div class="masthead__crest">
+    <div class="masthead__sprig"><Flourish kind="swash" /></div>
+    <div class="masthead__hat"><TopHat /></div>
+    <div class="masthead__sprig"><Flourish kind="swash" flipped /></div>
+  </div>
   <Tag class="masthead__name">
     <!-- Plain text in a link: sighted readers and screen readers get
          the same thing, once. -->
@@ -62,6 +68,8 @@ const builtIso = built.toISOString().slice(0, 10);
       height="243"
     />
   </div>
+  <!-- A flourish to close off the nameplate. -->
+  <div class="masthead__flourish"><Flourish /></div>
   </div>
 
   <aside class="ear ear--left" aria-labelledby="ear-support">
@@ -259,10 +267,31 @@ const builtIso = built.toISOString().slice(0, 10);
     }
   }
 
-  /* The hat sits centred just above the name. */
+  /* The hat sits centred just above the name, a sprig at each side. */
+  .masthead__crest {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+  }
+
   .masthead__hat {
+    flex: none;
     width: clamp(2.5rem, 7vw, 4rem);
-    margin: 0 auto var(--space-1);
+  }
+
+  .masthead__sprig {
+    flex: none;
+    width: clamp(3rem, 9vw, 6rem);
+    padding-bottom: 0.35rem;
+  }
+
+  /* The flourish under the slogan: as wide as the slogan and its
+     cupids, and never wider than the nameplate. */
+  .masthead__flourish {
+    width: min(100%, 30rem);
+    margin: var(--space-1) auto 0;
   }
 
   .masthead__name {
