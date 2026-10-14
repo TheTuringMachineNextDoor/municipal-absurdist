@@ -46,7 +46,22 @@ const builtIso = built.toISOString().slice(0, 10);
          not kept after the click: the front page loads with it gone. -->
     <a class="masthead__link has-stroke" href="/">The Municipal Absurdist<Stroke /></a>
   </Tag>
-  <p class="masthead__slogan">The world, as it unfortunately is</p>
+  <!-- The slogan, with a cupid either side blowing a horn toward it.
+       The two are the same picture; the right-hand one is turned to
+       face the other way. They are decoration, so they are hidden from
+       screen readers (alt="" and aria-hidden). -->
+  <div class="masthead__herald">
+    <img class="masthead__cupid" src="/illustrations/cupid.webp" alt="" aria-hidden="true" width="240" height="243" />
+    <p class="masthead__slogan">The world, as it unfortunately is</p>
+    <img
+      class="masthead__cupid masthead__cupid--right"
+      src="/illustrations/cupid.webp"
+      alt=""
+      aria-hidden="true"
+      width="240"
+      height="243"
+    />
+  </div>
   </div>
 
   <aside class="ear ear--left" aria-labelledby="ear-support">
@@ -273,6 +288,29 @@ const builtIso = built.toISOString().slice(0, 10);
 
   .masthead__link:hover {
     color: var(--ink);
+  }
+
+  /* The slogan in the middle, a cupid at each end, all on one line. */
+  .masthead__herald {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(var(--space-2), 2vw, var(--space-5));
+    margin-top: var(--space-1);
+  }
+
+  /* Small, but large enough to make out. The width follows the window
+     between a phone's 2.25rem and a desk's 4.5rem; the height follows
+     the picture's own proportions. */
+  .masthead__cupid {
+    flex: none;
+    width: clamp(2.25rem, 6vw, 4.5rem);
+    height: auto;
+  }
+
+  /* Turned to face left, so both horns point in at the slogan. */
+  .masthead__cupid--right {
+    transform: scaleX(-1);
   }
 
   .masthead__slogan {

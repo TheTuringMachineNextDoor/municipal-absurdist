@@ -678,5 +678,18 @@
     "width": 800,
     "height": 840,
     "placeholder": true
+  },
+  {
+    "file": "cupid.webp",
+    "title": "A Cupid Blowing a Horn",
+    "alt": "Engraving of a winged cupid in a trailing ribbon, blowing a long horn.",
+    "creator": "Unknown",
+    "source": "Supplied by the editor as cupid-blowing-horn.jpg; cut out of its ground and recoloured in ink for the masthead",
+    "license": "Not confirmed",
+    "credit": "Placeholder image. Source and rights to be confirmed before publication.",
+    "width": 240,
+    "height": 243,
+    "placeholder": true,
+    "needsSource": true
   }
 ]
