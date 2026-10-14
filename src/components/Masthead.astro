@@ -52,22 +52,16 @@ const builtIso = built.toISOString().slice(0, 10);
          not kept after the click: the front page loads with it gone. -->
     <a class="masthead__link has-stroke" href="/">The Municipal Absurdist<Stroke /></a>
   </Tag>
-  <!-- The slogan, with a cupid either side blowing a horn toward it.
-       The two are the same picture; the right-hand one is turned to
-       face the other way. They are decoration, so they are hidden from
-       screen readers (alt="" and aria-hidden). -->
+  <!-- One line under the name: the slogan in the middle, a cupid
+       either side of it blowing a horn toward it, and a vine outside
+       each cupid, trailing away to the edge. The two cupids are one
+       picture and the two vines one drawing; in each pair the right-hand
+       one is mirrored. All four are decoration, so they are hidden from
+       screen readers. -->
   <div class="masthead__herald">
+    <div class="masthead__vine"><Flourish kind="vine" /></div>
     <img class="masthead__cupid" src="/illustrations/cupid.webp" alt="" aria-hidden="true" width="240" height="243" />
-    <!-- The slogan, and under it a vine reaching out to each cupid.
-         They share the cupids' height, so they add no height of their
-         own to the masthead. -->
-    <div class="masthead__motto">
-      <p class="masthead__slogan">The world, as it unfortunately is</p>
-      <div class="masthead__vines">
-        <Flourish kind="vine" />
-        <Flourish kind="vine" flipped />
-      </div>
-    </div>
+    <p class="masthead__slogan">The world, as it unfortunately is</p>
     <img
       class="masthead__cupid masthead__cupid--right"
       src="/illustrations/cupid.webp"
@@ -76,6 +70,7 @@ const builtIso = built.toISOString().slice(0, 10);
       width="240"
       height="243"
     />
+    <div class="masthead__vine"><Flourish kind="vine" flipped /></div>
   </div>
   </div>
 
@@ -294,19 +289,6 @@ const builtIso = built.toISOString().slice(0, 10);
     padding-bottom: 0.35rem;
   }
 
-  /* The two vines under the slogan: side by side, each a little under
-     half the slogan's width, with a gap between them in the middle. */
-  .masthead__vines {
-    display: flex;
-    justify-content: space-between;
-    gap: 8%;
-    margin-top: calc(-1 * var(--space-1));
-  }
-
-  .masthead__vines :global(.flourish) {
-    width: 46%;
-  }
-
   .masthead__name {
     margin: 0;
     font-weight: 400;
@@ -332,13 +314,38 @@ const builtIso = built.toISOString().slice(0, 10);
     color: var(--ink);
   }
 
-  /* The slogan in the middle, a cupid at each end, all on one line. */
+  /* One line: vine, cupid, slogan, cupid, vine, centred on the slogan. */
   .masthead__herald {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(var(--space-2), 2vw, var(--space-5));
+    gap: clamp(var(--space-2), 1.5vw, var(--space-4));
     margin-top: var(--space-1);
+  }
+
+  /* A vine takes whatever room is left outside its cupid, up to 11rem.
+     On a phone there is none to spare (the slogan and two cupids fill
+     the line), so the vines are left out there. */
+  .masthead__vine {
+    display: none;
+  }
+
+  @media (min-width: 40rem) {
+    .masthead__vine {
+      display: block;
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 11rem;
+    }
+  }
+
+  /* Just after the ears appear (72rem) they take so much of the line
+     that a vine would be squeezed to a squiggle, so the vines wait
+     until the window is a little wider. */
+  @media (min-width: 72rem) and (max-width: 82rem) {
+    .masthead__vine {
+      display: none;
+    }
   }
 
   /* Small, but large enough to make out. The width follows the window
@@ -356,7 +363,8 @@ const builtIso = built.toISOString().slice(0, 10);
   }
 
   .masthead__slogan {
-    margin: 0 0 var(--space-1);
+    flex: none;
+    margin: 0;
     font-size: clamp(1.25rem, 1.05rem + 1vw, 1.75rem);
     font-style: italic;
     line-height: var(--leading-snug);
