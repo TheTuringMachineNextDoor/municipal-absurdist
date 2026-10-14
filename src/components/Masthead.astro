@@ -31,6 +31,13 @@ const builtIso = built.toISOString().slice(0, 10);
 ---
 
 <header class="masthead sheet">
+  <!-- The top of the masthead: the nameplate in the middle and, on a
+       wide screen, an "ear" either side of it. Ears are the small boxed
+       notices beside a newspaper's name. They are written after the
+       nameplate here, so that a screen reader meets the paper's name
+       first; CSS places them left and right. -->
+  <div class="masthead__top">
+  <div class="masthead__plate">
   <div class="masthead__hat"><TopHat /></div>
   <Tag class="masthead__name">
     <!-- Plain text in a link: sighted readers and screen readers get
@@ -40,6 +47,25 @@ const builtIso = built.toISOString().slice(0, 10);
     <a class="masthead__link has-stroke" href="/">The Municipal Absurdist<Stroke /></a>
   </Tag>
   <p class="masthead__slogan">The world, as it unfortunately is</p>
+  </div>
+
+  <aside class="ear ear--left" aria-labelledby="ear-support">
+    <p id="ear-support" class="ear__title">Support the Paper</p>
+    <p class="ear__text">
+      No owner and no advertisers. It is paid for by its readers, when it is paid for at all.
+    </p>
+    <p class="ear__link"><a href="/support">Keep the presses warm</a></p>
+  </aside>
+
+  <aside class="ear ear--right" aria-labelledby="ear-wanted">
+    <p id="ear-wanted" class="ear__title">Writers &amp; Artists Wanted</p>
+    <p class="ear__text">
+      The paper is short of both. Reports, cartoons and curiosities are read by an editor and printed under your
+      name.
+    </p>
+    <p class="ear__link"><a href="/submit">Submit your work</a></p>
+  </aside>
+  </div>
 
   <div class="dateline label">
     <!-- For a signed-in reader the script at the foot of this file
@@ -134,6 +160,82 @@ const builtIso = built.toISOString().slice(0, 10);
   .masthead {
     padding-top: var(--space-7);
     text-align: center;
+  }
+
+  /* ---- The ears ----
+     Hidden until the screen is wide enough to hold them beside the
+     name (72rem, about 1150 pixels). Below that there is no room, and
+     both pages are in the menu. */
+  .ear {
+    display: none;
+  }
+
+  @media (min-width: 72rem) {
+    /* Three columns: ear, nameplate, ear. `grid-template-areas` names
+       the places, so each part can be put in its place whatever order
+       it is written in. */
+    .masthead__top {
+      display: grid;
+      grid-template-columns: 13rem minmax(0, 1fr) 13rem;
+      grid-template-areas: 'left plate right';
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .masthead__plate { grid-area: plate; }
+    .ear--left { grid-area: left; }
+    .ear--right { grid-area: right; }
+
+    /* With an ear either side there is less room for the name, so here
+       it is sized to fit the space between them. The name is about 11.7
+       times its font-size wide. The space is the window's width less
+       the two ears, the gaps and the page's side margins, which come to
+       about 34rem; dividing what is left by 11.9 gives a size that
+       always fits, and 4.75rem is still the most it grows to. */
+    .masthead__top .masthead__link {
+      font-size: min(4.75rem, calc((min(100vw, var(--page-max)) - 34rem) / 11.9));
+    }
+
+    /* An ear: a small double-ruled box, like a classified notice. */
+    .ear {
+      display: block;
+      padding: var(--space-3);
+      border: var(--rule-thick) double var(--rule);
+      text-align: center;
+    }
+
+    .ear__title {
+      margin: 0 0 var(--space-2);
+      padding-bottom: var(--space-2);
+      border-bottom: var(--rule-hair) solid var(--rule);
+      font-family: var(--font-label);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      line-height: 1.25;
+    }
+
+    .ear__text {
+      margin: 0 0 var(--space-2);
+      font-size: var(--text-xs);
+      font-style: italic;
+      line-height: 1.35;
+      color: var(--ink-soft);
+    }
+
+    .ear__link {
+      margin: 0;
+      font-family: var(--font-label);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+    }
+
+    .ear__link a {
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.2em;
+    }
   }
 
   /* The hat sits centred just above the name. */
