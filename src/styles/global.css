@@ -22,7 +22,15 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
+  /* The paper, with a faint grain so it is not a flat screen colour.
+     The grain is a tiny SVG drawn by the browser: `feTurbulence` makes
+     random speckle, and `feColorMatrix` turns it into dark-grey specks
+     at 5% strength. It is one small square, repeated; `stitchTiles`
+     makes the edges of the square match so no seams show. No image file
+     is downloaded. To make the grain stronger or fainter, change the
+     0.05 near the end of the address. */
+  background-color: var(--paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16 0 0 0 0 0.15 0 0 0 0 0.12 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23g)'/%3E%3C/svg%3E");
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--text-base);
