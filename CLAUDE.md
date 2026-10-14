@@ -92,7 +92,7 @@ Ask before adding any dependency not listed here.
 
 **Color tokens** (`src/styles/tokens.css`):
 ```css
---paper: #EFF4E7;   /* the pale green of Eye-Ease notebook paper (matched by eye) */
+--paper: #EAF6DB;   /* the pale green of Eye-Ease notebook paper (matched by eye) */
 --ink: #1A1714;     /* near-black */
 --ink-soft: #4A443D;
 --rule: #2B2622;
