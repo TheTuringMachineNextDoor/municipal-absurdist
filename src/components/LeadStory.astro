@@ -4,6 +4,7 @@
 // byline. It fills whatever column it is put in.
 import Illustration from './Illustration.astro';
 import { formatDate } from '../lib/articles';
+import { highlighterStyle } from '../lib/highlighter';
 import { getIllustration, isPortrait } from '../lib/illustrations';
 
 interface Props {
@@ -18,13 +19,17 @@ interface Props {
   /** Shown above the headline; leave out on a section's own page. */
   sectionName?: string;
   sectionHref?: string;
-  /** Set the headline over yellow marker strokes. */
-  highlighted?: boolean;
+  /** Set the headline over marker strokes: `true` for the house yellow
+      (the front page), or a colour such as "#D4998F" for a section's
+      own (its section front). */
+  highlighted?: boolean | string;
 }
 
 const { href, title, dek, author, date, image, imageAlt, imageCredit, sectionName, sectionHref, highlighted = false } =
   Astro.props;
 const { label, iso } = formatDate(date);
+// A colour was given: swap the yellow stroke for one in that colour.
+const strokeStyle = typeof highlighted === 'string' ? highlighterStyle(highlighted) : undefined;
 
 // A landscape picture sits above the headline. An upright one would be
 // cropped to a forehead up there, so it stands beside the words instead.
@@ -44,8 +49,8 @@ const upright = isPortrait(getIllustration(image));
         </p>
       )
     }
-    <h2 class:list={['lead__title', { 'lead__title--highlighted': highlighted }]}>
-      <a href={href}>{highlighted ? <span class="highlighter">{title}</span> : title}</a>
+    <h2 class:list={['lead__title', { 'lead__title--highlighted': Boolean(highlighted) }]}>
+      <a href={href}>{highlighted ? <span class="highlighter" style={strokeStyle}>{title}</span> : title}</a>
     </h2>
     <p class="dek lead__dek">{dek}</p>
     <p class="label lead__byline">

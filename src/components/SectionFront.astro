@@ -15,6 +15,7 @@ import Pagination from './Pagination.astro';
 import Stroke from './Stroke.astro';
 import { perPage, sectionContents, sectionPageHref, type Section } from '../lib/section-front';
 import { summarize } from '../lib/articles';
+import { sectionHighlight } from '../lib/highlighter';
 
 interface Props {
   section: Section;
@@ -69,7 +70,9 @@ const empty = !lead && onThisPage.length === 0;
   lead && (
     <div class:list={['front-top', { 'front-top--alone': elsewhere.length === 0 }]}>
       <div class="front-top__lead">
-        <LeadStory {...lead} sectionName={undefined} sectionHref={undefined} />
+        {/* The lead headline is highlighted in the section's own colour.
+            (On the front page the lead keeps the house yellow.) */}
+        <LeadStory {...lead} sectionName={undefined} sectionHref={undefined} highlighted={sectionHighlight(section.ink)} />
       </div>
       {elsewhere.length > 0 && (
         <div class="front-top__aside">
