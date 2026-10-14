@@ -26,6 +26,26 @@ rnd = random.Random(seed)
 INK = '#2B2622'
 
 
+# A strip of the page kept free of marks: the dateline bar under the
+# masthead (the date, the clock, the account links), where a mark sits
+# right beside small type and looks like a fault rather than character.
+# Measured in pixels from the top of the page. Because the marks repeat
+# down the page, the same strip is clean in every repeat, which nobody
+# will notice.
+CLEAR_FROM, CLEAR_TO = 226, 306
+
+
+class Marks(list):
+    """The marks drawn so far, each remembered with how high and low it
+    reaches, so that any touching the clear strip can be left out."""
+
+    def add(self, svg, y, reach):
+        self.append((y - reach, y + reach, svg))
+
+    def kept(self):
+        return [svg for top, bottom, svg in self if bottom < CLEAR_FROM or top > CLEAR_TO]
+
+
 def n(x):
     """A number written as briefly as possible, to keep the file small."""
     return f'{x:.1f}'.rstrip('0').rstrip('.')
@@ -61,7 +81,7 @@ def wander(x, y, angle, length, steps, drift):
 
 def fine_layer(W, H):
     """Sharp marks: scratches, hairs, dust, specks, splatters."""
-    out = []
+    out = Marks()
     inside = lambda m: (rnd.uniform(m, W - m), rnd.uniform(m, H - m))
 
     # Scratches. Some long and faint, some short and hard; some broken
@@ -76,37 +96,39 @@ def fine_layer(W, H):
         if rnd.random() < 0.45:
             dash = f" stroke-dasharray='{' '.join(n(rnd.uniform(2, 40)) for _ in range(rnd.choice([2, 4, 6])))}'"
         d = wander(x, y, angle, length, rnd.randint(2, 6), rnd.uniform(0.02, 0.18))
-        out.append(f"<path d='{d}' fill='none' stroke-width='{width}' opacity='{rnd.uniform(.08,.24):.2f}'{dash}/>")
+        out.add(f"<path d='{d}' fill='none' stroke-width='{width}' opacity='{rnd.uniform(.08,.24):.2f}'{dash}/>", y, length)
 
     # Hairs and lint: thin lines that curl back on themselves.
     for _ in range(rnd.randint(5, 8)):
         x, y = inside(60)
         d = wander(x, y, rnd.uniform(0, math.tau), rnd.uniform(14, 70), rnd.randint(5, 9), rnd.uniform(0.5, 1.3))
-        out.append(f"<path d='{d}' fill='none' stroke-width='{rnd.choice([.35,.45,.6])}' stroke-linejoin='round' opacity='{rnd.uniform(.10,.22):.2f}'/>")
+        out.add(f"<path d='{d}' fill='none' stroke-width='{rnd.choice([.35,.45,.6])}' stroke-linejoin='round' opacity='{rnd.uniform(.10,.22):.2f}'/>", y, 70)
 
     # Dust: small uneven lumps, each its own shape.
     for _ in range(rnd.randint(16, 22)):
         x, y = inside(20)
-        out.append(f"<path d='{blob(x, y, rnd.uniform(.6, 2.6))}' opacity='{rnd.uniform(.10,.30):.2f}'/>")
+        out.add(f"<path d='{blob(x, y, rnd.uniform(.6, 2.6))}' opacity='{rnd.uniform(.10,.30):.2f}'/>", y, 8)
 
     # Speck clusters: a pinch of fine dots that landed together.
     for _ in range(rnd.randint(4, 6)):
         cx, cy = inside(40)
         spread = rnd.uniform(5, 22)
         for _ in range(rnd.randint(3, 9)):
-            out.append(
+            out.add(
                 f"<circle cx='{n(cx + rnd.gauss(0, spread))}' cy='{n(cy + rnd.gauss(0, spread))}' "
-                f"r='{n(rnd.uniform(.3, 1.1))}' opacity='{rnd.uniform(.10,.28):.2f}'/>"
+                f"r='{n(rnd.uniform(.3, 1.1))}' opacity='{rnd.uniform(.10,.28):.2f}'/>",
+                cy,
+                spread * 3,
             )
 
     # Splatters: one drop with smaller ones thrown off to one side.
     for _ in range(rnd.randint(2, 3)):
         cx, cy = inside(60)
-        out.append(f"<path d='{blob(cx, cy, rnd.uniform(2.5, 5), lump=.4)}' opacity='{rnd.uniform(.08,.16):.2f}'/>")
+        out.add(f"<path d='{blob(cx, cy, rnd.uniform(2.5, 5), lump=.4)}' opacity='{rnd.uniform(.08,.16):.2f}'/>", cy, 40)
         throw = rnd.uniform(0, math.tau)
         for _ in range(rnd.randint(3, 7)):
             dist, a = rnd.uniform(6, 30), throw + rnd.uniform(-0.6, 0.6)
-            out.append(f"<path d='{blob(cx + math.cos(a) * dist, cy + math.sin(a) * dist, rnd.uniform(.4, 1.6))}' opacity='{rnd.uniform(.08,.20):.2f}'/>")
+            out.add(f"<path d='{blob(cx + math.cos(a) * dist, cy + math.sin(a) * dist, rnd.uniform(.4, 1.6))}' opacity='{rnd.uniform(.08,.20):.2f}'/>", cy, 40)
 
     rnd.shuffle(out)
     # The filter pushes every edge about by a pixel or two according to a
@@ -115,44 +137,46 @@ def fine_layer(W, H):
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{W}' height='{H}'>"
         f"<filter id='r' x='-5%' y='-5%' width='110%' height='110%'><feTurbulence type='fractalNoise' baseFrequency='.035' numOctaves='2' seed='{seed % 97}'/>"
         "<feDisplacementMap in='SourceGraphic' scale='5'/></filter>"
-        f"<g filter='url(#r)' fill='{INK}' stroke='{INK}' stroke-linecap='round'>{''.join(out)}</g></svg>"
+        f"<g filter='url(#r)' fill='{INK}' stroke='{INK}' stroke-linecap='round'>{''.join(out.kept())}</g></svg>"
     )
 
 
 def soft_layer(W, H):
     """Soft marks: stains, spills, rings and smudges, blurred and faint."""
-    out = []
+    out = Marks()
     inside = lambda m: (rnd.uniform(m, W - m), rnd.uniform(m, H - m))
 
     # Spills: large uneven patches, barely darker than the paper.
     for _ in range(rnd.randint(3, 5)):
         x, y = inside(90)
-        out.append(f"<path d='{blob(x, y, rnd.uniform(14, 46), points=rnd.randint(7, 11), lump=.45)}' opacity='{rnd.uniform(.012,.03):.3f}'/>")
+        out.add(f"<path d='{blob(x, y, rnd.uniform(14, 46), points=rnd.randint(7, 11), lump=.45)}' opacity='{rnd.uniform(.012,.03):.3f}'/>", y, 80)
 
     # Rings: where a drop dried from the edge inward, or a cup stood.
     for _ in range(rnd.randint(1, 2)):
         x, y = inside(110)
-        out.append(
+        out.add(
             f"<path d='{blob(x, y, rnd.uniform(18, 52), points=rnd.randint(9, 12), lump=.12)}' fill='none' "
-            f"stroke-width='{n(rnd.uniform(1, 2.6))}' stroke-dasharray='{n(rnd.uniform(40,160))} {n(rnd.uniform(6,60))}' opacity='{rnd.uniform(.03,.06):.3f}'/>"
+            f"stroke-width='{n(rnd.uniform(1, 2.6))}' stroke-dasharray='{n(rnd.uniform(40,160))} {n(rnd.uniform(6,60))}' opacity='{rnd.uniform(.03,.06):.3f}'/>",
+            y,
+            75,
         )
 
     # Smudges: a thumb dragged across, wider than it is tall.
     for _ in range(rnd.randint(2, 4)):
         x, y = inside(70)
         rx, ry, turn = rnd.uniform(10, 34), rnd.uniform(2, 7), rnd.uniform(0, 180)
-        out.append(f"<ellipse cx='{n(x)}' cy='{n(y)}' rx='{n(rx)}' ry='{n(ry)}' transform='rotate({n(turn)} {n(x)} {n(y)})' opacity='{rnd.uniform(.018,.04):.3f}'/>")
+        out.add(f"<ellipse cx='{n(x)}' cy='{n(y)}' rx='{n(rx)}' ry='{n(ry)}' transform='rotate({n(turn)} {n(x)} {n(y)})' opacity='{rnd.uniform(.018,.04):.3f}'/>", y, 50)
 
     # Drips: small soft dots, like a fine spray.
     for _ in range(rnd.randint(8, 14)):
         x, y = inside(30)
-        out.append(f"<path d='{blob(x, y, rnd.uniform(2, 6), lump=.35)}' opacity='{rnd.uniform(.02,.05):.3f}'/>")
+        out.add(f"<path d='{blob(x, y, rnd.uniform(2, 6), lump=.35)}' opacity='{rnd.uniform(.02,.05):.3f}'/>", y, 24)
 
     return (
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{W}' height='{H}'>"
         f"<filter id='s' x='-10%' y='-10%' width='120%' height='120%'><feTurbulence type='fractalNoise' baseFrequency='.02' numOctaves='2' seed='{(seed * 7) % 89}'/>"
         "<feDisplacementMap in='SourceGraphic' scale='14'/><feGaussianBlur stdDeviation='2.2'/></filter>"
-        f"<g filter='url(#s)' fill='{INK}' stroke='{INK}'>{''.join(out)}</g></svg>"
+        f"<g filter='url(#s)' fill='{INK}' stroke='{INK}'>{''.join(out.kept())}</g></svg>"
     )
 
 
