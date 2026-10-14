@@ -10,10 +10,10 @@
   /* Colour. These five are the whole palette; see CLAUDE.md. */
   /* The paper: the pale green of "Eye-Ease" ledger and notebook paper,
      which was tinted to rest the eye. There is no published code for
-     that paper; this is a match by eye: light, but a clear fresh
-     green rather than a greyed one. The mustard accent text meets the AA contrast
+     that paper; this is a match by eye: a bright, luminous pale
+     green (the green channel is nearly full), not a greyed one. The mustard accent text meets the AA contrast
      standard on it. */
-  --paper: #EAF6DB;
+  --paper: #E3FBCE;
   --ink: #1A1714;     /* near-black */
   --ink-soft: #4A443D;
   --rule: #2B2622;
