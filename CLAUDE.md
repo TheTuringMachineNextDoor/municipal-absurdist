@@ -48,7 +48,7 @@ Ask before adding any dependency not listed here.
 - `name`, `role` (writer / illustrator / both), `standing` (auto / main / occasional: where they are listed on `/about`), `bio` (the Markdown body), `portrait`, `links`, `commissionsOpen` (bool), `tallyFormUrl`
 
 **Products** (`src/content/products/*.md`)
-- `title`, `kind` (print / merchandise), `artist` (ref, optional), `image`, `price` (whole dollars), `stripeLink`, `edition` (e.g. "1 of 50"), `available` (bool), `sample` (bool); the description is the Markdown body
+- `title`, `kind` (print / merchandise), `category` (for merchandise: pin / t-shirt / tote / notebook / mug), `artist` (ref, optional), `image`, `price` (whole dollars), `stripeLink`, `edition` (e.g. "1 of 50"), `available` (bool), `sample` (bool); the description is the Markdown body
 
 ---
 
@@ -60,7 +60,7 @@ Ask before adding any dependency not listed here.
 | `/[section]` and `/[section]/page/[n]` | Section front (`SectionFront.astro`): the section's lead story beside headlines from the rest of the paper, then cards with dates, then older pages (12 cards a page). The Comic front shows strips large in frames instead. |
 | `/[section]/[slug]` | Article |
 | `/contributors/[slug]` | A page for each contributor: bio, links, commission form (their own Tally form, shown when `commissionsOpen`), portfolio of pictures they drew, and articles they wrote. Helpers in `src/lib/contributors.ts`. Bylines on articles link here. There is no list page: the staff are listed on `/about`, and `/contributors` redirects there. |
-| `/store` and `/store/[slug]` | The Store: Art & Prints, Merchandise, and Commissions (contributors with `commissionsOpen`, linking to the form on their page). Each product has its own page with a Purchase button to its Stripe Payment Link; with no link it shows "Not Yet on Sale", and with `available: false`, "Sold Out". Helpers in `src/lib/store.ts`. |
+| `/store`, `/store/art`, `/store/merch`, `/store/[slug]` | The Store, modelled on The Public Domain Review's shop. `/store` is a front page of large cards ("From $X"). `/store/art` is the Art Shop: a gallery of every print, then a section per artist with a "Meet the Artist" panel, a commission button (to the form on their page, when `commissionsOpen`) and their prints, then prints from the archives. `/store/merch` is the Merch Shop: pins, T-shirts, totes, notebooks, mugs (a product's `category`; the shelves are `MERCH` in `src/lib/store.ts`). Each product has its own page with a Purchase button to its Stripe Payment Link; with no link it shows "Not Yet on Sale", and with `available: false`, "Sold Out". |
 | `/submit` | Write for Us / Draw for Us / Create for Us: what each desk wants, how work is credited, and a button to each desk's Tally form (`submissionForms` in `src/data/site.ts`) |
 | `/about` | What the paper is, what it stands for, why it is different and why it matters; then the staff: main writers and main artists with portraits, then occasional writers and artists as smaller lists. A contributor's `standing` (auto / main / occasional) decides which; auto means main after `MAIN_AFTER` pieces. |
 | `/support` | Donations by Stripe Payment Link (`donationLinks` in `src/data/site.ts`), plus other ways to help |

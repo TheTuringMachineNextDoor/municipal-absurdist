@@ -1,0 +1,302 @@
+---
+// The Art Shop, at /store/art.
+//
+//   The Gallery   every print, together
+//   The Artists   a section for each artist: who they are ("Meet the
+//                 Artist"), a way to commission them, and their prints
+//   From the Archives   old prints with no living artist
+//
+// An artist appears here once a product names them as its artist. The
+// commission button goes to the form on that artist's own page, and
+// only shows for artists who have commissions switched on.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Portrait from '../../components/Portrait.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { contributorPath, firstSentence, getContributors, roleLabel } from '../../lib/contributors';
+import { getIllustration } from '../../lib/illustrations';
+import { formatPrice, getProducts, makerOf, productPath, saleState } from '../../lib/store';
+
+const prints = (await getProducts()).filter((p) => p.product.data.kind === 'print');
+const people = await getContributors();
+
+// Group the prints under their artists, in the order of the staff list.
+const artists = people
+  .map(({ person }) => ({ person, prints: prints.filter((p) => p.artist?.id === person.id) }))
+  .filter((artist) => artist.prints.length > 0);
+const archive = prints.filter((p) => !p.artist);
+
+const credits = [...new Set(prints.map((p) => getIllustration(p.product.data.image).credit))];
+
+type Listed = (typeof prints)[number];
+const cardProps = ({ product, artist }: Listed) => {
+  const sale = saleState(product);
+  return {
+    href: productPath(product),
+    title: product.data.title,
+    image: product.data.image,
+    price: formatPrice(product.data.price),
+    edition: product.data.edition,
+    artist,
+    maker: makerOf(product),
+    notice: sale.canBuy ? undefined : sale.notice,
+  };
+};
+---
+
+<BaseLayout title="The Art Shop" description="Art prints by the artists of The Municipal Absurdist, and how to commission them.">
+  <header class="art-header">
+    <p class="label label--accent"><a href="/store">The Store</a></p>
+    <h1>The Art Shop</h1>
+    <p class="dek art-header__dek">
+      Prints of work made for this newspaper, by the people who made it. Each artist may also be hired, on
+      terms of their own.
+    </p>
+    <nav class="art-header__nav label" aria-label="Parts of the Art Shop">
+      <a href="#gallery">The Gallery</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="#artists">The Artists</a>
+      {
+        archive.length > 0 && (
+          <>
+            <span aria-hidden="true">&middot;</span>
+            <a href="#archives">From the Archives</a>
+          </>
+        )
+      }
+    </nav>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  <section class="art-section" id="gallery" aria-labelledby="gallery-heading">
+    <h2 id="gallery-heading" class="art-section__heading">The Gallery</h2>
+    {
+      prints.length > 0 ? (
+        <ul class="art-grid">
+          {prints.map((print) => (
+            <li><ProductCard {...cardProps(print)} /></li>
+          ))}
+        </ul>
+      ) : (
+        <p class="art-empty">The walls are bare at present. The artists have been told, and are drawing faster.</p>
+      )
+    }
+  </section>
+
+  <section class="art-section" id="artists" aria-labelledby="artists-heading">
+    <h2 id="artists-heading" class="art-section__heading">The Artists</h2>
+    {
+      artists.length === 0 && (
+        <p class="art-empty">No artist has yet hung work here. The hooks are up.</p>
+      )
+    }
+    {
+      artists.map(({ person, prints: theirs }) => (
+        <article class="artist" id={person.id} aria-labelledby={`${person.id}-name`}>
+          {/* Meet the Artist: who they are, and how to hire them. */}
+          <div class="artist__meet">
+            <Portrait name={person.data.name} portrait={person.data.portrait} size="large" />
+            <div>
+              <p class="label label--accent">Meet the Artist</p>
+              <h3 id={`${person.id}-name`} class="artist__name">{person.data.name}</h3>
+              <p class="label artist__role">{roleLabel(person.data.role)}</p>
+              <p class="artist__bio">{firstSentence(person.body ?? '')}</p>
+              <p class="artist__links">
+                <a href={contributorPath(person)}>Their page and published work</a>
+              </p>
+              {person.data.commissionsOpen ? (
+                <a class="artist__commission" href={`${contributorPath(person)}#commissions`}>
+                  Commission {person.data.name}
+                </a>
+              ) : (
+                <p class="label artist__closed">Not taking commissions at present</p>
+              )}
+            </div>
+          </div>
+
+          <h4 class="label artist__prints-heading">Prints by {person.data.name}</h4>
+          <ul class="art-grid">
+            {theirs.map((print) => (
+              <li><ProductCard {...cardProps(print)} /></li>
+            ))}
+          </ul>
+        </article>
+      ))
+    }
+  </section>
+
+  {
+    archive.length > 0 && (
+      <section class="art-section" id="archives" aria-labelledby="archives-heading">
+        <h2 id="archives-heading" class="art-section__heading">From the Archives</h2>
+        <p class="art-section__intro">
+          Old prints the paper admires, by artists no longer available for commission, or for comment.
+        </p>
+        <ul class="art-grid">
+          {archive.map((print) => (
+            <li><ProductCard {...cardProps(print)} /></li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {credits.length > 0 && <p class="fine-print art-credits">Pictures: {credits.join(' ')}</p>}
+</BaseLayout>
+
+<style>
+  .art-header {
+    text-align: center;
+  }
+
+  .art-header a {
+    text-decoration: none;
+  }
+
+  .art-header__dek {
+    max-width: 38rem;
+    margin-inline: auto;
+  }
+
+  .art-header__nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+  }
+
+  .art-header__nav a {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+
+  .art-section {
+    margin-top: var(--space-7);
+    /* When a link jumps here, stop a little above the heading. */
+    scroll-margin-top: var(--space-4);
+  }
+
+  .art-section__heading {
+    margin: 0 0 var(--space-5);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  .art-section__intro,
+  .art-empty {
+    max-width: var(--measure-article);
+    margin-bottom: var(--space-5);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* Two across on a phone, three on a tablet, four on a desk. */
+  .art-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40rem) {
+    .art-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .art-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* One artist: the introduction, then their prints. A hairline
+     separates one artist from the next. */
+  .artist {
+    scroll-margin-top: var(--space-4);
+  }
+
+  .artist + .artist {
+    margin-top: var(--space-7);
+    padding-top: var(--space-6);
+    border-top: var(--rule-hair) solid var(--rule);
+  }
+
+  /* Portrait above the words on a phone, beside them on a desk. */
+  .artist__meet {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    margin-bottom: var(--space-5);
+  }
+
+  @media (min-width: 40rem) {
+    .artist__meet {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--space-6);
+      align-items: start;
+    }
+  }
+
+  .artist__name {
+    margin-bottom: var(--space-1);
+    font-size: var(--text-h3);
+  }
+
+  .artist__role {
+    margin-bottom: var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .artist__bio {
+    max-width: var(--measure);
+    font-size: var(--text-lg);
+  }
+
+  .artist__links {
+    font-size: var(--text-sm);
+  }
+
+  /* The way to hire them: a square block of ink. */
+  .artist__commission {
+    display: inline-block;
+    padding: var(--space-2) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
+  .artist__commission:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .artist__closed {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .artist__prints-heading {
+    margin-bottom: var(--space-4);
+    font-size: var(--text-sm);
+  }
+
+  .art-credits {
+    margin: var(--space-6) 0 0;
+    font-style: italic;
+    text-align: center;
+  }
+</style>

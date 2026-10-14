@@ -124,6 +124,8 @@ const products = defineCollection({
     title: z.string(),
     // Which shelf of the Store it sits on.
     kind: z.enum(['print', 'merchandise']),
+    // For merchandise: which shelf of the Merch Shop. Ignored for prints.
+    category: z.preprocess(blankToUndefined, z.enum(['pin', 't-shirt', 'tote', 'notebook', 'mug']).optional()),
     // Leave empty for work from the archives or made by the paper itself.
     artist: z.preprocess(blankToUndefined, reference('contributors').optional()),
     image: optionalText,

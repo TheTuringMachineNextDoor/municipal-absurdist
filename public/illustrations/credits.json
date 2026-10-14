@@ -618,5 +618,65 @@
     "width": 400,
     "height": 480,
     "placeholder": true
+  },
+  {
+    "file": "store/t-shirt.svg",
+    "title": "T-shirt (specimen drawing)",
+    "alt": "Line drawing of a T-shirt printed with a top hat.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Specimen drawing made for The Municipal Absurdist. Not a photograph of the finished article.",
+    "width": 400,
+    "height": 480,
+    "placeholder": true
+  },
+  {
+    "file": "store/mug.svg",
+    "title": "Mug (specimen drawing)",
+    "alt": "Line drawing of a steaming mug printed with a top hat.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Specimen drawing made for The Municipal Absurdist. Not a photograph of the finished article.",
+    "width": 400,
+    "height": 480,
+    "placeholder": true
+  },
+  {
+    "file": "store/portrait-treasurer.svg",
+    "title": "The Treasurer",
+    "alt": "Line drawing of a thin man in spectacles and a yellow eyeshade, wearing a tie.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Drawn for The Municipal Absurdist. A specimen print, shown to fill the gallery.",
+    "width": 800,
+    "height": 840,
+    "placeholder": true
+  },
+  {
+    "file": "store/portrait-chief.svg",
+    "title": "The Chief of Police",
+    "alt": "Line drawing of a man with a walrus moustache in a peaked cap with a yellow badge.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Drawn for The Municipal Absurdist. A specimen print, shown to fill the gallery.",
+    "width": 800,
+    "height": 840,
+    "placeholder": true
+  },
+  {
+    "file": "store/portrait-citizen.svg",
+    "title": "A Concerned Citizen",
+    "alt": "Line drawing of a woman in spectacles and a wide hat with a yellow ornament.",
+    "creator": "The Municipal Absurdist",
+    "source": "Drawn for this site",
+    "license": "Own work",
+    "credit": "Drawn for The Municipal Absurdist. A specimen print, shown to fill the gallery.",
+    "width": 800,
+    "height": 840,
+    "placeholder": true
   }
 ]

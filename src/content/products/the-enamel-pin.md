@@ -1,6 +1,7 @@
 ---
 title: The Enamel Pin
 kind: merchandise
+category: pin
 image: store/enamel-pin.svg
 price: 9
 edition: Specimen listing.

@@ -194,10 +194,23 @@ export default config({
         kind: fields.select({
           label: 'Shelf',
           options: [
-            { label: 'Art and prints', value: 'print' },
-            { label: 'Merchandise', value: 'merchandise' },
+            { label: 'Art Shop (a print)', value: 'print' },
+            { label: 'Merch Shop', value: 'merchandise' },
           ],
           defaultValue: 'print',
+        }),
+        category: fields.select({
+          label: 'Kind of merchandise',
+          description: 'For merchandise only. Decides which shelf of the Merch Shop it sits on.',
+          options: [
+            { label: 'Not merchandise (a print)', value: '' },
+            { label: 'Pin', value: 'pin' },
+            { label: 'T-shirt', value: 't-shirt' },
+            { label: 'Tote', value: 'tote' },
+            { label: 'Notebook', value: 'notebook' },
+            { label: 'Mug', value: 'mug' },
+          ],
+          defaultValue: '',
         }),
         artist: fields.relationship({
           label: 'Artist',

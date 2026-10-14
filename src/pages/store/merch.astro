@@ -1,0 +1,151 @@
+---
+// The Merch Shop, at /store/merch: goods bearing the paper's name, on
+// five shelves (pins, T-shirts, totes, notebooks, mugs). A product sits
+// on the shelf named by its `category`. The shelves themselves are
+// listed in src/lib/store.ts (MERCH).
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { getIllustration } from '../../lib/illustrations';
+import { formatPrice, getProducts, makerOf, MERCH, productPath, saleState } from '../../lib/store';
+
+const goods = (await getProducts()).filter((p) => p.product.data.kind === 'merchandise');
+const shelves = MERCH.map((shelf) => ({ ...shelf, items: goods.filter((p) => p.product.data.category === shelf.id) }));
+// Anything filed as merchandise without a category still gets shown.
+const loose = goods.filter((p) => !p.product.data.category);
+
+const credits = [...new Set(goods.map((p) => getIllustration(p.product.data.image).credit))];
+---
+
+<BaseLayout title="The Merch Shop" description="Pins, T-shirts, totes, notebooks and mugs from The Municipal Absurdist.">
+  <header class="merch-header">
+    <p class="label label--accent"><a href="/store">The Store</a></p>
+    <h1>The Merch Shop</h1>
+    <p class="dek merch-header__dek">
+      Useful objects bearing the name of this newspaper, for readers who wish to be asked about it.
+    </p>
+    <nav class="merch-header__nav label" aria-label="Shelves">
+      {
+        shelves.map((shelf, index) => (
+          <>
+            {index > 0 && <span aria-hidden="true">&middot;</span>}
+            <a href={`#${shelf.id}`}>{shelf.name}</a>
+          </>
+        ))
+      }
+    </nav>
+  </header>
+
+  <hr class="rule--thick-thin" />
+
+  {
+    [...shelves, ...(loose.length > 0 ? [{ id: 'sundries', name: 'Sundries', blurb: '', items: loose }] : [])].map((shelf) => (
+      <section class="shelf" id={shelf.id} aria-labelledby={`${shelf.id}-heading`}>
+        <h2 id={`${shelf.id}-heading`} class="shelf__heading">{shelf.name}</h2>
+        {shelf.items.length > 0 ? (
+          <ul class="shelf__items">
+            {shelf.items.map(({ product, artist }) => {
+              const sale = saleState(product);
+              return (
+                <li>
+                  <ProductCard
+                    href={productPath(product)}
+                    title={product.data.title}
+                    image={product.data.image}
+                    price={formatPrice(product.data.price)}
+                    edition={product.data.edition}
+                    artist={artist}
+                    maker={makerOf(product)}
+                    notice={sale.canBuy ? undefined : sale.notice}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p class="shelf__empty">This shelf is being dusted. Goods are expected once the dust has been dealt with.</p>
+        )}
+      </section>
+    ))
+  }
+
+  {credits.length > 0 && <p class="fine-print merch-credits">Pictures: {credits.join(' ')}</p>}
+</BaseLayout>
+
+<style>
+  .merch-header {
+    text-align: center;
+  }
+
+  .merch-header a {
+    text-decoration: none;
+  }
+
+  .merch-header__dek {
+    max-width: 38rem;
+    margin-inline: auto;
+  }
+
+  .merch-header__nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1) var(--space-3);
+    margin-top: var(--space-4);
+  }
+
+  .merch-header__nav a {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+
+  .shelf {
+    margin-top: var(--space-7);
+    scroll-margin-top: var(--space-4);
+  }
+
+  .shelf__heading {
+    margin: 0 0 var(--space-5);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--rule-thick) double var(--rule);
+    font-family: var(--font-label);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+  }
+
+  /* Two across on a phone, three on a tablet, four on a desk. */
+  .shelf__items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40rem) {
+    .shelf__items {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .shelf__items {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .shelf__empty {
+    max-width: var(--measure);
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .merch-credits {
+    margin: var(--space-6) 0 0;
+    font-style: italic;
+    text-align: center;
+  }
+</style>

@@ -1,129 +1,117 @@
 ---
-// The Store, at /store: three shelves.
+// The Store's front page, at /store. Modelled on the shop of The Public
+// Domain Review: not a wall of products, but a few large cards, one for
+// each part of the shop, each saying what is there and from what price.
 //
-//   Art & Prints   work by the paper's artists, and from the archives
-//   Merchandise    goods bearing the paper's name
-//   Commissions    contributors who can be hired for custom work
+//   The Art Shop    /store/art     prints, by artist, and commissions
+//   The Merch Shop  /store/merch   pins, T-shirts, totes, notebooks, mugs
 //
 // Products are Markdown files in src/content/products. Buying happens on
-// Stripe: each product has a Payment Link, and its page links to it.
-// There is no cart. Commissions are arranged through each contributor's
-// own form, on their page.
+// Stripe (each product links to its own Payment Link); there is no cart.
+import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Portrait from '../../components/Portrait.astro';
-import ProductCard from '../../components/ProductCard.astro';
-import { contributorPath, getContributors, roleLabel } from '../../lib/contributors';
-import { getIllustration } from '../../lib/illustrations';
-import { formatPrice, getProducts, makerOf, productPath, saleState } from '../../lib/store';
+import { getContributors } from '../../lib/contributors';
+import { getIllustration, illustrationSrc } from '../../lib/illustrations';
+import { fromPrice, getProducts, MERCH } from '../../lib/store';
 
 const products = await getProducts();
-const shelves = [
-  {
-    id: 'prints',
-    title: 'Art & Prints',
-    intro: 'Illustrations, cartoons and prints by the paper’s artists, and curiosities from the archives.',
-    empty: 'The walls are bare at present. The artists have been told, and are drawing faster.',
-    items: products.filter((p) => p.product.data.kind === 'print'),
-  },
-  {
-    id: 'merchandise',
-    title: 'Merchandise',
-    intro: 'Useful objects bearing the name of this newspaper, for readers who wish to be asked about it.',
-    empty: 'The shelves are being dusted. Goods are expected once the dust has been dealt with.',
-    items: products.filter((p) => p.product.data.kind === 'merchandise'),
-  },
-];
+const prints = products.filter((p) => p.product.data.kind === 'print');
+const merch = MERCH.map((shelf) => ({
+  ...shelf,
+  items: products.filter((p) => p.product.data.kind === 'merchandise' && p.product.data.category === shelf.id),
+}));
 
-const forHire = (await getContributors()).filter((c) => c.person.data.commissionsOpen);
+// Three prints fanned out on the Art Shop's card. Prints by the paper's
+// own artists are shown before prints from the archives.
+const fan = [...prints.filter((p) => p.artist), ...prints.filter((p) => !p.artist)]
+  .slice(0, 3)
+  .map((p) => getIllustration(p.product.data.image));
+
+const artistsForHire = (await getContributors()).filter((c) => c.person.data.commissionsOpen).length;
 
 // Every picture on the page is credited once, at the foot.
-const credits = [...new Set(products.map((p) => getIllustration(p.product.data.image).credit))];
+const shown = [...fan, ...merch.flatMap((shelf) => shelf.items.slice(0, 1).map((p) => getIllustration(p.product.data.image)))];
+const credits = [...new Set(shown.map((picture) => picture.credit))];
 ---
 
 <BaseLayout
   title="The Store"
-  description="Prints, goods and commissions from the artists and writers of The Municipal Absurdist."
+  description="Art prints, commissions and goods from the artists and writers of The Municipal Absurdist."
 >
   <header class="store-header">
     <p class="label label--accent">The Store</p>
-    <h1>Goods, Prints &amp; Commissions</h1>
+    <h1>Shop</h1>
     <p class="dek store-header__dek">
-      A small shop attached to a newspaper. Everything in it was made by someone, and the money goes to them
-      and to the paper, in that order where possible.
+      Everything here was made by someone. The money goes to them and to the paper, in that order where
+      possible.
     </p>
-    <nav class="store-header__nav label" aria-label="Parts of the Store">
-      <a href="#prints">Art &amp; Prints</a>
-      <span aria-hidden="true">&middot;</span>
-      <a href="#merchandise">Merchandise</a>
-      <span aria-hidden="true">&middot;</span>
-      <a href="#commissions">Commissions</a>
-    </nav>
   </header>
 
   <hr class="rule--thick-thin" />
 
-  {
-    shelves.map((shelf) => (
-      <section class="shelf" id={shelf.id} aria-labelledby={`${shelf.id}-heading`}>
-        <h2 id={`${shelf.id}-heading`} class="shelf__heading">{shelf.title}</h2>
-        <p class="shelf__intro">{shelf.intro}</p>
-        {shelf.items.length > 0 ? (
-          <ul class="shelf__items">
-            {shelf.items.map(({ product, artist }) => {
-              const sale = saleState(product);
-              return (
-                <li>
-                  <ProductCard
-                    href={productPath(product)}
-                    title={product.data.title}
-                    image={product.data.image}
-                    price={formatPrice(product.data.price)}
-                    edition={product.data.edition}
-                    artist={artist}
-                    maker={makerOf(product)}
-                    notice={sale.canBuy ? undefined : sale.notice}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p class="shelf__empty">{shelf.empty}</p>
-        )}
-      </section>
-    ))
-  }
+  <section class="shop" aria-labelledby="art-heading">
+    <h2 id="art-heading" class="shop__heading">The Art Shop</h2>
+    <div class="shop__row shop__row--art">
+      <a class="shop-card shop-card--wide" href="/store/art">
+        <div class="shop-card__picture shop-card__picture--fan">
+          {
+            fan.map((picture) => (
+              <Image src={illustrationSrc(picture.file)} alt="" width={picture.width} height={picture.height} loading="eager" />
+            ))
+          }
+        </div>
+        <div class="shop-card__words">
+          <h3 class="shop-card__title">Art Prints</h3>
+          <p class="shop-card__blurb">
+            Illustrations and cartoons by the paper’s artists, with curiosities from the archives. A gallery,
+            arranged by artist.
+          </p>
+          <p class="label shop-card__price">{fromPrice(prints)}</p>
+        </div>
+      </a>
 
-  <section class="shelf" id="commissions" aria-labelledby="commissions-heading">
-    <h2 id="commissions-heading" class="shelf__heading">Commissions</h2>
-    <p class="shelf__intro">
-      Several of the paper’s artists and writers may be hired for work of your own: a caricature, an
-      illustration, a portrait, a poem, a speech. Each sets their own terms and price, agreed with you before
-      any work begins.
-    </p>
-    {
-      forHire.length > 0 ? (
-        <ul class="hire">
-          {forHire.map(({ person }) => (
-            <li class="hire__person">
-              <Portrait name={person.data.name} portrait={person.data.portrait} />
-              <div>
-                <h3 class="hire__name">{person.data.name}</h3>
-                <p class="label hire__role">{roleLabel(person.data.role)}</p>
-                <p class="hire__link">
-                  <a href={`${contributorPath(person)}#commissions`}>Commission {person.data.name}</a>
-                </p>
+      <a class="shop-card" href="/store/art#artists">
+        <div class="shop-card__picture shop-card__picture--text" aria-hidden="true">
+          <span>&#x261E;&#xFE0E;</span>
+        </div>
+        <div class="shop-card__words">
+          <h3 class="shop-card__title">Meet the Artists</h3>
+          <p class="shop-card__blurb">
+            Who drew what, and how to hire them for a caricature, a portrait, or an illustration of your own.
+          </p>
+          <p class="label shop-card__price">
+            {
+              artistsForHire > 0
+                ? `${artistsForHire} ${artistsForHire === 1 ? 'artist is' : 'artists are'} taking commissions`
+                : 'Commissions open shortly'
+            }
+          </p>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section class="shop" aria-labelledby="merch-heading">
+    <h2 id="merch-heading" class="shop__heading">The Merch Shop</h2>
+    <div class="shop__row shop__row--merch">
+      {
+        merch.map((shelf) => {
+          const first = shelf.items[0] && getIllustration(shelf.items[0].product.data.image);
+          return (
+            <a class="shop-card" href={`/store/merch#${shelf.id}`}>
+              <div class="shop-card__picture">
+                {first && <Image src={illustrationSrc(first.file)} alt="" width={first.width} height={first.height} loading="lazy" />}
               </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p class="shelf__empty">
-          No one is taking commissions this week. The artists are occupied with deadlines, which is the polite
-          word for it.
-        </p>
-      )
-    }
+              <div class="shop-card__words">
+                <h3 class="shop-card__title">{shelf.name}</h3>
+                <p class="shop-card__blurb">{shelf.blurb}</p>
+                <p class="label shop-card__price">{fromPrice(shelf.items)}</p>
+              </div>
+            </a>
+          );
+        })
+      }
+    </div>
   </section>
 
   <section class="store-terms" aria-labelledby="terms-heading">
@@ -134,7 +122,7 @@ const credits = [...new Set(products.map((p) => getIllustration(p.product.data.i
         know what to do with it.
       </li>
       <li>There is no basket. Each item is bought on its own, which the editors find restful.</li>
-      <li>A commission is arranged with the artist or writer directly, through the form on their page.</li>
+      <li>A commission is arranged with the artist directly, through the form on their page.</li>
     </ul>
   </section>
 
@@ -151,23 +139,13 @@ const credits = [...new Set(products.map((p) => getIllustration(p.product.data.i
     margin-inline: auto;
   }
 
-  .store-header__nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--space-1) var(--space-3);
-    margin-top: var(--space-4);
-  }
-
-  .shelf {
+  .shop {
     margin-top: var(--space-7);
-    /* When a link jumps here, stop a little above the heading. */
-    scroll-margin-top: var(--space-4);
   }
 
   /* A ruled label, like the section bands on the front page. */
-  .shelf__heading {
-    margin: 0 0 var(--space-3);
+  .shop__heading {
+    margin: 0 0 var(--space-5);
     padding-bottom: var(--space-2);
     border-bottom: var(--rule-thick) double var(--rule);
     font-family: var(--font-label);
@@ -175,78 +153,127 @@ const credits = [...new Set(products.map((p) => getIllustration(p.product.data.i
     letter-spacing: 0.12em;
   }
 
-  .shelf__intro {
-    max-width: var(--measure-article);
-    margin-bottom: var(--space-5);
-    font-style: italic;
-    color: var(--ink-soft);
+  .shop__row {
+    display: grid;
+    gap: var(--space-5);
   }
 
-  /* Two across on a phone, three on a tablet, four on a desk. */
-  .shelf__items {
-    display: grid;
+  /* Art: the prints card takes two-thirds, the artists card one-third.
+     Merch: two across on a phone, then three, then all five in a row. */
+  .shop__row--merch {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-6) var(--space-4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
   }
 
   @media (min-width: 40rem) {
-    .shelf__items {
+    .shop__row--merch {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-6);
+    }
+  }
+
+  @media (min-width: 52rem) {
+    .shop__row--art {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     }
   }
 
   @media (min-width: 64rem) {
-    .shelf__items {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+    .shop__row--merch {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
     }
   }
 
-  .shelf__empty {
-    max-width: var(--measure);
+  /* A card is one large link: picture on a tinted mount, then a title,
+     a line about it, and the price it starts from. */
+  .shop-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .shop-card__picture {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
     padding: var(--space-4);
     border: var(--rule-hair) solid var(--rule);
-    font-style: italic;
-    color: var(--ink-soft);
+    background: color-mix(in srgb, var(--accent) 10%, var(--paper));
+    transition: background 150ms;
   }
 
-  /* People who take commissions. */
-  .hire {
-    display: grid;
-    gap: var(--space-5) var(--space-7);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .shop-card:hover .shop-card__picture {
+    background: color-mix(in srgb, var(--accent) 28%, var(--paper));
   }
 
-  @media (min-width: 52rem) {
-    .hire {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .shop-card__picture img {
+    width: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply; /* a white ground takes the mount's colour */
   }
 
-  .hire__person {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: var(--space-4);
+  /* The Art Shop's card: wider than it is tall, with three prints
+     side by side, the outer two tilted like pictures leaning on a wall. */
+  .shop-card--wide .shop-card__picture {
+    aspect-ratio: auto;
+    min-height: 16rem;
+  }
+
+  .shop-card__picture--fan {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
     align-items: center;
   }
 
-  .hire__name {
+  .shop-card__picture--fan img {
+    width: 100%;
+    max-height: 18rem;
+    border: var(--rule-hair) solid var(--rule);
+    mix-blend-mode: normal;
+  }
+
+  .shop-card__picture--fan img:first-child { transform: rotate(-3deg); }
+  .shop-card__picture--fan img:last-child { transform: rotate(3deg); }
+
+  /* A card with no picture: a printer's hand, set large. */
+  .shop-card__picture--text {
+    aspect-ratio: auto;
+    min-height: 16rem;
+    font-size: 5rem;
+    line-height: 1;
+    color: var(--accent-text);
+  }
+
+  .shop-card__words {
+    padding-top: var(--space-3);
+  }
+
+  .shop-card__title {
     margin-bottom: var(--space-1);
     font-size: var(--text-h4);
   }
 
-  .hire__role {
-    margin-bottom: var(--space-2);
-    font-size: var(--text-xs);
+  .shop-card:hover .shop-card__title {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
   }
 
-  .hire__link {
+  .shop-card__blurb {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    font-style: italic;
+    line-height: var(--leading-snug);
+    color: var(--ink-soft);
+  }
+
+  .shop-card__price {
     margin: 0;
+    font-size: var(--text-sm);
+    font-variant-numeric: lining-nums;
+    color: var(--accent-text);
   }
 
   .store-terms {

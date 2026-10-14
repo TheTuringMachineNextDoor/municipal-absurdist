@@ -1,6 +1,7 @@
 ---
 title: The Reporter’s Notebook
 kind: merchandise
+category: notebook
 image: store/notebook.svg
 price: 14
 edition: Ruled, 96 pages. Specimen listing.

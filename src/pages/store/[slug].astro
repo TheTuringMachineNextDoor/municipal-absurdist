@@ -16,14 +16,17 @@ export async function getStaticPaths() {
 
 interface Props {
   product: Product;
-  artist?: { name: string; href: string };
+  artist?: { id: string; name: string; href: string };
 }
 
 const { product, artist } = Astro.props;
 const { data } = product;
 const picture = getIllustration(data.image);
 const sale = saleState(product);
-const shelf = data.kind === 'print' ? { name: 'Art & Prints', href: '/store#prints' } : { name: 'Merchandise', href: '/store#merchandise' };
+const shelf =
+  data.kind === 'print'
+    ? { name: 'The Art Shop', href: '/store/art' }
+    : { name: 'The Merch Shop', href: data.category ? `/store/merch#${data.category}` : '/store/merch' };
 
 // The description is the Markdown body of the product's file.
 const { Content } = await render(product);
@@ -53,6 +56,14 @@ const { Content } = await render(product);
         {artist ? <>By <a href={artist.href}>{artist.name}</a></> : makerOf(product)}
       </p>
       {data.edition && <p class="product__edition">{data.edition}</p>}
+      {/* A print by one of the paper's artists: point to the artist. */}
+      {
+        data.kind === 'print' && artist && (
+          <p class="product__artist">
+            <a href={`/store/art#${artist.id}`}>Meet the artist, and see their other prints</a>
+          </p>
+        )
+      }
 
       <div class="product__description"><Content /></div>
 
@@ -139,6 +150,18 @@ const { Content } = await render(product);
 
   .product__maker {
     margin-bottom: var(--space-1);
+  }
+
+  .product__artist {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+  }
+
+  .product__details .product__artist a {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
   }
 
   .product__edition {

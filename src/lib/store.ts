@@ -25,6 +25,20 @@ export function saleState(product: Product) {
 export const makerOf = (product: Product) =>
   product.data.kind === 'print' ? 'From the Archives' : 'By The Municipal Absurdist';
 
+/** The shelves of the Merch Shop, in the order they are shown. `blurb`
+    is the line on the shelf's card on the Store's front page. */
+export const MERCH = [
+  { id: 'pin', name: 'Pins', blurb: 'Enamel, for the lapel. Identifies the wearer to anyone standing unreasonably close.' },
+  { id: 't-shirt', name: 'T-Shirts', blurb: 'The hat, worn on the chest. Not a uniform, though the paper has no other.' },
+  { id: 'tote', name: 'Totes', blurb: 'Stout canvas. Holds a week of newspapers, or what they used to buy.' },
+  { id: 'notebook', name: 'Notebooks', blurb: 'Ruled pages for the recording of facts, should any present themselves.' },
+  { id: 'mug', name: 'Mugs', blurb: 'Ceramic. Holds roughly one deadline of coffee.' },
+] as const;
+
+/** "From $35": the lowest price among some products, for a shelf's card. */
+export const fromPrice = (products: { product: Product }[]) =>
+  products.length > 0 ? `From ${formatPrice(Math.min(...products.map((p) => p.product.data.price)))}` : 'Expected shortly';
+
 /** Every product with its artist looked up, in alphabetical order. */
 export async function getProducts() {
   const products = (await getCollection('products')).sort((a, b) => a.data.title.localeCompare(b.data.title));
@@ -33,7 +47,7 @@ export async function getProducts() {
       const artist = product.data.artist ? await getEntry(product.data.artist) : undefined;
       return {
         product,
-        artist: artist && { name: artist.data.name, href: contributorPath(artist) },
+        artist: artist && { id: artist.id, name: artist.data.name, href: contributorPath(artist) },
       };
     }),
   );

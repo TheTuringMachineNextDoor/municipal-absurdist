@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -14 160 168" width="800" height="840"><rect x="-20" y="-14" width="160" height="168" fill="#FBF1CF"/><rect x="-14" y="-8" width="148" height="156" fill="none" stroke="#1A1714" stroke-width="1"/>
+    
+    <path d="M12 140 C14 112 32 101 50 97 L60 112 L70 97 C88 101 106 112 108 140 Z" fill="#1A1714" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M24 122 L30 138 M32 114 L37 138 M96 122 L90 138 M88 114 L83 138" stroke="#FCFBF8" stroke-width="1" fill="none"/>
+    
+    <path d="M50 97 L60 132 L70 97 L66 88 H54 Z" fill="#FCFBF8" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <path d="M38 58 C32 56 32 70 39 70 M82 58 C88 56 88 70 81 70" fill="#FCFBF8" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <ellipse cx="60" cy="64" rx="22" ry="28" fill="#FCFBF8" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <path d="M47 53 L56 54 M64 54 L73 53" fill="none" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="50" y="58.5" width="3" height="3" fill="#1A1714"/>
+    <rect x="67" y="58.5" width="3" height="3" fill="#1A1714"/>
+    <path d="M60 60 L57 71 H62" fill="none" stroke="#1A1714" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M44 74 C50 68 57 70 60 73 C63 70 70 68 76 74 C78 84 70 88 66 80 C63 79 57 79 54 80 C50 88 42 84 44 74 Z" fill="#1A1714"/>
+    
+    <path d="M36 34 C36 16 84 16 84 34 Z" fill="#1A1714" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="37" y="33" width="46" height="7" fill="#FCFBF8" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M35 41 H85 C80 50 40 50 35 41 Z" fill="#1A1714" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M60 19 L65 24 L60 31 L55 24 Z" fill="#F2C12E" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M50 97 L46 106 L58 104 Z M70 97 L74 106 L62 104 Z" fill="#FCFBF8" stroke="#1A1714" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="57" y="110" width="6" height="6" fill="#F2C12E" stroke="#1A1714" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>

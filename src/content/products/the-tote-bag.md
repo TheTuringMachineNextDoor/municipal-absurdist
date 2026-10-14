@@ -1,6 +1,7 @@
 ---
 title: The Tote Bag
 kind: merchandise
+category: tote
 image: store/tote-bag.svg
 price: 22
 edition: Heavy canvas. Specimen listing.

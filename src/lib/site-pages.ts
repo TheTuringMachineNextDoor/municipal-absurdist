@@ -9,7 +9,7 @@ import { contributorPath } from './contributors';
 import { sectionContents, sectionPageHref } from './section-front';
 import { productPath } from './store';
 
-const FIXED = ['/', '/about', '/archive', '/contact', '/games', '/newsletter', '/store', '/submit', '/support', '/games/crossword/submit'];
+const FIXED = ['/', '/about', '/archive', '/contact', '/games', '/newsletter', '/store', '/store/art', '/store/merch', '/submit', '/support', '/games/crossword/submit'];
 
 export async function allPagePaths(): Promise<{ path: string; lastModified?: Date }[]> {
   const articles = await getPublishedArticles();
