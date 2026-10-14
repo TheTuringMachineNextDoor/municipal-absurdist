@@ -22,8 +22,11 @@ html {
 
 body {
   margin: 0;
-  /* The paper, with its grain (see --grain in tokens.css). */
-  background: var(--paper) var(--grain);
+  /* The paper: its colour, then its grain, then a few scratches and
+     fibres on top (see --grain and --scratches in tokens.css). A
+     background may have several layers; the first listed is on top. */
+  background-color: var(--paper);
+  background-image: var(--scratches), var(--grain);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--text-base);
