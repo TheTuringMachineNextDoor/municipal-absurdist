@@ -55,4 +55,10 @@ export const site = {
     once: '',
     monthly: '',
   },
+
+  // Your Buy Me a Coffee page, shown on the Support page. It looks like
+  //   https://buymeacoffee.com/yourname
+  // (or https://www.buymeacoffee.com/yourname). While blank, that card
+  // on the Support page says the kettle is not yet on.
+  buyMeACoffee: '',
 };

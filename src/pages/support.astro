@@ -2,7 +2,7 @@
 // The Support page: how to give the paper money, and what else helps.
 //
 // Donations go through Stripe Payment Links set in src/data/site.ts
-// (donationLinks). The site only links to Stripe; it never handles a
+// (donationLinks), and a Buy Me a Coffee page (buyMeACoffee). The site only links to Stripe; it never handles a
 // card. A link left blank is shown as a notice instead of a button.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import NewsletterBox from '../components/NewsletterBox.astro';
@@ -14,12 +14,21 @@ const plates = [
     text: 'Any sum, once. You choose the amount on the next page.',
     link: site.donationLinks.once,
     button: 'Give once',
+    closed: 'The collection plate is being polished',
   },
   {
     title: 'A Standing Contribution',
     text: 'A sum each month, until you tell Stripe to stop. The paper will notice, and be grateful, in that order.',
     link: site.donationLinks.monthly,
     button: 'Give monthly',
+    closed: 'The collection plate is being polished',
+  },
+  {
+    title: 'A Cup of Coffee',
+    text: 'The price of one coffee, sent to the editor by way of Buy Me a Coffee. It will be drunk at the desk, during a deadline.',
+    link: site.buyMeACoffee,
+    button: 'Buy me a coffee',
+    closed: 'The kettle is not yet on',
   },
 ];
 ---
@@ -58,14 +67,14 @@ const plates = [
             <a class="plate__button" href={plate.link} rel="noopener">{plate.button}</a>
           ) : (
             // Not a link: there is nowhere to send the reader yet.
-            <p class="label plate__closed">The collection plate is being polished</p>
+            <p class="label plate__closed">{plate.closed}</p>
           )}
         </li>
       ))
     }
   </ul>
   <p class="fine-print support__stripe">
-    Payment is taken by Stripe, on Stripe’s own page. This newspaper never sees your card. Contributions are
+    Payment is taken by Stripe or by Buy Me a Coffee, on their own pages. This newspaper never sees your card. Contributions are
     not tax-deductible; the paper is a newspaper, not a charity, though the difference is narrowing.
   </p>
 
@@ -113,9 +122,12 @@ const plates = [
     list-style: none;
   }
 
+  /* Side by side when there is room: as many as fit, each at least
+     13rem wide, so three sit in a row on a desk and stack on a phone. */
   @media (min-width: 40rem) {
     .plates {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 60rem;
+      grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
     }
   }
 
