@@ -184,6 +184,10 @@ const empty = !lead && onThisPage.length === 0;
     .front-top__aside {
       padding-left: var(--space-6);
       border-left: var(--rule-hair) solid var(--rule);
+      /* Held to the lead story's height; the list scrolls inside (see
+         LatestList.astro). */
+      position: relative;
+      min-height: 30rem;
     }
   }
 

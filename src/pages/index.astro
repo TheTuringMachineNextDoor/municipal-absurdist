@@ -164,7 +164,14 @@ const bandCredits = [
       border-left: var(--rule-hair) solid var(--rule);
     }
 
-    .front__latest { grid-area: latest; }
+    /* The side column is held to the lead story's height and scrolls
+       inside (see LatestList.astro). This box is what it fills. The
+       minimum height keeps it usable beside a short lead. */
+    .front__latest {
+      grid-area: latest;
+      position: relative;
+      min-height: 30rem;
+    }
     .front__features { grid-area: features; }
   }
 

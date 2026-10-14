@@ -5,6 +5,14 @@
 //
 // Used for "Latest" on the front page and "Also in the Paper" on the
 // section fronts.
+//
+// On a wide screen the column sits beside the lead story, and if it were
+// allowed its full length it would run on far below the lead, leaving a
+// gap under the lead's picture. So there it is held to the lead's height
+// and the list of headlines scrolls inside it. The page puts it in a box
+// with `position: relative` (see the front page and SectionFront); this
+// component then fills that box exactly. On a phone, where the column
+// sits below the lead, it is simply as long as it needs to be.
 import { Image } from 'astro:assets';
 import { getIllustration, illustrationSrc } from '../lib/illustrations';
 
@@ -34,7 +42,9 @@ const credits = [
 
 <section class="latest-list" aria-labelledby="latest-list-heading">
   <h2 id="latest-list-heading" class="latest-list__heading">{heading}</h2>
-  <ol class="latest-list__items">
+  <!-- tabindex="0" lets a keyboard reach the list, so it can be scrolled
+       with the arrow keys when it scrolls; the label says what it is. -->
+  <ol class="latest-list__items" tabindex="0" aria-labelledby="latest-list-heading">
     {
       pictured.map((item) => (
         <li class:list={['latest-list__item', { 'latest-list__item--pictured': item.picture }]}>
@@ -79,6 +89,43 @@ const credits = [
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .latest-list__items:focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
+  }
+
+  /* Beside the lead: fill the box the page gives us (as tall as the
+     lead), heading and credits fixed, the headlines between them
+     scrolling. `position: absolute` with `inset: 0` makes the column
+     take its size from the box rather than from its own contents, which
+     is what stops it stretching the row. */
+  @media (min-width: 60rem) {
+    .latest-list {
+      position: absolute;
+      inset: 0;
+      /* A box placed this way ignores its container's padding, so take
+         the container's own: it keeps the gap beside the column rule. */
+      padding-left: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .latest-list__items {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: var(--space-3); /* room for the scroll bar */
+      /* A thin scroll bar in the rule colour, where the browser allows. */
+      scrollbar-width: thin;
+      scrollbar-color: var(--rule) transparent;
+    }
+
+    /* A hairline under the last visible story marks where the list is cut. */
+    .latest-list__credits {
+      flex: none;
+    }
   }
 
   .latest-list__item {
