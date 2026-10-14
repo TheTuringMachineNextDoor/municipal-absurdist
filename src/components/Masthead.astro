@@ -1,12 +1,12 @@
 ---
-// The nameplate: "The Municipal Absurdist" in Nova Cut, under a small top hat,
+// The nameplate: "The Municipal Absurdist" in Nova Cut, under a small glass of whiskey,
 // the slogan beneath it, and the dateline bar.
 //
 // `as` chooses the wrapping tag. The front page passes "h1" because there
 // the paper's name is the page's main heading; every other page has its
 // own h1 (the headline), so the masthead is a plain <p>.
 
-import TopHat from './TopHat.astro';
+import WhiskeyGlass from './WhiskeyGlass.astro';
 import Stroke from './Stroke.astro';
 import MarkerStroke from './MarkerStroke.astro';
 import Flourish from './Flourish.astro';
@@ -39,10 +39,10 @@ const builtIso = built.toISOString().slice(0, 10);
        first; CSS places them left and right. -->
   <div class="masthead__top">
   <div class="masthead__plate">
-  <!-- The hat, with a curling sprig either side of it. -->
+  <!-- The whiskey glass (once a hat, hence the class name), with a curling sprig either side of it. -->
   <div class="masthead__crest">
     <div class="masthead__sprig"><Flourish kind="swash" /></div>
-    <div class="masthead__hat"><TopHat /></div>
+    <div class="masthead__hat"><WhiskeyGlass /></div>
     <div class="masthead__sprig"><Flourish kind="swash" flipped /></div>
   </div>
   <Tag class="masthead__name">
@@ -269,7 +269,7 @@ const builtIso = built.toISOString().slice(0, 10);
     }
   }
 
-  /* The hat sits centred just above the name, a sprig at each side. */
+  /* The glass sits centred just above the name, a sprig at each side. */
   .masthead__crest {
     display: flex;
     align-items: flex-end;

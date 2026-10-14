@@ -1,0 +1,64 @@
+---
+// A glass of whiskey on the rocks, standing on a coaster, above the
+// nameplate. It began as a top hat; the hat looked so much like a
+// tumbler that it became one. The outline is still the hat's (the rim
+// is the hat's crown, the coaster its brim), so it sits in the masthead
+// exactly where the hat did. Decorative, so hidden from screen readers.
+// Drawn inline so the lines take the ink colour from CSS (currentColor).
+//
+// Drawing order matters: the whiskey is filled first, then the ice and
+// the glass are drawn over it, so the lines of the ice show through the
+// drink as they would through a real one.
+---
+
+<svg class="whiskey-glass" viewBox="60 42 280 208" aria-hidden="true" focusable="false">
+  <!-- the whiskey, filled in the accent yellow: from its surface down to
+       the top of the glass's thick base -->
+  <path
+    class="whiskey-glass__drink"
+    d="M137 122 C160 134 240 134 263 122 L259 178 C238 188 162 188 141 178 Z"
+  />
+  <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- coaster: a flat disc, its far edge hidden behind the glass, with
+         its thickness shown as a second curve beneath -->
+    <path d="M141 198 C104 199 76 204 76 212 C76 223 134 230 200 230 C266 230 324 223 324 212 C324 204 296 199 259 198" />
+    <path d="M76 212 V219 C76 230 134 238 200 238 C266 238 324 230 324 219 V212" />
+    <!-- ice: one cube riding high, tipped to the left; one lower, tipped
+         to the right and mostly under the surface -->
+    <path d="M156 100 L193 93 L198 131 L161 138 Z" />
+    <path d="M156 100 L171 88 L207 82 L193 93" />
+    <path d="M207 82 L212 119 L198 131" />
+    <path d="M200 114 L232 119 L229 151 L196 146 Z" />
+    <path d="M232 119 L241 110 L239 142 L229 151" />
+    <!-- the surface of the drink: the near edge in front of the ice, the
+         far edge behind it -->
+    <path d="M137 122 C160 134 240 134 263 122" />
+    <path d="M137 122 C150 115 160 112 168 111 M228 111 C240 112 252 115 263 122" stroke-width="3" />
+    <!-- glass: rim, walls narrowing a little to the foot, and a heavy
+         base (the inner curve is the floor of the drink) -->
+    <ellipse cx="200" cy="62" rx="64" ry="14" />
+    <path d="M136 62 C135 110 137 160 141 198" />
+    <path d="M264 62 C265 110 263 160 259 198" />
+    <path d="M141 198 C162 208 238 208 259 198" />
+    <path d="M141 178 C162 188 238 188 259 178" />
+  </g>
+  <!-- shine on the glass: hatching down the right of the wall, where
+       the hat had its shade, and a single glint on the left -->
+  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+    <path d="M252 84 V106 M244 86 V104 M252 138 V168 M245 141 V170" />
+    <path d="M148 80 C147 92 147 104 148 114" />
+  </g>
+</svg>
+
+<style>
+  .whiskey-glass {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--ink);
+  }
+
+  .whiskey-glass__drink {
+    fill: var(--accent);
+  }
+</style>

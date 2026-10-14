@@ -79,7 +79,7 @@ Ask before adding any dependency not listed here.
 
 **The look:** an old newspaper crossed with an illustrated literary journal (*The Public Domain Review*). Authentic, collected, slightly eccentric, but clean, readable, and modern in usability.
 
-**Masthead:** "The Municipal Absurdist" on one line in `Nova Cut`, with a small top hat centred above it. Beneath it the slogan in grey italic: *The world, as it unfortunately is*. Dateline bar below between thin rules.
+**Masthead:** "The Municipal Absurdist" on one line in `Nova Cut`, with a small glass of whiskey on the rocks, on a coaster, centred above it (`WhiskeyGlass.astro`; it was a top hat until 13 Oct 2026). Beneath it the slogan in grey italic: *The world, as it unfortunately is*. Dateline bar below between thin rules.
 
 **Small mark (for now):** the masthead's top hat as a solid silhouette with a yellow band (`public/favicon.svg`). The eventual mark: a side profile of a formally dressed, pipe-smoking gentleman seated on a Victorian high-tank toilet, using a laptop, drawn straight-faced in engraved line style. Needs a detailed version and a simplified silhouette for favicon and avatar sizes. Use a placeholder SVG until the artist delivers.
 
