@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <!-- The small mark: the masthead's top hat as a solid silhouette, so
        it still reads at 16 pixels. The band is the accent yellow. -->
-  <rect width="32" height="32" fill="#FCFBF8"/>
+  <rect width="32" height="32" fill="#DDEBCF"/>
   <path d="M10 5.5 C13 4.2 19 4.2 22 5.5 L22.6 21 H9.4 Z" fill="#1A1714"/>
   <path d="M9.6 16.5 H22.4 L22.6 20.5 H9.4 Z" fill="#F2C12E"/>
   <ellipse cx="16" cy="23" rx="13" ry="3.6" fill="#1A1714"/>

@@ -8,14 +8,18 @@
 
 :root {
   /* Colour. These five are the whole palette; see CLAUDE.md. */
-  --paper: #FCFBF8;   /* clean newsprint: white with a little warmth */
+  /* The paper: the pale green of "Eye-Ease" ledger and notebook paper,
+     which was tinted to rest the eye. There is no published code for
+     that paper; this is a close match by eye, kept light enough that the
+     mustard accent text still meets the AA contrast standard on it. */
+  --paper: #DDEBCF;
   --ink: #1A1714;     /* near-black */
   --ink-soft: #4A443D;
   --rule: #2B2622;
   --accent: #F2C12E;  /* Wes Anderson yellow: for fills, strokes and underlines */
-  /* Yellow type on white paper cannot be read, so wherever the accent is
+  /* Yellow type on pale paper cannot be read, so wherever the accent is
      a colour for words or thin lines, this darker mustard is used. It
-     passes WCAG AA on the paper (5.5 to 1). */
+     passes WCAG AA on the paper (4.6 to 1 on the green paper; AA asks for 4.5). */
   --accent-text: #86600A;
   /* Highlighter-pen yellow: brighter and greener than the accent, as a
      real marker is. Only for the marker stroke (MarkerStroke.astro),

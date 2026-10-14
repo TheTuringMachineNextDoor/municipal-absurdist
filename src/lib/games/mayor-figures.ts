@@ -15,7 +15,8 @@ export interface Traits {
 }
 
 const INK = 'var(--ink)';
-const PAPER = 'var(--paper)';
+// Faces and shirt fronts are white whatever colour the page is.
+const PAPER = '#FCFBF8';
 const ACCENT = 'var(--accent)';
 // Shorthand for the usual outline.
 const line = `stroke="${INK}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"`;
