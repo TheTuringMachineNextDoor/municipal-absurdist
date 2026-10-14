@@ -58,7 +58,16 @@ const builtIso = built.toISOString().slice(0, 10);
        screen readers (alt="" and aria-hidden). -->
   <div class="masthead__herald">
     <img class="masthead__cupid" src="/illustrations/cupid.webp" alt="" aria-hidden="true" width="240" height="243" />
-    <p class="masthead__slogan">The world, as it unfortunately is</p>
+    <!-- The slogan, and under it a vine reaching out to each cupid.
+         They share the cupids' height, so they add no height of their
+         own to the masthead. -->
+    <div class="masthead__motto">
+      <p class="masthead__slogan">The world, as it unfortunately is</p>
+      <div class="masthead__vines">
+        <Flourish kind="vine" />
+        <Flourish kind="vine" flipped />
+      </div>
+    </div>
     <img
       class="masthead__cupid masthead__cupid--right"
       src="/illustrations/cupid.webp"
@@ -68,8 +77,6 @@ const builtIso = built.toISOString().slice(0, 10);
       height="243"
     />
   </div>
-  <!-- A flourish to close off the nameplate. -->
-  <div class="masthead__flourish"><Flourish /></div>
   </div>
 
   <aside class="ear ear--left" aria-labelledby="ear-support">
@@ -287,11 +294,17 @@ const builtIso = built.toISOString().slice(0, 10);
     padding-bottom: 0.35rem;
   }
 
-  /* The flourish under the slogan: as wide as the slogan and its
-     cupids, and never wider than the nameplate. */
-  .masthead__flourish {
-    width: min(100%, 30rem);
-    margin: var(--space-1) auto 0;
+  /* The two vines under the slogan: side by side, each a little under
+     half the slogan's width, with a gap between them in the middle. */
+  .masthead__vines {
+    display: flex;
+    justify-content: space-between;
+    gap: 8%;
+    margin-top: calc(-1 * var(--space-1));
+  }
+
+  .masthead__vines :global(.flourish) {
+    width: 46%;
   }
 
   .masthead__name {
@@ -343,7 +356,7 @@ const builtIso = built.toISOString().slice(0, 10);
   }
 
   .masthead__slogan {
-    margin: var(--space-2) 0 var(--space-2);
+    margin: 0 0 var(--space-1);
     font-size: clamp(1.25rem, 1.05rem + 1vw, 1.75rem);
     font-style: italic;
     line-height: var(--leading-snug);

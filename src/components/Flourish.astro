@@ -2,52 +2,50 @@
 // Printer's flourishes for the masthead, drawn for this site in the
 // manner of old book ornament: scrolling vines with leaves.
 //
-//   kind="rule"   a long ornament to close off a heading: two vines
-//                 scrolling out from a yellow lozenge. (Only the left
-//                 half is drawn; the right is the same half, mirrored.)
-//   kind="swash"  a short curling sprig, to sit beside something.
-//                 Pass `flipped` for the one on the right.
+//   kind="vine"   a long leafy vine that scrolls up at one end and
+//                 trails off in dots at the other. Used in pairs under
+//                 the slogan: one as drawn, one `flipped` to mirror it.
+//                 Drawn heavier than the swash, so the masthead's
+//                 ornament is weightiest at the bottom.
+//   kind="swash"  a short curling sprig, to sit beside the hat.
 //
 // The lines take the text colour (currentColor), so they are ink on the
 // page. They are decoration, and hidden from screen readers.
 interface Props {
-  kind?: 'rule' | 'swash';
+  kind?: 'vine' | 'swash';
   flipped?: boolean;
 }
 
-const { kind = 'rule', flipped = false } = Astro.props;
+const { kind = 'vine', flipped = false } = Astro.props;
 ---
 
 {
-  kind === 'rule' ? (
-    <svg class="flourish flourish--rule" viewBox="0 0 640 64" aria-hidden="true" focusable="false">
-      <defs>
-        <g id="flourish-half" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          {/* the upper scroll, curling back on itself */}
-          <path d="M296 32 C272 32 262 14 236 14 C212 14 204 34 220 40 C232 44 240 32 230 26" />
-          {/* the lower scroll */}
-          <path d="M296 32 C276 32 268 48 246 50 C230 51 224 42 232 38" />
-          {/* the long stem running outward, hooked at its end */}
-          <path d="M214 32 C180 32 160 44 124 44 C96 44 84 28 58 28 C40 28 32 40 42 46 C50 50 56 42 50 38" />
-          {/* a rising tendril */}
-          <path d="M150 42 C140 30 150 18 164 20 C172 22 172 32 164 32" />
-          {/* leaves along the stem */}
-          <path d="M196 34 C188 24 176 24 170 30 C180 36 190 38 196 34 Z" fill="currentColor" />
-          <path d="M112 43 C106 52 94 54 86 50 C94 42 104 40 112 43 Z" fill="currentColor" />
-          <path d="M84 31 C80 22 70 18 62 22 C68 30 76 34 84 31 Z" fill="currentColor" />
-          {/* trailing dots, growing smaller */}
-          <circle cx="26" cy="34" r="2.2" fill="currentColor" stroke="none" />
-          <circle cx="15" cy="34" r="1.5" fill="currentColor" stroke="none" />
-          <circle cx="7" cy="34" r="1" fill="currentColor" stroke="none" />
-        </g>
-      </defs>
-      <use href="#flourish-half" />
-      <use href="#flourish-half" transform="translate(640 0) scale(-1 1)" />
-      {/* the centre: a lozenge in the accent yellow */}
-      <path class="flourish__lozenge" d="M320 20 L332 32 L320 44 L308 32 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-      <path d="M320 26 L326 32 L320 38 L314 32 Z" fill="currentColor" />
-      <circle cx="320" cy="12" r="2" fill="currentColor" />
-      <circle cx="320" cy="52" r="2" fill="currentColor" />
+  kind === 'vine' ? (
+    <svg
+      class:list={['flourish', 'flourish--vine', { 'flourish--flipped': flipped }]}
+      viewBox="0 6 300 52"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        {/* the upper scroll, curling back on itself */}
+        <path d="M296 32 C272 32 262 14 236 14 C212 14 204 34 220 40 C232 44 240 32 230 26" />
+        {/* the lower scroll */}
+        <path d="M296 32 C276 32 268 48 246 50 C230 51 224 42 232 38" />
+        {/* the long stem running outward, hooked at its end */}
+        <path d="M214 32 C180 32 160 44 124 44 C96 44 84 28 58 28 C40 28 32 40 42 46 C50 50 56 42 50 38" />
+        {/* a rising tendril */}
+        <path d="M150 42 C140 30 150 18 164 20 C172 22 172 32 164 32" />
+        {/* leaves along the stem */}
+        <path d="M196 34 C188 24 176 24 170 30 C180 36 190 38 196 34 Z" fill="currentColor" />
+        <path d="M112 43 C106 52 94 54 86 50 C94 42 104 40 112 43 Z" fill="currentColor" />
+        <path d="M84 31 C80 22 70 18 62 22 C68 30 76 34 84 31 Z" fill="currentColor" />
+        <path d="M140 44 C138 54 128 58 120 56 C124 48 132 44 140 44 Z" fill="currentColor" />
+        {/* trailing dots, growing smaller */}
+        <circle cx="26" cy="34" r="2.6" fill="currentColor" stroke="none" />
+        <circle cx="15" cy="34" r="1.8" fill="currentColor" stroke="none" />
+        <circle cx="7" cy="34" r="1.2" fill="currentColor" stroke="none" />
+      </g>
     </svg>
   ) : (
     <svg
@@ -56,12 +54,15 @@ const { kind = 'rule', flipped = false } = Astro.props;
       aria-hidden="true"
       focusable="false"
     >
-      <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
         <path d="M116 30 C92 30 84 12 60 12 C40 12 30 28 44 34 C54 38 62 28 54 22" />
         <path d="M92 26 C84 14 92 4 104 8 C110 10 108 18 102 18" />
         <path d="M60 12 C44 10 28 14 14 24" />
         <path d="M36 15 C30 8 20 8 14 12 C22 18 30 19 36 15 Z" fill="currentColor" />
+        {/* a second, smaller leaf and a bud, for a little more at the top */}
+        <path d="M78 20 C76 12 68 9 62 12 C66 18 72 21 78 20 Z" fill="currentColor" />
         <circle cx="8" cy="28" r="1.8" fill="currentColor" stroke="none" />
+        <circle cx="112" cy="22" r="1.4" fill="currentColor" stroke="none" />
       </g>
     </svg>
   )
@@ -72,10 +73,6 @@ const { kind = 'rule', flipped = false } = Astro.props;
     display: block;
     height: auto;
     color: var(--ink);
-  }
-
-  .flourish__lozenge {
-    fill: var(--accent);
   }
 
   /* Mirrored, for the right-hand side of a pair. */
