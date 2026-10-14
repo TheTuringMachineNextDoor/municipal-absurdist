@@ -197,8 +197,14 @@ const builtIso = built.toISOString().slice(0, 10);
     }
 
     /* An ear: a small double-ruled box, like a classified notice. */
+    /* Both ears are stretched to the full height of the row, so the two
+       boxes are always the same size however much each has to say. The
+       words inside are centred top to bottom. */
     .ear {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-self: stretch;
       padding: var(--space-3);
       border: var(--rule-thick) double var(--rule);
       text-align: center;
