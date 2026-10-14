@@ -624,7 +624,7 @@ crosswords.forEach((puzzle, index) => layOut(puzzle, `Crossword no. ${index + 1}
   .xw__step {
     min-width: 2.75rem;
     border: var(--rule-hair) solid var(--ink-soft);
-    background: var(--paper);
+    background: var(--paper) var(--grain);
     color: var(--ink);
     font: inherit;
     font-size: var(--text-lg);
@@ -653,7 +653,7 @@ crosswords.forEach((puzzle, index) => layOut(puzzle, `Crossword no. ${index + 1}
   .xw__cell {
     position: relative;
     aspect-ratio: 1;
-    background: var(--paper);
+    background: var(--paper) var(--grain);
   }
 
   .xw__cell--block {
@@ -737,7 +737,7 @@ crosswords.forEach((puzzle, index) => layOut(puzzle, `Crossword no. ${index + 1}
     min-height: 2.75rem;
     padding: var(--space-1) var(--space-3);
     border: var(--rule-hair) solid var(--ink-soft);
-    background: var(--paper);
+    background: var(--paper) var(--grain);
     color: var(--ink);
     font-family: var(--font-label);
     font-size: var(--text-sm);
