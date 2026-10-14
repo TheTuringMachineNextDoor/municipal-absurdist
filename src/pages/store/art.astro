@@ -13,7 +13,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Portrait from '../../components/Portrait.astro';
 import ProductCard from '../../components/ProductCard.astro';
 import { contributorPath, firstSentence, getContributors, roleLabel } from '../../lib/contributors';
-import { getIllustration } from '../../lib/illustrations';
 import { formatPrice, getProducts, makerOf, productPath, saleState } from '../../lib/store';
 
 const prints = (await getProducts()).filter((p) => p.product.data.kind === 'print');
@@ -25,7 +24,6 @@ const artists = people
   .filter((artist) => artist.prints.length > 0);
 const archive = prints.filter((p) => !p.artist);
 
-const credits = [...new Set(prints.map((p) => getIllustration(p.product.data.image).credit))];
 
 type Listed = (typeof prints)[number];
 const cardProps = ({ product, artist }: Listed) => {
@@ -141,7 +139,6 @@ const cardProps = ({ product, artist }: Listed) => {
     )
   }
 
-  {credits.length > 0 && <p class="fine-print art-credits">Pictures: {credits.join(' ')}</p>}
 </BaseLayout>
 
 <style>
@@ -294,9 +291,4 @@ const cardProps = ({ product, artist }: Listed) => {
     font-size: var(--text-sm);
   }
 
-  .art-credits {
-    margin: var(--space-6) 0 0;
-    font-style: italic;
-    text-align: center;
-  }
 </style>

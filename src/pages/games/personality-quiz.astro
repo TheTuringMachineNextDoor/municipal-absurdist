@@ -6,10 +6,7 @@
 import GameLayout from '../../layouts/GameLayout.astro';
 import ResultsCard from '../../components/games/ResultsCard.astro';
 import { departments, questions } from '../../data/personality-quiz';
-import { getIllustration } from '../../lib/illustrations';
 
-// One credit line for the woodcuts shown with the results.
-const credits = [...new Set(departments.map((d) => getIllustration(d.image).credit))];
 ---
 
 <GameLayout
@@ -53,7 +50,6 @@ const credits = [...new Set(departments.map((d) => getIllustration(d.image).cred
     <button type="button" class="quiz__again" data-quiz-again>Take it again</button>
   </ResultsCard>
 
-  <p class="fine-print quiz__credits">Illustrations: {credits.join(' ')}</p>
 </GameLayout>
 
 <script>
@@ -254,9 +250,4 @@ const credits = [...new Set(departments.map((d) => getIllustration(d.image).cred
     mix-blend-mode: multiply;
   }
 
-  .quiz__credits {
-    margin: var(--space-5) 0 0;
-    font-style: italic;
-    text-align: center;
-  }
 </style>

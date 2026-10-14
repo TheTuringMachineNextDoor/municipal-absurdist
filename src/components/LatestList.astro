@@ -24,20 +24,13 @@ interface Props {
     sectionName: string;
     /** A file from public/illustrations, shown as the thumbnail. */
     image?: string;
-    imageCredit?: string;
   }[];
   heading?: string;
 }
 
 const { items, heading = 'Latest' } = Astro.props;
 
-// Every picture must be credited on the page. A credit under each tiny
-// thumbnail would swamp it, so they are gathered and printed once, small,
-// at the foot of the column.
 const pictured = items.map((item) => ({ ...item, picture: item.image ? getIllustration(item.image) : undefined }));
-const credits = [
-  ...new Set(pictured.filter((item) => item.picture).map((item) => item.imageCredit ?? item.picture!.credit)),
-];
 ---
 
 <section class="latest-list" aria-labelledby="latest-list-heading">
@@ -72,8 +65,43 @@ const credits = [
       ))
     }
   </ol>
-  {credits.length > 0 && <p class="fine-print latest-list__credits">Pictures: {credits.join(' ')}</p>}
+  <!-- Under the list when it scrolls (a wide screen, and more stories
+       than fit): a small arrow saying there is more below. Pressing it
+       brings the next story into view. The script hides it when there is
+       nothing more to see. -->
+  <button type="button" class="latest-list__more" data-latest-more hidden aria-label="Show the next story">
+    <svg viewBox="0 0 16 10" width="16" height="10" aria-hidden="true" focusable="false">
+      <path d="M1.5 1.5 L8 8 L14.5 1.5" />
+    </svg>
+  </button>
 </section>
+
+<script>
+  // One arrow per column; there is at most one column on a page.
+  for (const column of document.querySelectorAll<HTMLElement>('.latest-list')) {
+    const list = column.querySelector<HTMLElement>('.latest-list__items')!;
+    const arrow = column.querySelector<HTMLButtonElement>('[data-latest-more]')!;
+
+    // Show the arrow only while some of the list is still hidden below.
+    // (On a phone the list does not scroll, so this never shows there.)
+    const update = () => {
+      arrow.hidden = list.scrollTop + list.clientHeight >= list.scrollHeight - 4;
+    };
+
+    arrow.addEventListener('click', () => {
+      // Scroll so that the first story still partly hidden comes into view.
+      const bottom = list.scrollTop + list.clientHeight;
+      const next = [...list.children].find(
+        (item) => (item as HTMLElement).offsetTop + (item as HTMLElement).offsetHeight > bottom + 2,
+      ) as HTMLElement | undefined;
+      list.scrollTo({ top: next ? next.offsetTop - list.offsetTop : list.scrollHeight, behavior: 'smooth' });
+    });
+
+    list.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  }
+</script>
 
 <style>
   .latest-list__heading {
@@ -97,7 +125,7 @@ const credits = [
   }
 
   /* Beside the lead: fill the box the page gives us (as tall as the
-     lead), heading and credits fixed, the headlines between them
+     lead), the heading fixed at the top and the arrow at the foot, the headlines between them
      scrolling. `position: absolute` with `inset: 0` makes the column
      take its size from the box rather than from its own contents, which
      is what stops it stretching the row. */
@@ -122,9 +150,40 @@ const credits = [
       scrollbar-color: var(--rule) transparent;
     }
 
-    /* A hairline under the last visible story marks where the list is cut. */
-    .latest-list__credits {
+    /* The arrow under the list: small, centred, on a hairline. */
+    .latest-list__more {
       flex: none;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 1.75rem;
+      padding: 0;
+      border: 0;
+      border-top: var(--rule-hair) solid var(--rule);
+      background: none;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+
+    .latest-list__more[hidden] {
+      display: none;
+    }
+
+    .latest-list__more svg {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 150ms;
+    }
+
+    .latest-list__more:hover {
+      color: var(--accent-text);
+    }
+
+    .latest-list__more:hover svg {
+      transform: translateY(2px);
     }
   }
 
@@ -190,10 +249,4 @@ const credits = [
     color: var(--ink-soft);
   }
 
-  .latest-list__credits {
-    margin: var(--space-3) 0 0;
-    padding-top: var(--space-2);
-    border-top: var(--rule-hair) solid var(--rule);
-    font-style: italic;
-  }
 </style>

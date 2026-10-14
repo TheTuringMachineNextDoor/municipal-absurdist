@@ -17,7 +17,6 @@ import ComicSlot from '../components/ComicSlot.astro';
 import FeaturesStrip from '../components/FeaturesStrip.astro';
 import NewsletterBox from '../components/NewsletterBox.astro';
 import { sections } from '../data/sections';
-import { getIllustration } from '../lib/illustrations';
 import { getPublishedArticles, summarize } from '../lib/articles';
 
 const all = await getPublishedArticles(); // newest first
@@ -51,14 +50,6 @@ const bands = sections
 const comicArticle = comics[0];
 const comic = comicArticle && (await summarize(comicArticle));
 
-// Every picture must be credited on the page. The lead and the comic
-// carry their own; the bands' credits are gathered here, duplicates
-// dropped, and printed once at the foot of the page.
-const bandCredits = [
-  ...new Set(
-    bands.flatMap((band) => band.items).map((item) => item.imageCredit ?? getIllustration(item.image).credit),
-  ),
-];
 ---
 
 <BaseLayout mastheadAs="h1">
@@ -99,9 +90,6 @@ const bandCredits = [
             {bands.map((band) => (
               <SectionBand name={band.section.name} href={`/${band.section.slug}`} items={band.items} />
             ))}
-            {bandCredits.length > 0 && (
-              <p class="fine-print front__credits">Illustrations: {bandCredits.join(' ')}</p>
-            )}
           </div>
         )}
 
@@ -132,11 +120,6 @@ const bandCredits = [
     min-width: 0;
   }
 
-  .front__credits {
-    margin: var(--space-5) 0 0;
-    font-style: italic;
-    text-align: center;
-  }
 
   /* A desk: two-thirds and one-third, with named areas. Each part is
      assigned to its area whatever order it was written in. */

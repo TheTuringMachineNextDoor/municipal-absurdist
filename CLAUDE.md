@@ -111,7 +111,7 @@ No dark mode at launch: the paper is the identity.
 
 **Never:** rounded corners, box shadows, gradients, emoji, pill buttons, hero carousels, stock photos, or anything that looks like a SaaS template.
 
-**Illustrations:** store public-domain images in `public/illustrations/` and record source and credit for every image in `public/illustrations/credits.json`. Always show the credit on the page.
+**Illustrations:** store public-domain images in `public/illustrations/` and record source and credit for every image in `public/illustrations/credits.json`. The credit is shown under a lead or inline illustration (and on product and portrait pages); lists of cards, side columns and shop shelves do not print gathered credit lines (removed at the editor's request, 13 Oct 2026). Where a licence requires attribution next to the picture, show it there.
 
 ---
 

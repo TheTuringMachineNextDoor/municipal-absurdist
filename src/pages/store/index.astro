@@ -28,10 +28,6 @@ const fan = [...prints.filter((p) => p.artist), ...prints.filter((p) => !p.artis
   .map((p) => getIllustration(p.product.data.image));
 
 const artistsForHire = (await getContributors()).filter((c) => c.person.data.commissionsOpen).length;
-
-// Every picture on the page is credited once, at the foot.
-const shown = [...fan, ...merch.flatMap((shelf) => shelf.items.slice(0, 1).map((p) => getIllustration(p.product.data.image)))];
-const credits = [...new Set(shown.map((picture) => picture.credit))];
 ---
 
 <BaseLayout
@@ -126,7 +122,6 @@ const credits = [...new Set(shown.map((picture) => picture.credit))];
     </ul>
   </section>
 
-  {credits.length > 0 && <p class="fine-print store-credits">Pictures: {credits.join(' ')}</p>}
 </BaseLayout>
 
 <style>
@@ -289,9 +284,4 @@ const credits = [...new Set(shown.map((picture) => picture.credit))];
     text-align: center;
   }
 
-  .store-credits {
-    margin: var(--space-6) 0 0;
-    font-style: italic;
-    text-align: center;
-  }
 </style>

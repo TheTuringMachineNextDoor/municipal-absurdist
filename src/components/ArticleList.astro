@@ -3,7 +3,6 @@
 // a phone, three on a desk. Used on the front page, the section fronts,
 // and the "More from" strip under an article.
 import ArticleCard from './ArticleCard.astro';
-import { getIllustration } from '../lib/illustrations';
 
 export interface ArticleListItem {
   href: string;
@@ -23,18 +22,10 @@ export interface ArticleListItem {
 
 interface Props {
   items: ArticleListItem[];
-  /** Pass false when the page prints all its credits together itself. */
-  showCredits?: boolean;
 }
 
-const { items, showCredits = true } = Astro.props;
+const { items } = Astro.props;
 
-// Every illustration must be credited on the page. A credit under each
-// small picture would crowd the cards, so the credits are gathered,
-// duplicates dropped, and printed once beneath the list.
-const credits = [
-  ...new Set(items.filter((i) => i.image).map((i) => i.imageCredit ?? getIllustration(i.image!).credit)),
-];
 ---
 
 <ul class="article-list">
@@ -55,14 +46,8 @@ const credits = [
     ))
   }
 </ul>
-{showCredits && credits.length > 0 && <p class="fine-print article-list__credits">Illustrations: {credits.join(' ')}</p>}
 
 <style>
-  .article-list__credits {
-    margin: var(--space-5) 0 0;
-    font-style: italic;
-    text-align: center;
-  }
 
   .article-list {
     display: grid;

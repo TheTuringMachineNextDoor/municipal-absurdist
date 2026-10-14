@@ -16,7 +16,7 @@ const { name, href, items } = Astro.props;
   <!-- The name sits on the rule: a line either side, drawn by the
        ::before and ::after of the heading. -->
   <h2 class="band__heading"><a href={href}>{name}</a></h2>
-  <ArticleList items={items} showCredits={false} />
+  <ArticleList items={items} />
 </section>
 
 <style>

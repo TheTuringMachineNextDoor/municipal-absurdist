@@ -4,7 +4,6 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GameNotice from '../../components/games/GameNotice.astro';
 import { games } from '../../data/games';
-import { getIllustration } from '../../lib/illustrations';
 import { realOrAbsurdistReady } from '../../data/real-or-absurdist';
 
 // Real or Absurdist stays closed to the public until it has enough real
@@ -13,8 +12,6 @@ import { realOrAbsurdistReady } from '../../data/real-or-absurdist';
 const isOpen = (game: (typeof games)[number]) =>
   game.live && (game.slug !== 'real-or-absurdist' || realOrAbsurdistReady || import.meta.env.DEV);
 
-// One credit line for all the woodcuts, duplicates dropped.
-const credits = [...new Set(games.map((game) => getIllustration(game.image).credit))];
 ---
 
 <BaseLayout
@@ -47,7 +44,6 @@ const credits = [...new Set(games.map((game) => getIllustration(game.image).cred
     }
   </ul>
 
-  <p class="fine-print hub-credits">Illustrations: {credits.join(' ')}</p>
 </BaseLayout>
 
 <style>
@@ -71,9 +67,4 @@ const credits = [...new Set(games.map((game) => getIllustration(game.image).cred
     list-style: none;
   }
 
-  .hub-credits {
-    margin: var(--space-5) 0 0;
-    font-style: italic;
-    text-align: center;
-  }
 </style>

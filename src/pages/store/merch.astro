@@ -5,7 +5,6 @@
 // listed in src/lib/store.ts (MERCH).
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ProductCard from '../../components/ProductCard.astro';
-import { getIllustration } from '../../lib/illustrations';
 import { formatPrice, getProducts, makerOf, MERCH, productPath, saleState } from '../../lib/store';
 
 const goods = (await getProducts()).filter((p) => p.product.data.kind === 'merchandise');
@@ -13,7 +12,6 @@ const shelves = MERCH.map((shelf) => ({ ...shelf, items: goods.filter((p) => p.p
 // Anything filed as merchandise without a category still gets shown.
 const loose = goods.filter((p) => !p.product.data.category);
 
-const credits = [...new Set(goods.map((p) => getIllustration(p.product.data.image).credit))];
 ---
 
 <BaseLayout title="The Merch Shop" description="Pins, T-shirts, totes, notebooks and mugs from The Municipal Absurdist.">
@@ -68,7 +66,6 @@ const credits = [...new Set(goods.map((p) => getIllustration(p.product.data.imag
     ))
   }
 
-  {credits.length > 0 && <p class="fine-print merch-credits">Pictures: {credits.join(' ')}</p>}
 </BaseLayout>
 
 <style>
@@ -143,9 +140,4 @@ const credits = [...new Set(goods.map((p) => getIllustration(p.product.data.imag
     color: var(--ink-soft);
   }
 
-  .merch-credits {
-    margin: var(--space-6) 0 0;
-    font-style: italic;
-    text-align: center;
-  }
 </style>
