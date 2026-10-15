@@ -1,0 +1,665 @@
+---
+// Zoning: the falling-blocks game, drawn the way the very first one
+// was, on a Soviet Elektronika 60 terminal in 1984. That machine could
+// show only text, so each block is a pair of brackets, [], the well's
+// walls are <! and !>, empty cells are dots, and the floor is a line of
+// = over a row of \/. Everything on the screen is plain text in one
+// <pre>, rewritten whenever something moves.
+//
+// It is not called by the original's name, which is a registered
+// trademark of The Tetris Company. The game itself (blocks falling,
+// lines clearing) is free for anyone to make; the name is not.
+//
+// The rules are in src/lib/games/zoning.ts. Like The Mayor, it may be
+// played as often as the reader likes.
+import GameLayout from '../../layouts/GameLayout.astro';
+import ResultsCard from '../../components/games/ResultsCard.astro';
+---
+
+<GameLayout
+  title="Zoning"
+  standfirst="Blocks arrive from above without planning permission. Fit them together. Complete rows are demolished."
+>
+  <Fragment slot="rules">
+    <ul class="list-ornament">
+      <li>Pieces of seven shapes fall into the well, one at a time. Move and turn each one as it falls.</li>
+      <li>A row filled from wall to wall is cleared, and everything above it drops down.</li>
+      <li>
+        Every ten rows the level rises and the pieces fall faster. Clearing four rows at once is worth
+        thirty times one.
+      </li>
+      <li>The game ends when the pieces stack up past the top.</li>
+      <li>
+        <strong>Keyboard:</strong> the left and right arrows move, the up arrow turns (Z turns the other way),
+        the down arrow hurries the piece, and the space bar drops it. P pauses. The number keys of the original
+        work too: 7 and 9 move, 8 turns, 4 hurries, 5 drops.
+      </li>
+      <li>
+        <strong>On a phone:</strong> tap the screen to turn, drag sideways to move, drag down to hurry, and
+        flick down to drop. Or use the buttons beneath it.
+      </li>
+    </ul>
+  </Fragment>
+
+  <div class="zoning" data-zoning>
+    <!-- The terminal. The screen is decoration for sighted players; the
+         score and what happens are given to screen readers in words
+         (role="status" below). -->
+    <div class="zoning__screen" data-zoning-screen>
+      <div class="zoning__layout">
+        <div class="zoning__panel zoning__panel--stats" aria-hidden="true">
+          <pre class="zoning__stats" data-zoning-stats></pre>
+          <pre class="zoning__next" data-zoning-next></pre>
+        </div>
+        <pre class="zoning__well" data-zoning-well aria-hidden="true"></pre>
+        <pre class="zoning__panel zoning__panel--help" data-zoning-help aria-hidden="true">{
+`←     LEFT
+→     RIGHT
+↑     ROTATE
+↓     SPEED UP
+SPACE DROP
+N     SHOW NEXT
+H     HIDE THIS TEXT
+P     PAUSE`
+        }</pre>
+      </div>
+    </div>
+
+    <div class="zoning__bar">
+      <button type="button" class="zoning__start" data-zoning-start>Begin</button>
+    </div>
+
+    <!-- Buttons for fingers. Shown on touch screens and narrow windows.
+         Holding one down repeats it, like holding a key. -->
+    <div class="zoning__pad" data-zoning-pad>
+      <button type="button" data-zoning-action="left" aria-label="Move left"><span aria-hidden="true">&larr;</span></button>
+      <button type="button" data-zoning-action="turn" aria-label="Turn"><span aria-hidden="true">&#x21bb;&#xFE0E;</span></button>
+      <button type="button" data-zoning-action="right" aria-label="Move right"><span aria-hidden="true">&rarr;</span></button>
+      <button type="button" data-zoning-action="down" aria-label="Move down"><span aria-hidden="true">&darr;</span></button>
+      <button type="button" data-zoning-action="drop" aria-label="Drop to the bottom"><span aria-hidden="true">&#x2913;&#xFE0E;</span></button>
+    </div>
+
+    <p class="visually-hidden" role="status" data-zoning-live></p>
+  </div>
+
+  <ResultsCard>
+    <button type="button" class="zoning__again" data-zoning-again>Apply for another permit</button>
+  </ResultsCard>
+</GameLayout>
+
+<script>
+  import {
+    COLS,
+    HIDDEN,
+    ROWS,
+    clearRows,
+    emptyWell,
+    fallTime,
+    fits,
+    fullRows,
+    levelFor,
+    placed,
+    pointsFor,
+    randomShape,
+    settle,
+    turn,
+    cellsOf,
+    type Piece,
+    type Shape,
+    type Well,
+  } from '../../lib/games/zoning';
+  import { chicagoDateKey } from '../../lib/games/daily';
+  import { recordPlay } from '../../lib/games/stats';
+  import { showResults } from '../../lib/games/results';
+
+  const GAME_ID = 'zoning';
+  const CLEAR_TIME = 180; // milliseconds a cleared row shows blank before it goes
+  const HURRY_TIME = 40; // milliseconds per cell while the piece is hurried down
+  const REPEAT_DELAY = 170; // holding a button: wait this long, then...
+  const REPEAT_EVERY = 55; // ...repeat this often
+
+  // Ranks by rows cleared, lowest first.
+  const ranks = [
+    { from: 0, name: 'Applicant', blurb: 'Your application has been received and placed at the bottom of a pile.' },
+    { from: 5, name: 'Junior Clerk, Planning Office', blurb: 'You may now stamp things, provided someone senior has already read them.' },
+    { from: 15, name: 'Assistant Surveyor', blurb: 'You have measured the city and found it wanting, but level.' },
+    { from: 30, name: 'Deputy Commissioner of Zoning', blurb: 'Developers now send you a hamper at Christmas. You are advised to return it.' },
+    { from: 50, name: 'Chairman of the Zoning Board', blurb: 'Nothing is built without your signature, and nothing has been built for some years.' },
+    { from: 100, name: 'Master Builder of the Municipality', blurb: 'A statue has been proposed. It will be declined on planning grounds.' },
+  ];
+
+  type State = 'ready' | 'playing' | 'paused' | 'clearing' | 'over';
+
+  const root = document.querySelector<HTMLElement>('[data-zoning]');
+  const resultsCard = document.querySelector<HTMLElement>('[data-results]');
+  if (root && resultsCard) play(root, resultsCard);
+
+  function play(root: HTMLElement, resultsCard: HTMLElement) {
+    const find = <T extends HTMLElement>(hook: string) => root.querySelector<T>(`[data-zoning-${hook}]`)!;
+    const screen = find('screen');
+    const wellEl = find('well');
+    const statsEl = find('stats');
+    const nextEl = find('next');
+    const helpEl = find('help');
+    const live = find('live');
+    const startButton = find<HTMLButtonElement>('start');
+
+    let state: State = 'ready';
+    let well: Well = emptyWell();
+    let piece: Piece | null = null;
+    let next: Shape = randomShape();
+    let lines = 0;
+    let score = 0;
+    let showNext = true;
+    let hurrying = false; // the down key or button is held
+    let clearing: number[] = []; // rows shown blank for a moment
+    let message = 'READY';
+    let sinceFall = 0; // milliseconds since the piece last fell a cell
+    let lastFrame = 0;
+
+    // ---- Drawing: everything is text ----
+    /** One line of the well: the walls, and [] or " ." for each cell. */
+    function wellLine(cells: boolean[]): string {
+      return `<!${cells.map((filled) => (filled ? '[]' : ' .')).join('')}!>`;
+    }
+
+    function draw() {
+      const grid = well.map((row) => [...row]);
+      if (piece) for (const [x, y] of cellsOf(piece)) grid[y][x] = true;
+
+      const out: string[] = [];
+      for (let y = HIDDEN; y < HIDDEN + ROWS; y++) {
+        if (clearing.includes(y)) out.push(`<!${' '.repeat(COLS * 2)}!>`);
+        else out.push(wellLine(grid[y]));
+      }
+      // A message is printed across the middle of the well.
+      if (message) {
+        const width = COLS * 2;
+        const padded = ` ${message} `;
+        const left = Math.floor((width - padded.length) / 2);
+        const row = Math.floor(ROWS / 2) - 1;
+        const line = out[row];
+        out[row] = line.slice(0, 2 + left) + padded + line.slice(2 + left + padded.length);
+      }
+      out.push(`<!${'='.repeat(COLS * 2)}!>`);
+      out.push(`  ${'\\/'.repeat(COLS)}  `);
+      wellEl.textContent = out.join('\n');
+
+      const level = levelFor(lines);
+      statsEl.textContent = [
+        `FULL LINES: ${String(lines).padStart(4)}`,
+        `LEVEL:      ${String(level).padStart(4)}`,
+        `SCORE:  ${String(score).padStart(8)}`,
+      ].join('\n');
+
+      // The next piece, its empty rows left out.
+      nextEl.textContent = showNext
+        ? ['NEXT:', ...next.filter((row) => row.some(Boolean)).map((row) => row.map((f) => (f ? '[]' : '  ')).join(''))].join('\n')
+        : '';
+      helpEl.textContent = helpEl.textContent!.replace(/SHOW NEXT|HIDE NEXT/, showNext ? 'HIDE NEXT' : 'SHOW NEXT');
+    }
+
+    function say(text: string) {
+      live.textContent = text;
+    }
+
+    // ---- Play ----
+    function newPiece() {
+      const fresh = placed(next);
+      next = randomShape(next);
+      if (!fits(well, fresh)) {
+        piece = fresh;
+        gameOver();
+        return;
+      }
+      piece = fresh;
+      sinceFall = 0;
+    }
+
+    function move(dx: number) {
+      if (state !== 'playing' || !piece) return;
+      const moved = { ...piece, x: piece.x + dx };
+      if (fits(well, moved)) {
+        piece = moved;
+        draw();
+      }
+    }
+
+    function rotate(dir: 1 | -1) {
+      if (state !== 'playing' || !piece) return;
+      const next = turn(well, piece, dir);
+      if (next) {
+        piece = next;
+        draw();
+      }
+    }
+
+    /** Move the piece down a cell; if it cannot go, it lands. */
+    function fall(hurried: boolean) {
+      if (state !== 'playing' || !piece) return;
+      const lower = { ...piece, y: piece.y + 1 };
+      if (fits(well, lower)) {
+        piece = lower;
+        if (hurried) score += 1; // a point for each cell hurried down
+      } else {
+        land();
+      }
+      sinceFall = 0;
+      draw();
+    }
+
+    /** Drop the piece straight to the bottom: two points a cell. */
+    function drop() {
+      if (state !== 'playing' || !piece) return;
+      while (fits(well, { ...piece, y: piece.y + 1 })) {
+        piece = { ...piece, y: piece.y + 1 };
+        score += 2;
+      }
+      land();
+      draw();
+    }
+
+    function land() {
+      if (!piece) return;
+      const inside = settle(well, piece);
+      piece = null;
+      if (!inside) {
+        gameOver();
+        return;
+      }
+      const full = fullRows(well);
+      if (full.length === 0) {
+        newPiece();
+        return;
+      }
+      // Show the full rows blank for a moment, then take them out.
+      state = 'clearing';
+      clearing = full;
+      window.setTimeout(() => {
+        const before = levelFor(lines);
+        clearRows(well, full);
+        clearing = [];
+        score += pointsFor(full.length, before);
+        lines += full.length;
+        const level = levelFor(lines);
+        const counted = ['', 'One row', 'Two rows', 'Three rows', 'Four rows'][full.length];
+        say(`${counted} cleared. Score ${score}.${level > before ? ` Level ${level}.` : ''}`);
+        state = 'playing';
+        newPiece();
+        draw();
+      }, CLEAR_TIME);
+    }
+
+    function gameOver() {
+      state = 'over';
+      message = 'GAME OVER';
+      hurrying = false;
+      startButton.hidden = true;
+      draw();
+      say(`Game over. ${lines} ${lines === 1 ? 'row' : 'rows'} cleared, ${score} points.`);
+      window.setTimeout(showEnd, 900);
+    }
+
+    function showEnd() {
+      const rank = [...ranks].reverse().find((r) => lines >= r.from) ?? ranks[0];
+      const yesterday = chicagoDateKey(new Date(Date.now() - 86_400_000));
+      const stats = recordPlay(GAME_ID, chicagoDateKey(), yesterday, score);
+      const points = `${score.toLocaleString('en-US')} ${score === 1 ? 'point' : 'points'}`;
+      const rows = `${lines} ${lines === 1 ? 'row' : 'rows'}`;
+      showResults(resultsCard, {
+        score: `${points}, ${rows} cleared`,
+        rank: rank.name,
+        blurb: rank.blurb,
+        shareText: [
+          'Zoning, in The Municipal Absurdist',
+          `${points} · ${rows} · ${rank.name}`,
+          `${location.origin}${location.pathname}`,
+        ].join('\n'),
+        stats,
+        bestText: stats.best.toLocaleString('en-US'),
+      });
+    }
+
+    function begin() {
+      well = emptyWell();
+      lines = 0;
+      score = 0;
+      message = '';
+      clearing = [];
+      next = randomShape();
+      resultsCard.hidden = true;
+      state = 'playing';
+      newPiece();
+      startButton.hidden = false;
+      startButton.textContent = 'Pause';
+      draw();
+      say('Begun. Level 1.');
+      // Bring the whole screen into view, so the arrow keys play rather
+      // than scroll.
+      screen.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function pause() {
+      if (state !== 'playing') return;
+      state = 'paused';
+      message = 'PAUSED';
+      hurrying = false;
+      startButton.textContent = 'Resume';
+      draw();
+      say('Paused.');
+    }
+
+    function resume() {
+      if (state !== 'paused') return;
+      state = 'playing';
+      message = '';
+      startButton.textContent = 'Pause';
+      draw();
+      say('Resumed.');
+    }
+
+    // ---- The clock ----
+    function frame(now: number) {
+      const elapsed = lastFrame ? now - lastFrame : 0;
+      lastFrame = now;
+      if (state === 'playing') {
+        sinceFall += elapsed;
+        const every = hurrying ? Math.min(HURRY_TIME, fallTime(levelFor(lines))) : fallTime(levelFor(lines));
+        if (sinceFall >= every) fall(hurrying);
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // Leaving the tab pauses the game.
+    document.addEventListener('visibilitychange', () => document.hidden && pause());
+
+    // ---- Buttons ----
+    startButton.addEventListener('click', () => {
+      if (state === 'ready') begin();
+      else if (state === 'playing' || state === 'clearing') pause();
+      else if (state === 'paused') resume();
+    });
+    resultsCard.querySelector('[data-zoning-again]')!.addEventListener('click', begin);
+
+    const actions: Record<string, () => void> = {
+      left: () => move(-1),
+      right: () => move(1),
+      turn: () => rotate(1),
+      down: () => fall(true),
+      drop,
+    };
+    const repeating = new Set(['left', 'right', 'down']);
+    for (const button of root.querySelectorAll<HTMLButtonElement>('[data-zoning-action]')) {
+      const name = button.dataset.zoningAction!;
+      let timer = 0;
+      const stop = () => window.clearTimeout(timer);
+      button.addEventListener('pointerdown', (event) => {
+        event.preventDefault(); // no focus ring, no double-tap zoom
+        if (state === 'ready') {
+          begin(); // the press that starts the game does nothing else
+          return;
+        }
+        actions[name]();
+        if (!repeating.has(name)) return;
+        const again = () => {
+          actions[name]();
+          timer = window.setTimeout(again, REPEAT_EVERY);
+        };
+        timer = window.setTimeout(again, REPEAT_DELAY);
+      });
+      for (const end of ['pointerup', 'pointerleave', 'pointercancel']) button.addEventListener(end, stop);
+      // A keyboard press on the button (Enter or Space) arrives as a
+      // click with no pointer.
+      button.addEventListener('click', (event) => {
+        if (event.detail === 0) actions[name]();
+      });
+    }
+
+    // ---- Keys ----
+    document.addEventListener('keydown', (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      // Not while the reader is typing somewhere (the newsletter box).
+      const target = event.target;
+      if (target instanceof Element && target.closest('input, textarea, select, [contenteditable]')) return;
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      // Two keys work whether or not a game is going.
+      if (key === 'h' || key === '0') {
+        helpEl.classList.toggle('is-hidden');
+        return;
+      }
+      if (key === 'n' || key === '1') {
+        showNext = !showNext;
+        draw();
+        return;
+      }
+      if (key === 'p' || key === 'Escape') {
+        if (state === 'playing') pause();
+        else if (state === 'paused') resume();
+        return;
+      }
+      if (state !== 'playing') return;
+      const keys: Record<string, () => void> = {
+        ArrowLeft: () => move(-1),
+        '7': () => move(-1),
+        ArrowRight: () => move(1),
+        '9': () => move(1),
+        ArrowUp: () => !event.repeat && rotate(1),
+        '8': () => !event.repeat && rotate(1),
+        x: () => !event.repeat && rotate(1),
+        z: () => !event.repeat && rotate(-1),
+        ArrowDown: () => (hurrying = true),
+        '4': () => (hurrying = true),
+        ' ': () => !event.repeat && drop(),
+        '5': () => !event.repeat && drop(),
+      };
+      if (keys[key]) {
+        event.preventDefault(); // the arrows and space bar would scroll the page
+        keys[key]();
+      }
+    });
+    document.addEventListener('keyup', (event) => {
+      if (event.key === 'ArrowDown' || event.key === '4') hurrying = false;
+    });
+
+    // ---- Fingers on the screen ----
+    // Tap to turn; drag sideways to move a cell for every cell's width
+    // dragged; drag down to hurry the same way; flick down to drop.
+    let touch: { id: number; startX: number; startY: number; x: number; y: number; time: number; moved: boolean } | null = null;
+    const cellWidth = () => wellEl.getBoundingClientRect().width / (COLS + 2);
+
+    screen.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse') return; // a mouse uses the keys
+      if (state === 'ready') {
+        begin(); // the tap that starts the game does nothing else
+        return;
+      }
+      if (state !== 'playing') return;
+      try {
+        screen.setPointerCapture(event.pointerId); // keep the drag even if the finger strays off
+      } catch {
+        // Some browsers refuse for a pointer already gone; the drag still works.
+      }
+      touch = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY, time: event.timeStamp, moved: false };
+    });
+    screen.addEventListener('pointermove', (event) => {
+      if (!touch || event.pointerId !== touch.id) return;
+      const step = cellWidth();
+      while (event.clientX - touch.x >= step) { move(1); touch.x += step; touch.moved = true; }
+      while (touch.x - event.clientX >= step) { move(-1); touch.x -= step; touch.moved = true; }
+      while (event.clientY - touch.y >= step) { fall(true); touch.y += step; touch.moved = true; }
+    });
+    screen.addEventListener('pointerup', (event) => {
+      if (!touch || event.pointerId !== touch.id) return;
+      const time = event.timeStamp - touch.time;
+      const down = event.clientY - touch.startY;
+      const across = Math.abs(event.clientX - touch.startX);
+      if (down > 40 && down > across && down / time > 0.8) drop();
+      else if (!touch.moved && time < 300) rotate(1);
+      touch = null;
+    });
+    screen.addEventListener('pointercancel', () => (touch = null));
+
+    draw();
+  }
+</script>
+
+<style>
+  /* The terminal's colours: phosphor green on black. They belong to the
+     game's screen alone, so they are set here rather than in tokens.css. */
+  .zoning {
+    --crt-ground: #050a05;
+    --crt-ink: #5cff5c;
+  }
+
+  /* On a wide window the screen is wider than the game column, so the
+     whole 1984 layout fits on one line: score, well, keys. The negative
+     margins centre it on the column. */
+  .zoning__screen {
+    container-type: inline-size;
+    padding: var(--space-4) var(--space-3);
+    border: var(--rule-thick) double var(--rule);
+    background: var(--crt-ground);
+    color: var(--crt-ink);
+    touch-action: none; /* the screen takes drags for the game, not for scrolling */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  @media (min-width: 64rem) {
+    .zoning__screen {
+      margin-inline: calc(50% - min(28rem, 50vw - 3rem));
+    }
+  }
+
+  .zoning pre {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    line-height: 1.15;
+    white-space: pre;
+    /* A faint glow, as the letters had on a phosphor tube. */
+    text-shadow: 0 0 0.35em color-mix(in srgb, var(--crt-ink) 55%, transparent);
+  }
+
+  /* A phone or narrow column: the score above the well, the keys left
+     out (the buttons beneath stand in). The type is sized so the well,
+     24 characters across, fills the screen's width. A character in these
+     fonts is 0.6 of the type size wide. */
+  /* The terminal's type. The layout below measures its columns in ch
+     (the width of one character), so the font is set here, on the
+     layout itself, for the ch to be the typewriter's and not the
+     newspaper's. */
+  .zoning__layout {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    display: grid;
+    justify-content: center;
+    gap: var(--space-3);
+    font-size: min(1.35rem, 100cqi / 24 / 0.6);
+  }
+
+
+  .zoning__panel--stats {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    font-size: 0.7em;
+  }
+
+  .zoning__panel--help {
+    display: none;
+  }
+
+  /* Wide enough for the original's arrangement. */
+  @container (min-width: 44rem) {
+    .zoning__layout {
+      grid-template-columns: 17ch 24ch 18ch;
+      column-gap: 2ch;
+      align-items: start;
+      font-size: min(1.3rem, 100cqi / 63 / 0.6);
+    }
+
+    .zoning__panel--stats {
+      display: block;
+      font-size: inherit;
+    }
+
+    .zoning__next {
+      margin-top: 2lh;
+    }
+
+    .zoning__panel--help {
+      display: block;
+    }
+  }
+
+  /* "H: hide this text" hides it but keeps its room, so nothing jumps. */
+  .zoning__panel--help.is-hidden {
+    visibility: hidden;
+  }
+
+  .zoning__bar {
+    margin-top: var(--space-3);
+    text-align: center;
+  }
+
+  .zoning__start,
+  .zoning__again {
+    min-height: 2.75rem;
+    padding: var(--space-1) var(--space-5);
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-size: var(--text-base);
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .zoning__start:hover,
+  .zoning__again:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .zoning__again {
+    margin-top: var(--space-4);
+  }
+
+  /* The finger buttons: only where there is no mouse, or little room. */
+  .zoning__pad {
+    display: none;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-2);
+    max-width: 24rem;
+    margin: var(--space-3) auto 0;
+  }
+
+  @media (hover: none), (max-width: 40rem) {
+    .zoning__pad {
+      display: grid;
+    }
+  }
+
+  .zoning__pad button {
+    min-height: 3.25rem;
+    border: var(--rule-hair) solid var(--ink);
+    background: var(--paper) var(--grain);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .zoning__pad button:active {
+    background: var(--accent);
+  }
+</style>

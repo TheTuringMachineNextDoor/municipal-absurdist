@@ -64,4 +64,11 @@ export const games: Game[] = [
     image: 'pantagruel-12.webp',
     live: true,
   },
+  {
+    slug: 'zoning',
+    name: 'Zoning',
+    blurb: 'Blocks arrive from above without planning permission. Fit them together. Complete rows are demolished.',
+    image: 'pantagruel-07.webp',
+    live: true,
+  },
 ];

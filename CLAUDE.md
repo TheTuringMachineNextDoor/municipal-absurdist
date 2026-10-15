@@ -142,6 +142,7 @@ No dark mode at launch: the paper is the identity.
    - 4e Crossword + reader puzzle submissions (Tally)
    - 4f Caption contest (Tally submissions, editor-picked winners)
    - 4g The Mayor (Reigns-style swipe-decision game: original art, cards, and look; meters are Treasury, Public, Council, Press)
+   - 4h Zoning (falling-blocks game drawn like the 1984 Elektronika 60 original: green text, `[]` blocks. Not called by the original's trademarked name. Rules in `src/lib/games/zoning.ts`)
 5. Section fronts (done)
 6. Contributors and portfolio pages (done)
 7. Store and commissions (done)

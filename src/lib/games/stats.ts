@@ -71,3 +71,24 @@ export function recordResult(
   }
   return next;
 }
+
+/** Record a finished round of a game that may be played as often as the
+    reader likes (The Mayor, Zoning). recordResult() above counts one
+    round a day, which suits the daily games; this counts every round.
+    "Streak" is still days in a row with at least one round. */
+export function recordPlay(gameId: string, dateKey: string, yesterdayKey: string, score: number): GameStats {
+  const stats = readStats(gameId);
+  const next: GameStats = {
+    played: stats.played + 1,
+    best: Math.max(stats.best, score),
+    streak: stats.lastPlayed === dateKey ? stats.streak : stats.lastPlayed === yesterdayKey ? stats.streak + 1 : 1,
+    lastPlayed: dateKey,
+    lastResult: null,
+  };
+  try {
+    localStorage.setItem(storageKey(gameId), JSON.stringify(next));
+  } catch {
+    // Not saved; the results card still shows this round.
+  }
+  return next;
+}

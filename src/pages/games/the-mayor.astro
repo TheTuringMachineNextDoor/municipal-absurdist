@@ -109,7 +109,7 @@ import { METERS, METER_NAMES, START } from '../../data/the-mayor';
   } from '../../data/the-mayor';
   import { drawFigure } from '../../lib/games/mayor-figures';
   import { chicagoDateKey } from '../../lib/games/daily';
-  import { readStats, type GameStats } from '../../lib/games/stats';
+  import { recordPlay, type GameStats } from '../../lib/games/stats';
   import { showResults } from '../../lib/games/results';
 
   const GAME_ID = 'the-mayor';
@@ -277,27 +277,10 @@ import { METERS, METER_NAMES, START } from '../../data/the-mayor';
       });
     }
 
-    /** Count a finished term. The shared recordResult() counts one round
-        a day, which suits the daily games; this game may be played many
-        times a day, so it keeps its own count in the same place and shape.
-        "Streak" is still days in a row with at least one term. */
+    /** Count a finished term (every term counts, not one a day). */
     function record(score: number): GameStats {
-      const today = chicagoDateKey();
       const yesterday = chicagoDateKey(new Date(Date.now() - 86_400_000));
-      const stats = readStats(GAME_ID);
-      const next: GameStats = {
-        played: stats.played + 1,
-        best: Math.max(stats.best, score),
-        streak: stats.lastPlayed === today ? stats.streak : stats.lastPlayed === yesterday ? stats.streak + 1 : 1,
-        lastPlayed: today,
-        lastResult: null,
-      };
-      try {
-        localStorage.setItem(`absurdist:game:${GAME_ID}`, JSON.stringify(next));
-      } catch {
-        // Not saved; the results card still shows this term.
-      }
-      return next;
+      return recordPlay(GAME_ID, chicagoDateKey(), yesterday, score);
     }
 
     function begin() {
